@@ -1012,3 +1012,36 @@ button { font: inherit; }
 .save-flash.on { animation: save-flash 1.8s ease-out; }
 @keyframes save-flash { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 .sheet-icon.pic { background: transparent; }
+
+/* ---------------------------------------------------------------- day 3 */
+
+.flash.red { background: #b0201a; animation: flash 0.6s ease-out; }
+.actor.zoom { animation: zoom-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@keyframes zoom-in {
+  from { scale: 1; }
+  to { scale: 1.32; transform-origin: 50% 20%; }
+}
+.actor { transform-origin: 50% 20%; }
+
+.verdict.acquit { background: rgba(18, 26, 51, 0.55); }
+.verdict.acquit span { text-shadow: 10px 10px 0 var(--ochre); }
+
+.confetti { position: absolute; inset: 0; overflow: hidden; }
+.confetti i {
+  position: absolute;
+  top: -20px;
+  width: 12px;
+  height: 18px;
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+@keyframes confetti-fall {
+  from { translate: 0 0; rotate: 0deg; }
+  to { translate: var(--drift) 780px; rotate: var(--spin); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti { display: none; }
+  .actor.zoom { animation: none; }
+}

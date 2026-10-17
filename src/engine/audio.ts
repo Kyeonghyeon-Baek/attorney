@@ -480,6 +480,43 @@ export function sfx(name: SfxName): void {
         hiss(st, 0.025, 0.2, 'bandpass', 2600 + Math.random() * 1500, 2);
       }
       break;
+    case 'breakdown': {
+      // The culprit falls apart: a dissonant cluster sliding down into a noise swell.
+      ['C3', 'C#3', 'F#3', 'G3', 'C4'].forEach((n) => {
+        const f = freqOf(n);
+        const o = osc('sawtooth', f, t, t + 2.4);
+        o.frequency.exponentialRampToValueAtTime(f * 0.5, t + 2.2);
+        const g = sus(t, 0.05, 0.02, 1.6, 0.7);
+        o.connect(filter('lowpass', 1600, 0.8)).connect(g);
+        out(g, sfxBus, 0.6);
+      });
+      const swell = ctx.createGain();
+      swell.gain.setValueAtTime(0.0001, t);
+      swell.gain.exponentialRampToValueAtTime(0.5, t + 0.9);
+      swell.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+      noiseSrc(t, t + 2.5).connect(filter('lowpass', 2500, 0.6)).connect(swell);
+      out(swell, sfxBus, 0.6);
+      tone(70, t, 1.4, 'sine', 0.7, 0.4, 30);
+      break;
+    }
+    case 'cheer': {
+      // Applause and a lifted crowd: dense claps over a bright murmur.
+      for (let i = 0; i < 60; i++) {
+        const st = t + Math.random() * 2.4;
+        hiss(st, 0.03, 0.18 + Math.random() * 0.12, 'bandpass', 1500 + Math.random() * 2500, 1.2, 0.4);
+      }
+      for (let i = 0; i < 6; i++) {
+        const st = t + Math.random() * 0.6;
+        const len = 1.4 + Math.random();
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, st);
+        g.gain.exponentialRampToValueAtTime(0.15, st + 0.3);
+        g.gain.exponentialRampToValueAtTime(0.0001, st + len);
+        noiseSrc(st, st + len + 0.05).connect(filter('bandpass', 600 + Math.random() * 700, 2.5)).connect(g);
+        out(g, sfxBus, 0.5);
+      }
+      break;
+    }
     case 'heartbeat':
       tone(60, t, 0.18, 'sine', 0.6, 0.2, 40);
       tone(55, t + 0.24, 0.2, 'sine', 0.45, 0.2, 38);

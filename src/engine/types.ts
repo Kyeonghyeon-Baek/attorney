@@ -6,10 +6,12 @@ export type Voice = 'high' | 'mid' | 'low' | 'deep' | 'ai' | 'soft' | 'warm' | '
 export type SfxName =
   | 'gavel' | 'gavel3' | 'shout' | 'damage' | 'heal' | 'reveal' | 'glitch'
   | 'boot' | 'whoosh' | 'select' | 'open' | 'close' | 'evidence'
-  | 'paper' | 'slam' | 'realize' | 'shock' | 'murmur' | 'step' | 'door' | 'typing' | 'heartbeat';
+  | 'paper' | 'slam' | 'realize' | 'shock' | 'murmur' | 'step' | 'door' | 'typing' | 'heartbeat'
+  | 'breakdown' | 'cheer';
 export type BgmName =
   | 'trial' | 'testimony' | 'cross' | 'pursuit' | 'suspense' | 'daon'
-  | 'investigate' | 'emptyroom' | 'serverroom' | 'sorrow';
+  | 'investigate' | 'emptyroom' | 'serverroom' | 'sorrow'
+  | 'cornered' | 'victory' | 'ending';
 export type AmbienceName = 'court' | 'lobby' | 'clock' | 'hum' | 'lounge';
 export type DaonMode = 'normal' | 'glitch' | 'human';
 export type IconName = 'door' | 'autopsy' | 'card' | 'brochure' | 'log' | 'contract' | 'mic';
@@ -58,7 +60,8 @@ export type Cmd =
   | { t: 'think'; text: string }
   | { t: 'show'; who: CharId; emo?: string }
   | { t: 'shout'; who: CharId; kind: ShoutKind }
-  | { t: 'fx'; kind: 'shake' | 'bigshake' | 'flash' }
+  | { t: 'fx'; kind: 'shake' | 'bigshake' | 'flash' | 'redflash' | 'zoom' }
+  | { t: 'verdict'; word: string; acquit?: boolean }
   | { t: 'sfx'; name: SfxName }
   | { t: 'bgm'; name: BgmName | null }
   | { t: 'ambience'; name: AmbienceName | null }

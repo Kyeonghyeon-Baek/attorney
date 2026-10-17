@@ -1,5 +1,6 @@
 import type { CaseData } from '../engine/game';
 import type { Evidence, Profile, Testimony } from '../engine/types';
+import { DAY3_EVIDENCE, DAY3_SCENES, DAY3_TESTIMONIES } from './chapter-day3';
 import { HAEUN_EVIDENCE, HAEUN_PROFILE, HAEUN_SCENES, HAEUN_TESTIMONIES } from './chapter-haeun';
 import { INVESTIGATION_END, INVESTIGATION_GOALS, LOCATIONS } from './investigation';
 import {
@@ -365,10 +366,10 @@ export const CASE_DAON: CaseData = {
   caseName: '살인  피고인 박순자',
   episode: '제4화 「대체된 증인」 프로토타입',
   start: 'investigation',
-  evidence: [...EVIDENCE, ...HAEUN_EVIDENCE],
+  evidence: [...EVIDENCE, ...HAEUN_EVIDENCE, ...DAY3_EVIDENCE],
   startEvidence: [],
   profiles: [...PROFILES, HAEUN_PROFILE],
-  testimonies: { night: NIGHT, self: SELF, ...HAEUN_TESTIMONIES },
+  testimonies: { night: NIGHT, self: SELF, ...HAEUN_TESTIMONIES, ...DAY3_TESTIMONIES },
   locations: LOCATIONS,
   gaugeStart: 71.3,
   wrongPenalty: 8.6,
@@ -407,11 +408,20 @@ export const CASE_DAON: CaseData = {
     cross4: '반대신문: 화면에 뜬 말들',
     accuse: '서지훈을 가리키다',
     epilogue: '2일째 마무리: 피고인 대기실',
+    day3lounge: '3일째 아침: 피고인 대기실',
+    day3: '3일째 개정: 서지훈의 증언',
+    cross5: '반대신문: 그날 밤, 나는 집에 있었다',
+    cross6: '반대신문: 주차장에만 들렀다',
+    finale: '사라진 사원증',
+    breakdown: '서지훈의 고백',
+    verdict: '판결',
+    epilogue4: '에필로그: 다온 검수팀',
   },
-  endingTitle: '법정 2일째는 여기까지예요',
+  endingTitle: '제4화 「대체된 증인」 끝',
 
   scenes: {
     ...HAEUN_SCENES,
+    ...DAY3_SCENES,
 
     investigation: [
       investigate('lobby', INVESTIGATION_GOALS, INVESTIGATION_END),

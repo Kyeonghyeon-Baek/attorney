@@ -79,9 +79,10 @@ export class Stage {
     const cut = who !== this.who;
     this.who = who;
     this.emo = nextEmo;
+    if (cut) this.actor.classList.remove('zoom');
     this.render(who, nextEmo, this.fieldBg ? 'field' : CHARACTERS[who].pos);
     if (cut) replay(this.root, 'cut');
-    if (['shock', 'surprised', 'panic', 'sweat'].includes(nextEmo)) replay(this.actor, 'jolt');
+    if (['shock', 'surprised', 'panic', 'sweat', 'cornered', 'rage'].includes(nextEmo)) replay(this.actor, 'jolt');
   }
 
   /** Cuts to black between chapters. */
@@ -103,7 +104,7 @@ export class Stage {
     this.bg.classList.toggle('has-img', !!bgUrl);
     this.bg.dataset.label = bgUrl ? '' : bgId;
 
-    const onMonitor = pos === 'witness' && (who === 'daon' || who === 'operator');
+    const onMonitor = (pos === 'witness' || pos === 'field') && (who === 'daon' || who === 'operator');
     this.daon.hidden = !onMonitor;
     this.actor.replaceChildren();
     this.actor.dataset.emo = emo;
@@ -118,6 +119,11 @@ export class Stage {
     } else {
       this.actor.appendChild(placeholder(ch.name, ch.color));
     }
+  }
+
+  /** Pushes the camera in on whoever is on screen, until the next cut. */
+  zoom(): void {
+    replay(this.actor, 'zoom');
   }
 
   setTalking(on: boolean): void {

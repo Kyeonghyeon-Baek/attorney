@@ -178,6 +178,56 @@ export const TRACKS: Record<BgmName, Track> = {
     ],
   },
 
+  // 진범을 몰아붙일 때. 추궁보다 한 단계 더 빠르고 무겁게.
+  cornered: {
+    bpm: 150, div: 2,
+    parts: [
+      { inst: 'lead', vol: 0.05, rev: 0.2, seq: bars(
+        'D5 - F5 - A5 G5 F5 E5', 'D5 - F5 - A5 Bb5 A5 G5',
+        'F5 - A5 - C6 Bb5 A5 G5', 'A5 - G5 - F5 - E5 -') },
+      { inst: 'bass', vol: 0.16, seq: bars(
+        'D2 D3 D2 D3 D2 D3 D2 D3', 'Bb1 Bb2 Bb1 Bb2 Bb1 Bb2 Bb1 Bb2',
+        'F2 F3 F2 F3 F2 F3 F2 F3', 'A1 A2 A1 A2 A1 A2 A1 A2') },
+      { inst: 'strings', vol: 0.05, rev: 0.3, seq: bars(
+        'D3+F3+A3 . D3+F3+A3 . . D3+F3+A3 . .', 'Bb2+D3+F3 . Bb2+D3+F3 . . Bb2+D3+F3 . .',
+        'F3+A3+C4 . F3+A3+C4 . . F3+A3+C4 . .', 'A2+C#3+E3 - - - A2+C#3+E3 - - -') },
+      { inst: 'kick', vol: 0.5, seq: 'x . x x x . x .' },
+      { inst: 'snare', vol: 0.18, rev: 0.15, seq: '. . X . . . X x' },
+      { inst: 'hat', vol: 0.06, seq: 'x x x x x x x x' },
+      { inst: 'crash', vol: 0.09, rev: 0.3, seq: `X ${rest(31)}` },
+    ],
+  },
+
+  // 무죄. 밝은 팡파르.
+  victory: {
+    bpm: 128, div: 2,
+    parts: [
+      { inst: 'lead', vol: 0.05, rev: 0.3, seq: bars(
+        'C5 - E5 G5 C6 - - -', 'B5 - A5 - G5 - E5 -', 'F5 - A5 C6 F6 - E6 D6', 'C6 - - - G5 - C6 -') },
+      { inst: 'strings', vol: 0.045, rev: 0.4, seq: holds(['C4+E4+G4', 'E3+G3+B3', 'F3+A3+C4', 'G3+B3+D4'], 8) },
+      { inst: 'bass', vol: 0.14, seq: bars('C2 . C3 . C2 . C3 .', 'E2 . E3 . E2 . E3 .', 'F2 . F3 . F2 . F3 .', 'G2 . G3 . G2 . G3 .') },
+      { inst: 'bell', vol: 0.035, rev: 0.5, seq: bars('. . . . . . G6 .', '. . . . . . E6 .', '. . . . . . A6 .', '. . . . . . B6 .') },
+      { inst: 'kick', vol: 0.4, seq: 'x . . . x . . .' },
+      { inst: 'snare', vol: 0.14, rev: 0.2, seq: '. . x . . . x .' },
+      { inst: 'hat', vol: 0.05, seq: 'x o x o x o x o' },
+      { inst: 'crash', vol: 0.08, rev: 0.3, seq: `X ${rest(31)}` },
+    ],
+  },
+
+  // 에필로그. 조용하고 희망적인.
+  ending: {
+    bpm: 84, div: 2,
+    parts: [
+      { inst: 'piano', vol: 0.1, rev: 0.5, seq: bars(
+        'G2 D3 G3 B3 D4 B3 G3 D3', 'D2 A2 D3 F#3 A3 F#3 D3 A2', 'E2 B2 E3 G3 B3 G3 E3 B2', 'C2 G2 C3 E3 G3 E3 C3 G2',
+        'G2 D3 G3 B3 D4 B3 G3 D3', 'D2 A2 D3 F#3 A3 F#3 D3 A2', 'C2 G2 C3 E3 G3 E3 C3 G2', 'D2 A2 D3 F#3 A3 F#3 D3 A2') },
+      { inst: 'bell', vol: 0.05, rev: 0.55, seq: bars(
+        'B4 - D5 - G5 - F#5 E5', 'D5 - - - A4 - - -', 'G4 - B4 - E5 - D5 C5', 'B4 - - - - - . .',
+        'B4 - D5 - G5 - A5 B5', 'A5 - - - F#5 - D5 -', 'E5 - G5 - E5 - C5 -', 'D5 - - - - - - -') },
+      { inst: 'strings', vol: 0.03, rev: 0.6, seq: holds(['G3+B3+D4', 'D3+F#3+A3', 'E3+G3+B3', 'C3+E3+G3', 'G3+B3+D4', 'D3+F#3+A3', 'C3+E3+G3', 'D3+F#3+A3'], 8) },
+    ],
+  },
+
   // 모녀, 슬픔, 대기실.
   sorrow: {
     bpm: 68, div: 2,

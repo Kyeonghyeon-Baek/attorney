@@ -57,6 +57,7 @@ export class Effects {
   }
 
   flash(): void {
+    this.flashEl.classList.remove('red');
     replay(this.flashEl, 'on');
   }
 
@@ -89,16 +90,41 @@ export class Effects {
     node.remove();
   }
 
-  async verdict(word: string): Promise<void> {
-    const node = el('div', 'verdict', this.layer);
+  /** Stamps the verdict one syllable at a time. An acquittal rains 색동 paper. */
+  async verdict(word: string, acquit = false): Promise<void> {
+    const node = el('div', acquit ? 'verdict acquit' : 'verdict', this.layer);
     for (const ch of word) {
       el('span', '', node, ch);
       sfx('gavel');
       this.shake(true);
       await sleep(this.ms(520));
     }
-    await sleep(this.ms(900));
+    if (acquit) {
+      sfx('cheer');
+      this.confetti();
+    }
+    await sleep(this.ms(acquit ? 2200 : 900));
     node.remove();
+  }
+
+  private confetti(): void {
+    const colors = ['#c8372d', '#e8a93b', '#2e5aac', '#2f8f5b', '#d9668a', '#f4f0e6'];
+    const box = el('div', 'confetti', this.layer);
+    for (let i = 0; i < 90; i++) {
+      const p = el('i', '', box);
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = `${Math.random() * 0.8}s`;
+      p.style.animationDuration = `${2.2 + Math.random() * 1.8}s`;
+      p.style.setProperty('--drift', `${(Math.random() - 0.5) * 160}px`);
+      p.style.setProperty('--spin', `${Math.random() * 900 - 450}deg`);
+    }
+    setTimeout(() => box.remove(), this.fast ? 300 : 5000);
+  }
+
+  redFlash(): void {
+    this.flashEl.classList.remove('on');
+    replay(this.flashEl, 'red');
   }
 
   /**

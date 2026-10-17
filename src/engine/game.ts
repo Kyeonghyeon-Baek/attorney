@@ -212,8 +212,8 @@ export class Game {
         const ch = CHARACTERS[cmd.who];
         this.scene.show(cmd.who, cmd.emo);
         // Stings for the big reactions, a desk slam when 강단비 points.
-        if (cmd.emo === 'shock' || cmd.emo === 'panic') sfx('shock');
-        else if (cmd.who === 'dan' && cmd.emo === 'point') sfx('slam');
+        if (cmd.emo === 'shock' || cmd.emo === 'panic' || cmd.emo === 'cornered') sfx('shock');
+        else if (cmd.emo === 'rage' || (cmd.who === 'dan' && cmd.emo === 'point')) sfx('slam');
         await this.line({
           name: cmd.name ?? ch.name, who: cmd.who, text: cmd.text,
           style: cmd.who === 'operator' ? 'human' : 'normal', voice: ch.voice,
@@ -235,7 +235,13 @@ export class Game {
         return;
       case 'fx':
         if (cmd.kind === 'flash') this.fx.flash();
+        else if (cmd.kind === 'redflash') this.fx.redFlash();
+        else if (cmd.kind === 'zoom') this.scene.zoom();
         else this.fx.shake(cmd.kind === 'bigshake');
+        return;
+      case 'verdict':
+        this.box.hide();
+        await this.fx.verdict(cmd.word, cmd.acquit);
         return;
       case 'sfx':
         sfx(cmd.name);

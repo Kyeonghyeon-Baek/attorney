@@ -1,6 +1,6 @@
 import type { Evidence, Profile, Script, Testimony } from '../engine/types';
 import {
-  addEvidence, addProfile, ambience, bgm, bigshake, cross, end, evidence, field, flash, gauge, gaugeSet, goto, place,
+  addEvidence, addProfile, ambience, bgm, bigshake, cross, evidence, field, flash, gauge, gaugeSet, goto, place,
   present, say, sfx, shake, think,
 } from './script';
 
@@ -36,7 +36,8 @@ export const HAEUN_EVIDENCE: Evidence[] = [
       '기능  서버실 소리를 감지해 이상 상황을 알림',
       '전달  들린 소리를 담당 상담원의 헤드셋으로 실시간 전달',
       '실시간 음성 자막  들린 말을 글자로 바꿔 상담원 화면에 표시',
-      '※ 소리와 자막은 저장되지 않는다.',
+      '저장  관리자 설정에 따름 (기본값: 저장함)',
+      '※ 사건 당일 밤에는 저장이 꺼져 있어, 소리와 자막이 남지 않았다.',
     ],
   },
 ];
@@ -343,6 +344,9 @@ export const HAEUN_SCENES: Record<string, Script> = {
     think('(사람을 대신하겠다던 AI 뒤에는, 사람이 있었다.)'),
     think('(그리고 그 사람들을 숨긴 누군가가 있다.)'),
     think('(내일, 서지훈 씨를 법정에 세운다. 이번엔 기계가 아니라 사람의 거짓말과 마주할 차례야.)'),
-    end,
+    bgm(null),
+    ambience(null),
+    field(null),
+    goto('day3lounge'),
   ],
 };

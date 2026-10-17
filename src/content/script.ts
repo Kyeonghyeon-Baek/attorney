@@ -9,6 +9,10 @@ export const shout = (kind: ShoutKind, who: CharId = 'dan'): Cmd => ({ t: 'shout
 export const shake: Cmd = { t: 'fx', kind: 'shake' };
 export const bigshake: Cmd = { t: 'fx', kind: 'bigshake' };
 export const flash: Cmd = { t: 'fx', kind: 'flash' };
+export const redflash: Cmd = { t: 'fx', kind: 'redflash' };
+/** Camera pushes in on the current speaker until the next cut. */
+export const zoom: Cmd = { t: 'fx', kind: 'zoom' };
+export const verdict = (word: string, acquit = false): Cmd => ({ t: 'verdict', word, acquit });
 export const sfx = (name: SfxName): Cmd => ({ t: 'sfx', name });
 export const bgm = (name: BgmName | null): Cmd => ({ t: 'bgm', name });
 export const ambience = (name: AmbienceName | null): Cmd => ({ t: 'ambience', name });

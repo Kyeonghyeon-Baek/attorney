@@ -29,11 +29,11 @@ no logo, no frame.
 | ID | 이름 | 방향 | 표정 파일 |
 |---|---|---|---|
 | `dan` | 강단비 (변호사) | 오른쪽을 봄 | `normal`, `point`, `sweat` |
-| `narae` | 신나래 (조수) | 오른쪽을 봄 | `normal`, `angry`, `surprised` |
+| `narae` | 신나래 (조수) | 오른쪽을 봄 | `normal`, `angry`, `surprised`, `happy` |
 | `eom` | 엄정한 (검사) | 왼쪽을 봄 | `normal`, `shock`, `smug` |
 | `judge` | 고민중 (재판장) | 정면 | `normal`, `surprised`, `stern` |
 | `soonja` | 박순자 (피고인) | 정면 | `normal`, `shock`, `sad` |
-| `haeun` | 박하은 (증인) | 정면 | `normal`, `sad`, `shock` |
+| `haeun` | 박하은 (증인) | 정면 | `normal`, `sad`, `shock`, `smile` |
 
 다온(AI)은 게임이 직접 그려요(모니터 속 빛나는 원). 그림이 필요 없어요.
 
@@ -56,6 +56,7 @@ sleeves, a small brass shaman bell keychain. Lively, cheeky expression. 3/4 view
 - `normal`: 장난스럽게 웃는 얼굴
 - `angry`: 볼을 부풀리고 눈썹을 찌푸린 채 팔짱을 낌. 화났지만 귀여운 느낌
 - `surprised`: 눈을 동그랗게 뜨고 입을 벌림, 한 손을 입가에 댐
+- `happy`: 눈물이 맺힌 채 활짝 웃으며 두 주먹을 불끈 쥠
 
 ### eom — 엄정한
 ```
@@ -97,6 +98,7 @@ headset hanging around her neck, an outsourcing company ID lanyard. Facing the v
 - `normal`: 긴장해서 어깨를 움츠리고 시선을 살짝 피함
 - `sad`: 눈물이 맺힌 채 입술을 깨묾
 - `shock`: 눈을 크게 뜨고 두 손을 가슴께에 모음
+- `smile`: 눈가가 살짝 젖었지만 밝게, 안도한 작은 미소
 
 ## 법정 배경
 
@@ -121,7 +123,7 @@ foreground, no text. Anime background art style, painterly, slightly muted color
 
 | ID | 이름 | 방향 | 표정 파일 |
 |---|---|---|---|
-| `seo` | 서지훈 (누리랩 기술이사) | 정면 | `normal`, `sweat`, `proud` |
+| `seo` | 서지훈 (누리랩 기술이사) | 정면 | `normal`, `sweat`, `proud`, `cornered`, `rage`, `breakdown` |
 | `gu` | 구만두 (형사) | 정면 | `normal`, `panic` |
 
 #### seo — 서지훈
@@ -133,6 +135,9 @@ lanyard, a slim smartwatch. Facing the viewer.
 - `normal`: 정중하게 미소 짓지만 어딘가 긴장한 얼굴
 - `sweat`: 억지 미소, 관자놀이에 식은땀, 시선을 살짝 피함
 - `proud`: 자신감 넘치는 미소, 한 손을 가슴에 얹고 턱을 살짝 듦
+- `cornered`: 식은땀, 억지 미소가 일그러지고 시선이 흔들림, 한 손으로 목줄을 움켜쥠, 안경이 살짝 비뚤어짐
+- `rage`: 입을 크게 벌려 소리침, 관자놀이에 핏대, 주먹을 치켜듦, 머리가 흐트러지기 시작함
+- `breakdown`: 완전히 무너짐. 고개를 떨구고 어깨가 축 처짐, 금이 간 안경이 흘러내림, 머리가 헝클어짐, 떨리는 두 손 (허리 위 구도 유지)
 
 #### gu — 구만두
 ```
@@ -182,6 +187,9 @@ use abstract grey lines wherever writing would be.
 | `chatLog` | 길게 늘어진 상담 기록 출력지, 말풍선 블록들, 한 줄에 빨간 형광펜 |
 | `contract` | 붉은 인감 도장과 서명란이 있는 두 장짜리 계약서, 옆에 만년필 |
 | `micSpec` | 도면이 그려진 사양서와 그 옆의 작은 원반형 마이크 모듈(파란 고리 불빛) |
+| `parking` | 지하 주차장 출차 기록 출력지, 작은 자동차 실루엣과 빈 번호판 모양 사각형 |
+| `settingsLog` | 관리자 설정 화면이 떠 있는 태블릿, 빨간색으로 꺼진 토글 스위치, 작은 서버 아이콘과 기록 줄 |
+| `badge` | 투명한 경찰 증거 봉투에 담긴 흰 사원증(목줄 포함), 봉투에 빨간 꼬리표 |
 
 ## 인물 사진
 
