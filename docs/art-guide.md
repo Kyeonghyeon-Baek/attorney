@@ -33,6 +33,7 @@ no logo, no frame.
 | `eom` | 엄정한 (검사) | 왼쪽을 봄 | `normal`, `shock`, `smug` |
 | `judge` | 고민중 (재판장) | 정면 | `normal`, `surprised`, `stern` |
 | `soonja` | 박순자 (피고인) | 정면 | `normal`, `shock`, `sad` |
+| `haeun` | 박하은 (증인) | 정면 | `normal`, `sad`, `shock` |
 
 다온(AI)은 게임이 직접 그려요(모니터 속 빛나는 원). 그림이 필요 없어요.
 
@@ -86,6 +87,17 @@ blouse. Dignified despite exhaustion. Facing the viewer.
 - `shock`: 눈을 크게 뜨고 숨을 들이켬, 두 손으로 입을 가림
 - `sad`: 눈가가 젖은 채 시선을 아래로 떨굼, 입술을 꾹 다묾. 미소 없음
 
+### haeun — 박하은
+```
+Park Haeun, 22, a Korean university student who secretly works night shifts pretending to be an
+AI chat agent. Same warm eyes and face shape as her mother Park Soonja, black hair tied back in a
+low ponytail with loose strands, tired eyes. Grey sweatshirt under a black padded vest, a call-center
+headset hanging around her neck, an outsourcing company ID lanyard. Facing the viewer.
+```
+- `normal`: 긴장해서 어깨를 움츠리고 시선을 살짝 피함
+- `sad`: 눈물이 맺힌 채 입술을 깨묾
+- `shock`: 눈을 크게 뜨고 두 손을 가슴께에 모음
+
 ## 법정 배경
 
 공통:
@@ -101,6 +113,7 @@ foreground, no text. Anime background art style, painterly, slightly muted color
 | `bg/prosecution.png` | 검사석 뒤쪽 벽. 왼쪽으로 비스듬히 본 시점 |
 | `bg/witness.png` | 증언대 뒤쪽 벽. 정면, 가운데가 비어 있음 |
 | `bg/judge.png` | 재판장석 뒤 높은 벽. 정면, 가운데 위쪽에 가상의 원형 법원 문장(저울 모티프, 실제 기관 문장 아님) |
+| `bg/lounge.png` | 법원의 피고인 대기실. 베이지색 벽, 긴 나무 벤치, 정수기, 블라인드 친 창문, 벽시계, 형광등. 텅 빈 오후. 정면, 가운데가 비어 있음 |
 
 ## 조사 파트
 
@@ -146,6 +159,45 @@ no logos. 1536x1024, eye-level view.
 | `bg/callcenter.png` | 사람이 다 떠난 콜센터. 헤드셋만 남은 책상들이 뒤로 줄지어 있음. 앞쪽 가운데 왼쪽에 팀장 책상(명패, 액자, 모니터에 붙은 포스트잇, 컵라면 용기), 뒤쪽 벽에 실적 보드, 오른쪽에 회색 철제 보관함. 해 질 녘 빛 |
 | `bg/serverroom.png` | 서버실 사건 현장. 양옆에 서버랙, 가운데 통로. 왼쪽 랙에 노란 폴리스 라인, 가운데 왼쪽 바닥 근처 랙 모서리에 번호 감식 표지, 오른쪽에 카드 리더가 달린 문, 가운데 오른쪽 랙 위에 파란 불이 켜진 작은 원형 마이크 모듈. 차가운 파란 조명 |
 
+## 증거 그림
+
+| 경로 | 크기 | 배경 |
+|---|---|---|
+| `src/assets/items/<증거ID>.png` | 1024×1024 | **투명** |
+
+공통:
+```
+Item illustration for a Korean courtroom adventure game, same clean anime-style line art and
+flat two-tone cel shading as the character sprites. A single object, centered, slight 3/4
+top-down angle, soft contact shadow, transparent background. No readable text or numbers:
+use abstract grey lines wherever writing would be.
+```
+
+| ID | 그림 |
+|---|---|
+| `access` | 검은 태블릿 보드에 끼운 출입 기록 출력지, 위쪽에 작은 사원증 아이콘 |
+| `autopsy` | 클립보드에 꽂힌 부검 소견서, 사람 윤곽 도식과 붉은 도장 |
+| `cardReturn` | 반납 확인서 위에 놓인 흰 사원증(빈 사진 칸, 목줄), 붉은 원형 도장 |
+| `brochure` | 반짝이는 3단 회사 소개서, 표지에 짙은 남색 바탕의 청록색 빛나는 구체 |
+| `chatLog` | 길게 늘어진 상담 기록 출력지, 말풍선 블록들, 한 줄에 빨간 형광펜 |
+| `contract` | 붉은 인감 도장과 서명란이 있는 두 장짜리 계약서, 옆에 만년필 |
+| `micSpec` | 도면이 그려진 사양서와 그 옆의 작은 원반형 마이크 모듈(파란 고리 불빛) |
+
+## 인물 사진
+
+법원기록의 인물 탭은 캐릭터 그림의 얼굴 부분을 잘라 보여 줘요. 캐릭터 그림이 없는 인물만 따로 사진을 만들어요.
+
+| 경로 | 크기 | 배경 |
+|---|---|---|
+| `src/assets/portraits/<인물ID>.png` | 1024×1024 | 불투명 (옅은 회색 단색) |
+
+- `victim` — 한도윤 (41, 누리랩 대표, 피해자):
+```
+ID-photo style head-and-shoulders portrait of Han Doyun, 41, CEO of a Korean AI startup. Neat short
+black hair, clean-shaven, confident but kind eyes, navy suit with an open-collar white shirt.
+Plain light grey background, facing the viewer. Same anime illustration style as the sprites.
+```
+
 ## Codex로 한 번에 만들기
 
 지금 들어 있는 그림 13장은 아래 방식으로 Codex CLI가 만들었어요. 새 표정이나 캐릭터를 추가할 때는 이 문서에 먼저 적고 같은 방식으로 요청하면 돼요.
@@ -155,7 +207,6 @@ codex exec --skip-git-repo-check -s workspace-write "Read docs/art-guide.md. Usi
 ```
 
 다음에 있으면 좋은 그림:
-- `haeun/normal` — 다음 증인으로 나올 박하은
 - `dan/confident` — 모순을 찌른 뒤 여유 있게 웃는 강단비
 
 ## 표정을 늘릴 때

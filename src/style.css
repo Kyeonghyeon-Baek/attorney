@@ -282,6 +282,9 @@ button { font: inherit; }
 }
 .ev-card.on { display: block; animation: pop 0.25s ease-out; }
 .ev-card-icon svg { width: 92px; height: 92px; }
+.ev-card-icon { display: flex; justify-content: center; }
+.ev-card-icon.pic { height: 132px; }
+.ev-card-face { width: 112px; height: 112px; font-size: 52px; }
 .ev-card-name { font-size: 15px; margin-top: 6px; color: var(--ink); word-break: keep-all; }
 @keyframes pop { from { scale: 0.6; opacity: 0; } to { scale: 1; opacity: 1; } }
 
@@ -315,6 +318,7 @@ button { font: inherit; }
   font-weight: 700;
 }
 .textbox[data-who='daon'] .plate { background: #11706d; }
+.textbox[data-who='operator'] .plate,
 .textbox[data-who='haeun'] .plate { background: #8a5420; }
 
 .line {
@@ -569,21 +573,45 @@ button { font: inherit; }
   border-radius: 6px;
   cursor: pointer;
 }
-.tile svg { width: 52px; height: 52px; }
 .tile.on { border-color: var(--ochre); background: #34487a; }
 .tile-name { font-size: 12px; line-height: 1.35; color: var(--paper); text-align: center; word-break: keep-all; }
 .face,
-.sheet-face {
+.sheet-face,
+.ev-card-face {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: var(--face);
+  flex: none;
+  border-radius: 8px;
+  background-color: var(--face);
+  background-repeat: no-repeat;
   color: var(--paper);
   font-family: var(--display);
+  box-shadow: inset 0 0 0 2px rgba(244, 240, 230, 0.85);
 }
-.face { width: 52px; height: 52px; font-size: 26px; }
-.sheet-face { width: 72px; height: 72px; font-size: 36px; flex: none; }
+/* sprite crops sit on a light photo-booth backdrop */
+.face.photo,
+.sheet-face.photo,
+.ev-card-face.photo { background-color: #d8d2c4; }
+.face.orb,
+.sheet-face.orb,
+.ev-card-face.orb { background: radial-gradient(circle at 50% 45%, #0f2c3c, #061018 75%); }
+.face.orb i,
+.sheet-face.orb i,
+.ev-card-face.orb i {
+  width: 46%;
+  height: 46%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff 0, var(--daon) 32%, #1f8e9a 70%);
+  box-shadow: 0 0 14px var(--daon);
+}
+.face { width: 68px; height: 68px; font-size: 30px; }
+.sheet-face { width: 96px; height: 96px; font-size: 44px; }
+.tile-pic { display: flex; align-items: center; justify-content: center; width: 68px; height: 68px; }
+.tile-pic svg { width: 52px; height: 52px; }
+.tile-pic img,
+.sheet-icon img,
+.ev-card-icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 .sheet {
   position: relative;
@@ -596,8 +624,8 @@ button { font: inherit; }
 }
 .sheet-top { display: flex; gap: 16px; align-items: center; }
 .sheet-icon {
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   flex: none;
   display: flex;
   align-items: center;
@@ -782,7 +810,8 @@ button { font: inherit; }
 
 /* ---------------------------------------------------------------- investigation */
 
-.stage.investigating .gauge { display: none; }
+.stage.investigating .gauge,
+.stage.offstage .gauge { display: none; }
 .scene[data-pos='field'] .desk { display: none; }
 .scene[data-pos='field'] .actor { left: 50%; translate: -50% 0; height: 700px; bottom: -60px; }
 .scene[data-pos='field'] .bg:not(.has-img) {
@@ -982,3 +1011,4 @@ button { font: inherit; }
 }
 .save-flash.on { animation: save-flash 1.8s ease-out; }
 @keyframes save-flash { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+.sheet-icon.pic { background: transparent; }

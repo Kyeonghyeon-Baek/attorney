@@ -101,7 +101,7 @@ export class InvestigateUi {
     const area = el('div', 'spots', this.examineEl);
     const bar = el('div', 'examine-bar', this.examineEl);
     const hint = el('span', '', bar, '살펴볼 곳을 고르세요');
-    const back = el('button', 'btn', bar, '돌아가기  Esc');
+    const back = el('button', 'btn', bar, '← 메뉴로  Esc');
     const buttons = spots.map((s) => {
       const b = el('button', 'spot', area);
       Object.assign(b.style, { left: `${s.x}px`, top: `${s.y}px`, width: `${s.w}px`, height: `${s.h}px` });
@@ -168,7 +168,7 @@ export class InvestigateUi {
       }
       return b;
     });
-    const back = el('button', 'btn inv-back', this.listEl, '돌아가기  Esc');
+    const back = el('button', 'btn inv-back', this.listEl, '← 메뉴로  Esc');
     let sel = 0;
     const paint = () => buttons.forEach((b, i) => b.classList.toggle('on', i === sel));
     paint();

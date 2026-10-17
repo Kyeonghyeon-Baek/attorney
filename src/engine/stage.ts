@@ -1,7 +1,8 @@
 import { bgImage, charImage } from './assets';
 import { el, replay } from './dom';
-import { icon } from './icons';
-import type { CharId, DaonMode, Evidence, Position } from './types';
+import { paintFace, paintItem } from './portrait';
+import type { HeldItem } from './record';
+import type { CharId, DaonMode, Position } from './types';
 import { CHARACTERS } from '../content/characters';
 
 const BG_FOR: Record<Position, string> = {
@@ -102,7 +103,7 @@ export class Stage {
     this.bg.classList.toggle('has-img', !!bgUrl);
     this.bg.dataset.label = bgUrl ? '' : bgId;
 
-    const onMonitor = pos === 'witness' && (who === 'daon' || who === 'haeun');
+    const onMonitor = pos === 'witness' && (who === 'daon' || who === 'operator');
     this.daon.hidden = !onMonitor;
     this.actor.replaceChildren();
     this.actor.dataset.emo = emo;
@@ -135,15 +136,17 @@ export class Stage {
     this.daonStatus.textContent = DAON_STATUS[mode];
   }
 
-  showEvidence(ev: Evidence | null): void {
-    if (!ev) {
+  /** Holds up a piece of evidence or a person's profile next to the speaker. */
+  showEvidence(item: HeldItem | null): void {
+    if (!item) {
       this.evCard.classList.remove('on');
       return;
     }
     this.evCard.replaceChildren();
     const tile = el('div', 'ev-card-icon', this.evCard);
-    tile.innerHTML = icon(ev.icon);
-    el('div', 'ev-card-name', this.evCard, ev.name);
+    if (item.evidence) paintItem(tile, item.evidence);
+    else if (item.profile) paintFace(el('span', 'ev-card-face', tile), item.profile);
+    el('div', 'ev-card-name', this.evCard, item.name);
     replay(this.evCard, 'on');
   }
 }

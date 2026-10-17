@@ -1,8 +1,9 @@
 import type { CaseData } from '../engine/game';
 import type { Evidence, Profile, Testimony } from '../engine/types';
+import { HAEUN_EVIDENCE, HAEUN_PROFILE, HAEUN_SCENES, HAEUN_TESTIMONIES } from './chapter-haeun';
 import { INVESTIGATION_END, INVESTIGATION_GOALS, LOCATIONS } from './investigation';
 import {
-  addEvidence, ask, bgm, bigshake, cross, daon, end, evidence, flash, gauge, goto, investigate,
+  addEvidence, ambience, ask, bgm, bigshake, cross, daon, evidence, flash, gauge, goto, investigate,
   option, place, present, reveal, say, sfx, shake, show, think, wait,
 } from './script';
 
@@ -88,7 +89,7 @@ const EVIDENCE: Evidence[] = [
 
 const PROFILES: Profile[] = [
   {
-    id: 'soonja', name: '박순자', meta: '52세 · 피고인', color: '#9A7B5A',
+    id: 'soonja', name: '박순자', meta: '52세 · 피고인', color: '#9A7B5A', sprite: 'soonja', face: [0.52, 0.2],
     summary: '누리랩 고객센터의 20년 차 팀장. 다온이 도입되며 10월 10일에 해고됐다. 사건 당일 23시 20분, 건물 로비로 들어오는 모습이 CCTV에 찍혔다. 딸과 단둘이 산다.',
   },
   {
@@ -96,23 +97,23 @@ const PROFILES: Profile[] = [
     summary: '누리랩 대표. 투자 시연회를 하루 앞둔 밤, 서버실에서 숨진 채 발견됐다.',
   },
   {
-    id: 'daon', name: '다온', meta: 'AI 상담원 · 증인', color: '#3FB8B0',
+    id: 'daon', name: '다온', meta: 'AI 상담원 · 증인', color: '#3FB8B0', orb: true,
     summary: '누리랩의 AI 상담원. 고객 상담과 건물 보안 기록을 맡는다. 대한민국 법정에 선 최초의 AI 증인.',
   },
   {
-    id: 'seo', name: '서지훈', meta: '38세 · 누리랩 기술이사', color: '#6B5B8C',
-    summary: '다온 개발 책임자. 사건 당일 밤에는 집에 있었다고 진술했다.',
+    id: 'seo', name: '서지훈', meta: '38세 · 누리랩 기술이사', color: '#6B5B8C', sprite: 'seo', face: [0.47, 0.17],
+    summary: '다온 개발 책임자. 다온을 "제 인생을 건 작품"이라고 부른다. 사건 당일 밤엔 집에 있었고, 야간 근무 같은 건 없다고 말했다.',
   },
   {
-    id: 'gu', name: '구만두', meta: '43세 · 형사', color: '#9C7A4E',
+    id: 'gu', name: '구만두', meta: '43세 · 형사', color: '#9C7A4E', sprite: 'gu', face: [0.5, 0.16],
     summary: '이번 사건 담당 형사. 사람은 좋은데 입이 가볍다. 상사에게 "그만둬!" 소리를 자주 듣는다.',
   },
   {
-    id: 'eom', name: '엄정한', meta: '32세 · 검사', color: '#4A4F5C',
+    id: 'eom', name: '엄정한', meta: '32세 · 검사', color: '#4A4F5C', sprite: 'eom', face: [0.51, 0.18],
     summary: 'AI 수사 시스템을 신뢰하는 엘리트 검사. 즉결공판제 도입 이후 패소한 적이 없다.',
   },
   {
-    id: 'narae', name: '신나래', meta: '19세 · 조수', color: '#B8473A',
+    id: 'narae', name: '신나래', meta: '19세 · 조수', color: '#B8473A', sprite: 'narae', face: [0.56, 0.17],
     summary: '무당 집안 막내딸. 단비의 사무소에서 일을 돕는다. 기계는 영 못 믿는다.',
   },
 ];
@@ -122,6 +123,7 @@ const PROFILES: Profile[] = [
 const NIGHT: Testimony = {
   id: 'night',
   title: '사건 당일 밤의 기록',
+  hearing: 'daon',
   statements: [
     {
       id: 'n1', who: 'daon',
@@ -160,6 +162,7 @@ const NIGHT: Testimony = {
             say('daon', '네. 서버실 앞에는 카메라가 없습니다. 제가 확인한 것은 사원증입니다.'),
             say('daon', '앞선 증언의 표현이 정확하지 않았습니다. 정정하겠습니다.'),
             reveal('n2b', 'n5b'),
+            sfx('realize'),
             think('(정정했다…! 다온이 아는 건 "박순자 씨"가 아니라, "박순자 씨의 사원증"이야.)'),
           ], true),
         ]),
@@ -262,6 +265,7 @@ const NIGHT: Testimony = {
 const SELF: Testimony = {
   id: 'self',
   title: '그 시각, 다온은',
+  hearing: 'daon',
   statements: [
     {
       id: 's1', who: 'daon',
@@ -315,6 +319,7 @@ const SELF: Testimony = {
           option('"실수하지 않는다"는 근거가 뭐죠?', [
             say('daon', '제 모든 응답은 출력되기 전에 맞춤법 검사 엔진을 통과합니다. 통과하지 못한 문장은 출력되지 않습니다.'),
             say('daon', '그래서 제 맞춤법 오류율은 0%입니다. {r}제품 소개서{/}에도 적혀 있습니다.'),
+            sfx('realize'),
             think('(출력 전에 반드시 검사를 거친다… 그렇다면 다온이 쓴 문장에는 틀린 글자가 있을 수 없다는 거네.)'),
           ], true),
         ]),
@@ -346,6 +351,7 @@ const SELF: Testimony = {
     say('dan', '"되었어요"를 줄이면 "됐어요". {r}"됬"{/}이라는 글자는 맞춤법에 없어요.'),
     say('judge', '흠… 하지만 변호인, 그건 그냥 오타 아닙니까? 저도 문자 보낼 때 자주 틀리는데요.'),
     say('eom', '그렇습니다. AI도 아주 가끔은 실수를 하겠죠. 사소한 오타 하나가 사건과 무슨 상관입니까?', 'smug'),
+    sfx('realize'),
     think('(그냥 오타라면 그렇겠지. 하지만 다온은 "그냥 오타"를 낼 수가 없어. 그걸 증명하려면…)'),
     goto('climax'),
   ],
@@ -359,10 +365,10 @@ export const CASE_DAON: CaseData = {
   caseName: '살인  피고인 박순자',
   episode: '제4화 「대체된 증인」 프로토타입',
   start: 'investigation',
-  evidence: EVIDENCE,
+  evidence: [...EVIDENCE, ...HAEUN_EVIDENCE],
   startEvidence: [],
-  profiles: PROFILES,
-  testimonies: { night: NIGHT, self: SELF },
+  profiles: [...PROFILES, HAEUN_PROFILE],
+  testimonies: { night: NIGHT, self: SELF, ...HAEUN_TESTIMONIES },
   locations: LOCATIONS,
   gaugeStart: 71.3,
   wrongPenalty: 8.6,
@@ -395,16 +401,25 @@ export const CASE_DAON: CaseData = {
     cross1: '반대신문: 사건 당일 밤의 기록',
     cross2: '반대신문: 그 시각, 다온은',
     climax: '마지막 증거 제시',
+    recess: '휴정: 피고인 대기실',
+    day2b: '심리 재개: 박하은의 증언',
+    cross3: '반대신문: 헤드셋 너머의 소리',
+    cross4: '반대신문: 화면에 뜬 말들',
+    accuse: '서지훈을 가리키다',
+    epilogue: '2일째 마무리: 피고인 대기실',
   },
+  endingTitle: '법정 2일째는 여기까지예요',
 
   scenes: {
+    ...HAEUN_SCENES,
+
     investigation: [
-      bgm('investigate'),
       investigate('lobby', INVESTIGATION_GOALS, INVESTIGATION_END),
     ],
 
     intro: [
       bgm('trial'),
+      ambience('court'),
       place('10월 17일 오전 10시', '서울 즉결법원', '제417호 법정'),
       sfx('gavel'),
       say('judge', '지금부터 박순자 피고인에 대한 즉결공판, 2일째 심리를 시작하겠습니다.'),
@@ -418,13 +433,14 @@ export const CASE_DAON: CaseData = {
       bgm(null),
       show('daon'),
       sfx('boot'),
+      bgm('daon'),
       wait(900),
       say('daon', '안녕하세요. 누리랩 AI 상담원, 다온입니다. 무엇을 도와드릴까요?'),
       shake,
+      sfx('murmur'),
       say('judge', '기, 기, 기계가 증언대에!?', 'surprised'),
       say('judge', '이, 이건… 선서는 어떻게 하는 겁니까? 손을 들 수가 없지 않습니까…'),
       say('daon', '걱정하지 마세요. 저는 거짓말을 하도록 설계되지 않았습니다. 선서는 필요하지 않습니다.'),
-      bgm('trial'),
       say('eom', '들으셨습니까, 재판장님. 사람 증인은 착각하고, 잊어버리고, 무엇보다 거짓말을 합니다.', 'smug'),
       say('eom', '하지만 다온은 다릅니다. 이 법정에서 가장 정확한 증인이죠.'),
       say('narae', '언니, 나 저거 싫어. 눈도 없으면서 대체 뭘 봤다는 거야?', 'angry'),
@@ -465,6 +481,7 @@ export const CASE_DAON: CaseData = {
         sfx('reveal'),
         bigshake,
         say('dan', '23시 52분, 다온의 화면 뒤에서 고객에게 답장을 쓴 건 {r}사람{/}입니다!', 'point'),
+        sfx('murmur'),
         gauge(-27.5),
         say('eom', '마, 말도 안 됩니다! 다온은 24시간 쉬지 않는 AI 상담원이라고…!', 'shock'),
         bgm('suspense'),
@@ -475,20 +492,22 @@ export const CASE_DAON: CaseData = {
         say('judge', '증인! 아니, 다온 씨! 괜찮습니까!?', 'surprised'),
         say('narae', '언니, 저 화면… 뭔가 이상해!', 'surprised'),
         daon('human'),
+        sfx('typing'),
         wait(1200),
-        say('haeun', '……죄송해요.'),
+        say('operator', '……죄송해요.'),
         say('dan', '!?', 'sweat'),
-        say('haeun', '그날 밤 23시 52분의 답장은… 제가 썼어요.'),
-        say('haeun', '다온은 밤에는 혼자 일하지 못해요. AI가 대답하지 못하는 상담은… 저희가 몰래, 다온인 척하고 받았어요.'),
+        say('operator', '그날 밤 23시 52분의 답장은… 제가 썼어요.'),
+        say('operator', '다온은 밤에는 혼자 일하지 못해요. AI가 대답하지 못하는 상담은… 저희가 몰래, 다온인 척하고 받았어요.'),
         say('eom', '저희…라고?', 'shock'),
-        say('haeun', '그리고 그날 밤, 저는 다온의 마이크로… 서버실에서 나는 소리를 전부 들었어요.'),
+        say('operator', '그리고 그날 밤, 저는 다온의 마이크로… 서버실에서 나는 소리를 전부 들었어요.'),
         say('soonja', '……그 목소리.', 'shock'),
         say('soonja', '하은이…? 너니?', 'sad'),
         flash,
         bigshake,
+        sfx('murmur'),
         say('judge', '피, 피고인의… 따님!?', 'surprised'),
         think('(박순자 씨의 딸이… 엄마를 밀어낸 AI의 "속"에서 일하고 있었다고…?)'),
-        end,
+        goto('recess'),
       ], [
         say('eom', '…그 증거로는 아무것도 증명할 수 없습니다.', 'smug'),
         say('judge', '변호인, 다시 생각해 보세요. 이것도 {r}AI 판결 예측{/}에 반영됩니다.', 'stern'),

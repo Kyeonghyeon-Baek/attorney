@@ -1,5 +1,5 @@
 import type { Location, Script } from '../engine/types';
-import { addEvidence, bgm, flag, goto, place, say, think, when } from './script';
+import { addEvidence, bgm, flag, goto, place, say, sfx, think, when } from './script';
 
 // 10월 16일, 재판 전날. 누리랩 본사 조사.
 //
@@ -14,6 +14,8 @@ export const LOCATIONS: Record<string, Location> = {
     id: 'lobby',
     name: '누리랩 로비',
     bg: 'lobby',
+    bgm: 'investigate',
+    ambience: 'lobby',
     person: 'seo',
     connects: ['callcenter', 'serverroom'],
     enter: [
@@ -95,6 +97,7 @@ export const LOCATIONS: Record<string, Location> = {
           say('dan', '고객센터에서 사건 당일 밤 날짜가 적힌 컵라면을 봤어요. 그날 밤, 고객센터에 누가 있었나요?'),
           say('seo', '야, 야간 근무요? 그런 건 없습니다.', 'sweat'),
           say('seo', '고객센터는 10일에 문을 닫았어요. 밤에는 다온 혼자 일합니다. 그게 다온이 존재하는 이유니까요.'),
+          sfx('realize'),
           think('(…대답이 너무 빨랐어. 꼭 미리 준비해 둔 것처럼.)'),
           flag('f_night'),
         ],
@@ -126,6 +129,8 @@ export const LOCATIONS: Record<string, Location> = {
     id: 'callcenter',
     name: '고객센터',
     bg: 'callcenter',
+    bgm: 'emptyroom',
+    ambience: 'clock',
     connects: ['lobby', 'serverroom'],
     enter: [
       say('narae', '…여기, 너무 조용하다.'),
@@ -152,6 +157,7 @@ export const LOCATIONS: Record<string, Location> = {
         id: 'ramen', label: '컵라면', x: 935, y: 438, w: 145, h: 112,
         script: [
           think('(먹다 남은 편의점 컵라면. 뚜껑에 매직으로 「10/14 23:10」이라고 적혀 있다.)'),
+          sfx('realize'),
           say('narae', '10월 14일 밤이면… 사건 당일이잖아?'),
           say('dan', '고객센터는 10일에 문을 닫았다고 했는데. 그날 밤, 누가 여기 있었던 거지?'),
           flag('f_ramen'),
@@ -170,6 +176,7 @@ export const LOCATIONS: Record<string, Location> = {
         id: 'locker', label: '인사팀 보관함', x: 1090, y: 0, w: 180, h: 380,
         script: [
           think('(인사팀 공용 보관함. 반납된 사원증이 번호별로 꽂혀 있다.)'),
+          sfx('realize'),
           say('dan', 'NR-0213… 박순자 씨 사원증 칸이 비어 있어!'),
           say('narae', '반납했다며? 그럼 누가 꺼내 간 거야?'),
           think('(칸 옆에 반납 확인서 사본이 꽂혀 있다. 챙겨 두자.)'),
@@ -185,6 +192,9 @@ export const LOCATIONS: Record<string, Location> = {
     id: 'serverroom',
     name: '서버실',
     bg: 'serverroom',
+    bgm: 'serverroom',
+    ambience: 'hum',
+    arrive: 'door',
     person: 'gu',
     connects: ['lobby', 'callcenter'],
     enter: [

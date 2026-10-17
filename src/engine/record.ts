@@ -1,11 +1,18 @@
 import { sfx } from './audio';
 import { el } from './dom';
-import { icon } from './icons';
 import { push } from './input';
+import { paintFace, paintItem } from './portrait';
 import type { Evidence, Profile } from './types';
 
 type Tab = 'evidence' | 'profiles';
 const COLS = 3;
+
+/** Something held up in court: a piece of evidence or a person's profile. */
+export interface HeldItem {
+  name: string;
+  evidence?: Evidence;
+  profile?: Profile;
+}
 
 /** The court record, drawn as a bound Korean case file. */
 export class CourtRecord {
@@ -58,6 +65,18 @@ export class CourtRecord {
     return this.evidence.find((e) => e.id === id);
   }
 
+  getProfile(id: string): Profile | undefined {
+    return this.profiles.find((p) => p.id === id);
+  }
+
+  item(id: string | null): HeldItem | null {
+    if (!id) return null;
+    const ev = this.get(id);
+    if (ev) return { name: ev.name, evidence: ev };
+    const p = this.getProfile(id);
+    return p ? { name: p.name, profile: p } : null;
+  }
+
   has(id: string): boolean {
     return this.owned.has(id);
   }
@@ -68,11 +87,21 @@ export class CourtRecord {
 
   ownAll(): void {
     this.evidence.forEach((e) => this.owned.add(e.id));
+    this.profiles.forEach((p) => this.owned.add(p.id));
+  }
+
+  /** Ids held, evidence and profiles alike, for saving. */
+  get ownedIds(): string[] {
+    return [...this.evidence, ...this.profiles].map((x) => x.id).filter((id) => this.owned.has(id));
   }
 
   /** Evidence the player holds, in case-file order. */
   private get held(): Evidence[] {
     return this.evidence.filter((e) => this.owned.has(e.id));
+  }
+
+  private get people(): Profile[] {
+    return this.profiles.filter((p) => this.owned.has(p.id));
   }
 
   open(mode: 'view' | 'present', prompt = '', cancellable = true): Promise<string | null> {
@@ -84,7 +113,7 @@ export class CourtRecord {
     this.closeBtn.hidden = !cancellable;
     this.tab = 'evidence';
     this.render();
-    sfx('open');
+    sfx('paper');
     return new Promise((resolve) => {
       const pop = push((a) => {
         if (a === 'back' && cancellable) this.close(null);
@@ -111,9 +140,9 @@ export class CourtRecord {
   }
 
   private presentSelected(): void {
-    if (this.mode !== 'present' || this.tab !== 'evidence') return;
-    const ev = this.held[this.sel];
-    if (ev) this.finish?.(ev.id);
+    if (this.mode !== 'present') return;
+    const picked = this.tab === 'evidence' ? this.held[this.sel] : this.people[this.sel];
+    if (picked) this.finish?.(picked.id);
   }
 
   private setTab(t: Tab): void {
@@ -125,7 +154,7 @@ export class CourtRecord {
   }
 
   private move(d: number): void {
-    const n = this.tab === 'evidence' ? this.held.length : this.profiles.length;
+    const n = this.tab === 'evidence' ? this.held.length : this.people.length;
     const next = this.sel + d;
     if (next < 0 || next >= n) return;
     this.sel = next;
@@ -138,18 +167,16 @@ export class CourtRecord {
       this.tabBtns[t].classList.toggle('on', t === this.tab);
     }
     this.presentBtn.hidden = this.mode !== 'present';
-    const items = this.tab === 'evidence' ? this.held : this.profiles;
+    const items = this.tab === 'evidence' ? this.held : this.people;
     if (this.sel >= items.length) this.sel = Math.max(0, items.length - 1);
-    this.presentBtn.disabled = this.tab !== 'evidence' || items.length === 0;
+    this.presentBtn.disabled = items.length === 0;
+    this.presentBtn.textContent = this.tab === 'evidence' ? '이 증거를 제시한다  Enter' : '이 인물을 제시한다  Enter';
     this.grid.replaceChildren();
     items.forEach((item, i) => {
       const tile = el('button', 'tile', this.grid);
       tile.classList.toggle('on', i === this.sel);
-      if ('icon' in item) tile.innerHTML = icon(item.icon);
-      else {
-        const face = el('span', 'face', tile, item.name[0]);
-        face.style.setProperty('--face', item.color);
-      }
+      if ('icon' in item) paintItem(el('span', 'tile-pic', tile), item);
+      else paintFace(el('span', 'face', tile), item);
       el('span', 'tile-name', tile, item.name);
       tile.addEventListener('click', () => {
         if (this.sel === i && this.mode === 'present') {
@@ -173,8 +200,7 @@ export class CourtRecord {
         return;
       }
       const top = el('div', 'sheet-top', this.sheet);
-      const ic = el('div', 'sheet-icon', top);
-      ic.innerHTML = icon(ev.icon);
+      paintItem(el('div', 'sheet-icon', top), ev);
       const titles = el('div', '', top);
       el('div', 'sheet-label', titles, ev.label);
       el('h2', 'sheet-title', titles, ev.name);
@@ -184,11 +210,10 @@ export class CourtRecord {
         el('div', line.startsWith('※') ? 'note' : 'row', detail, line);
       }
     } else {
-      const p = this.profiles[this.sel];
+      const p = this.people[this.sel];
       if (!p) return;
       const top = el('div', 'sheet-top', this.sheet);
-      const face = el('div', 'sheet-face', top, p.name[0]);
-      face.style.setProperty('--face', p.color);
+      paintFace(el('div', 'sheet-face', top), p);
       const titles = el('div', '', top);
       el('div', 'sheet-label', titles, p.meta);
       el('h2', 'sheet-title', titles, p.name);

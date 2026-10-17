@@ -1,4 +1,4 @@
-import type { AskOption, BgmName, CharId, Cmd, DaonMode, Script, SfxName, ShoutKind } from '../engine/types';
+import type { AmbienceName, AskOption, BgmName, CharId, Cmd, DaonMode, Script, SfxName, ShoutKind } from '../engine/types';
 
 // Small helpers so case scripts read like a screenplay.
 
@@ -11,9 +11,12 @@ export const bigshake: Cmd = { t: 'fx', kind: 'bigshake' };
 export const flash: Cmd = { t: 'fx', kind: 'flash' };
 export const sfx = (name: SfxName): Cmd => ({ t: 'sfx', name });
 export const bgm = (name: BgmName | null): Cmd => ({ t: 'bgm', name });
+export const ambience = (name: AmbienceName | null): Cmd => ({ t: 'ambience', name });
 export const wait = (ms: number): Cmd => ({ t: 'wait', ms });
 export const place = (...lines: string[]): Cmd => ({ t: 'place', lines });
 export const gauge = (delta: number): Cmd => ({ t: 'gauge', delta });
+/** The AI re-runs its prediction: the bar moves to an exact value. */
+export const gaugeSet = (value: number): Cmd => ({ t: 'gaugeSet', value });
 export const evidence = (id: string | null): Cmd => ({ t: 'evidence', id });
 export const cross = (id: string): Cmd => ({ t: 'cross', id });
 export const reveal = (...statements: string[]): Cmd => ({ t: 'reveal', statements });
@@ -34,3 +37,6 @@ export const flag = (name: string): Cmd => ({ t: 'flag', name });
 export const when = (has: string, then: Script, otherwise?: Script): Cmd => ({ t: 'if', has, then, else: otherwise });
 /** Free investigation that ends once every id in `until` is held, then plays `then`. */
 export const investigate = (start: string, until: string[], then: Script): Cmd => ({ t: 'investigate', start, until, then });
+export const addProfile = (id: string): Cmd => ({ t: 'addProfile', id });
+/** Leaves the courtroom for a location shown first-person (no menu), or returns with null. */
+export const field = (bg: string | null): Cmd => ({ t: 'field', bg });

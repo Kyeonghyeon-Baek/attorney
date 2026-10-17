@@ -1,6 +1,6 @@
 import { AskPanel } from './ask';
-import { bgImage } from './assets';
-import { initAudio, isMuted, playBgm, setMuted, sfx } from './audio';
+import { allImageUrls, bgImage } from './assets';
+import { initAudio, isMuted, playAmbience, playBgm, setMuted, sfx } from './audio';
 import { el, josa, replay, sleep } from './dom';
 import { Effects } from './effects';
 import { Gauge } from './gauge';
@@ -33,6 +33,8 @@ export interface CaseData {
   scenes: Record<string, Script>;
   /** How each scene is named on the 이어하기 button. */
   sceneLabels: Record<string, string>;
+  /** Headline on the card shown when the playable part ends. */
+  endingTitle: string;
   gaugeStart: number;
   wrongPenalty: number;
   /** Fallback reactions, used when a testimony or statement has none of its own. */
@@ -96,6 +98,9 @@ export class Game {
     this.box.root.addEventListener('click', () => emit('advance'));
     bindKeyboard(() => this.toggleMute());
 
+    // Warm the cache while the title screen is up, so sprites and photos appear instantly.
+    for (const url of allImageUrls()) new Image().src = url;
+
     const fit = () => {
       const s = Math.min(innerWidth / 1280, innerHeight / 720);
       this.stage.style.setProperty('--scale', String(s));
@@ -146,6 +151,7 @@ export class Game {
       scene = jump ?? this.data.start;
       if (scene === this.data.start) this.data.startEvidence.forEach((id) => this.record.add(id));
       else this.record.ownAll();
+      this.data.profiles.filter((p) => !p.later).forEach((p) => this.record.add(p.id));
       this.startedAt = performance.now();
     }
     this.saving = !jump;
@@ -164,6 +170,7 @@ export class Game {
   private restore(save: SaveData): void {
     save.flags.forEach((f) => this.flags.add(f));
     save.evidence.forEach((id) => this.record.add(id));
+    this.data.profiles.filter((p) => !p.later).forEach((p) => this.record.add(p.id));
     this.revealed = new Set(save.revealed);
     this.gauge.set(save.gauge);
     this.wrongs = save.wrongs;
@@ -181,7 +188,7 @@ export class Game {
       scene: this.sceneName,
       ...at,
       flags: [...this.flags],
-      evidence: this.data.evidence.filter((e) => this.record.has(e.id)).map((e) => e.id),
+      evidence: this.record.ownedIds,
       revealed: [...this.revealed],
       gauge: this.gauge.value,
       wrongs: this.wrongs,
@@ -204,9 +211,12 @@ export class Game {
       case 'say': {
         const ch = CHARACTERS[cmd.who];
         this.scene.show(cmd.who, cmd.emo);
+        // Stings for the big reactions, a desk slam when 강단비 points.
+        if (cmd.emo === 'shock' || cmd.emo === 'panic') sfx('shock');
+        else if (cmd.who === 'dan' && cmd.emo === 'point') sfx('slam');
         await this.line({
           name: cmd.name ?? ch.name, who: cmd.who, text: cmd.text,
-          style: cmd.who === 'haeun' ? 'human' : 'normal', voice: ch.voice,
+          style: cmd.who === 'operator' ? 'human' : 'normal', voice: ch.voice,
         });
         await this.waitAdvance();
         return;
@@ -231,8 +241,10 @@ export class Game {
         sfx(cmd.name);
         return;
       case 'bgm':
-        this.bgm = cmd.name;
-        playBgm(cmd.name);
+        this.music(cmd.name);
+        return;
+      case 'ambience':
+        playAmbience(cmd.name);
         return;
       case 'wait':
         await sleep(this.fast ? 0 : cmd.ms);
@@ -244,8 +256,11 @@ export class Game {
       case 'gauge':
         await this.gauge.add(cmd.delta);
         return;
+      case 'gaugeSet':
+        await this.gauge.add(cmd.value - this.gauge.value);
+        return;
       case 'evidence':
-        this.scene.showEvidence(cmd.id ? this.record.get(cmd.id) ?? null : null);
+        this.scene.showEvidence(this.record.item(cmd.id));
         return;
       case 'cross':
         return this.runCross(this.data.testimonies[cmd.id]);
@@ -261,6 +276,15 @@ export class Game {
         return;
       case 'addEvidence':
         return this.addEvidence(cmd.id);
+      case 'addProfile':
+        return this.addProfile(cmd.id);
+      case 'field':
+        this.box.hide();
+        this.scene.setField(cmd.bg);
+        this.scene.clear();
+        if (cmd.bg) this.scene.showPlace();
+        this.stage.classList.toggle('offstage', !!cmd.bg);
+        return;
       case 'flag':
         this.flags.add(cmd.name);
         return;
@@ -278,6 +302,11 @@ export class Game {
     }
   }
 
+  private music(name: BgmName | null): void {
+    this.bgm = name;
+    playBgm(name);
+  }
+
   private has(id: string): boolean {
     return this.flags.has(id) || this.record.has(id);
   }
@@ -286,15 +315,26 @@ export class Game {
     const ev = this.record.get(id);
     if (!ev || this.record.has(id)) return;
     this.record.add(id);
-    this.scene.showEvidence(ev);
+    this.scene.showEvidence(this.record.item(id));
     sfx('evidence');
     await this.line({ name: null, text: `「${ev.name}」${josa(ev.name, '을', '를')} 법원기록에 넣었다.`, style: 'notice', voice: null });
     await this.waitAdvance();
     this.scene.showEvidence(null);
   }
 
+  private async addProfile(id: string): Promise<void> {
+    const p = this.record.getProfile(id);
+    if (!p || this.record.has(id)) return;
+    this.record.add(id);
+    this.scene.showEvidence(this.record.item(id));
+    sfx('evidence');
+    await this.line({ name: null, text: `「${p.name}」의 프로필을 법원기록에 넣었다.`, style: 'notice', voice: null });
+    await this.waitAdvance();
+    this.scene.showEvidence(null);
+  }
+
   private async line(o: LineOptions): Promise<void> {
-    const onMonitor = o.who === 'daon' || o.who === 'haeun';
+    const onMonitor = o.who === 'daon' || o.who === 'operator';
     this.scene.setTalking(true);
     await this.box.say({ ...o, onBlip: onMonitor ? () => this.scene.pulseDaon() : undefined });
     this.scene.setTalking(false);
@@ -335,8 +375,10 @@ export class Game {
     // Resuming from a save skips the first hearing of the testimony.
     const resume = this.resumeCross?.id === tm.id ? this.resumeCross : null;
     this.resumeCross = null;
+    const crossTrack = this.bgm ?? 'cross';
     this.box.hide();
     if (!resume) {
+      this.music(tm.hearing ?? 'testimony');
       await this.fx.banner('증언 개시', tm.title);
       const first = this.visible(tm);
       for (let k = 0; k < first.length; k++) {
@@ -348,6 +390,7 @@ export class Game {
       if (tm.beforeCross && (await this.run(tm.beforeCross)) === STOP) return STOP;
       this.box.hide();
     }
+    this.music(crossTrack);
     await this.fx.banner(resume ? '반대신문 재개' : '반대신문 개시', tm.title);
 
     const gaugeAtStart = resume?.gaugeStart ?? this.gauge.value;
@@ -403,7 +446,7 @@ export class Game {
         continue;
       }
       await this.exec({ t: 'shout', who: 'dan', kind: 'objection' });
-      this.scene.showEvidence(this.record.get(id) ?? null);
+      this.scene.showEvidence(this.record.item(id));
       if (st.accept?.includes(id)) return this.run(tm.contradiction);
       const hint = st.nearMiss?.[id];
       if (hint) {
@@ -430,7 +473,7 @@ export class Game {
       this.box.hide();
       const id = await this.record.open('present', cmd.prompt, false);
       await this.exec({ t: 'shout', who: 'dan', kind: 'takethat' });
-      this.scene.showEvidence(this.record.get(id ?? '') ?? null);
+      this.scene.showEvidence(this.record.item(id));
       if (id === cmd.answer) return this.run(cmd.then);
       const r = await this.run(cmd.wrong ?? this.data.presentWrong);
       this.scene.showEvidence(null);
@@ -462,17 +505,20 @@ export class Game {
     let here = this.resumeLoc ?? cmd.start;
     this.resumeLoc = null;
     this.stage.classList.add('investigating');
+    const goalsMet = () => cmd.until.every((id) => this.has(id));
     try {
       for (;;) {
         const loc = this.data.locations[here];
         this.scene.setField(loc.bg);
         this.inv.setLocation(loc.name);
+        if (loc.bgm) this.music(loc.bgm);
+        playAmbience(loc.ambience ?? null);
         if (!this.flags.has(`visited:${here}`)) {
           this.flags.add(`visited:${here}`);
           this.scene.showPlace(loc.person);
           if (loc.enter && (await this.run(loc.enter)) === STOP) return STOP;
         }
-        if (cmd.until.every((id) => this.has(id))) {
+        if (goalsMet()) {
           this.box.hide();
           this.scene.showPlace(loc.person);
           return await this.run(cmd.then);
@@ -486,37 +532,51 @@ export class Game {
         if (action === 'record') {
           await this.record.open('view');
         } else if (action === 'examine') {
-          const spot = await this.inv.examine(loc.hotspots, (s) => this.flags.has(`seen:${here}:${s.id}`));
-          if (spot) {
+          // Stay in examine mode until the player backs out (or the day's goals are met).
+          for (;;) {
+            const spot = await this.inv.examine(loc.hotspots, (s) => this.flags.has(`seen:${here}:${s.id}`));
+            if (!spot) break;
             const key = `seen:${here}:${spot.id}`;
             const again = this.flags.has(key) && spot.again;
             this.flags.add(key);
             r = await this.run(again ? spot.again! : spot.script);
+            if (r === STOP || goalsMet()) break;
+            this.box.hide();
+            this.scene.showPlace(loc.person);
+            this.autosave(`조사: ${loc.name}`, { loc: here });
           }
         } else if (action === 'move') {
           const dest = await this.inv.list('어디로 갈까?', loc.connects.map((id) => ({
             id, label: this.data.locations[id].name, thumb: bgImage(this.data.locations[id].bg),
           })));
           if (dest) {
-            sfx('whoosh');
+            sfx('step');
+            const arrive = this.data.locations[dest].arrive;
+            if (arrive) setTimeout(() => sfx(arrive), 700);
             here = dest;
           }
         } else if (action === 'talk' && loc.talks) {
-          const topics = loc.talks.filter((t) => !t.requires || this.has(t.requires));
-          const pick = await this.inv.list(`${CHARACTERS[loc.person!].name}에게 무엇을 물어볼까?`, topics.map((t) => ({
-            id: t.id, label: t.label, done: this.flags.has(`talked:${here}:${t.id}`),
-          })));
-          const topic = topics.find((t) => t.id === pick);
-          if (topic) {
+          // Same for talking: the topic list comes back after each conversation.
+          for (;;) {
+            const topics = loc.talks.filter((t) => !t.requires || this.has(t.requires));
+            const pick = await this.inv.list(`${CHARACTERS[loc.person!].name}에게 무엇을 물어볼까?`, topics.map((t) => ({
+              id: t.id, label: t.label, done: this.flags.has(`talked:${here}:${t.id}`),
+            })));
+            const topic = topics.find((t) => t.id === pick);
+            if (!topic) break;
             this.flags.add(`talked:${here}:${topic.id}`);
             r = await this.run(topic.script);
+            if (r === STOP || goalsMet()) break;
+            this.box.hide();
+            this.scene.showPlace(loc.person);
+            this.autosave(`조사: ${loc.name}`, { loc: here });
           }
         } else if (action === 'present' && loc.person) {
           const id = await this.record.open('present', `${CHARACTERS[loc.person].name}에게 무엇을 보여줄까?`);
           if (id) {
             await this.exec({ t: 'shout', who: 'dan', kind: 'takethat' });
             this.scene.showPlace(loc.person);
-            this.scene.showEvidence(this.record.get(id) ?? null);
+            this.scene.showEvidence(this.record.item(id));
             r = await this.run(loc.presents?.[id] ?? loc.presentDefault ?? this.data.fieldPresentDefault);
             this.scene.showEvidence(null);
           }
@@ -524,6 +584,7 @@ export class Game {
         if (r === STOP) return STOP;
       }
     } finally {
+      playAmbience(null);
       this.inv.hide();
       this.box.hide();
       this.scene.setField(null);
@@ -553,11 +614,12 @@ export class Game {
 
   private async ending(): Promise<void> {
     this.box.hide();
+    playAmbience(null);
     if (this.saving) clearSave(this.data.id);
     const secs = Math.round((performance.now() - this.startedAt) / 1000);
     await this.fx.card((body) => {
       el('p', 'card-kicker', body, this.data.episode);
-      el('h2', 'card-title', body, '법정 프로토타입은 여기까지예요');
+      el('h2', 'card-title', body, this.data.endingTitle);
       const stats = el('dl', 'stats', body);
       for (const [k, v] of [
         ['플레이 시간', `${Math.floor(secs / 60)}분 ${secs % 60}초`],

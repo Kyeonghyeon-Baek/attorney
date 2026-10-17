@@ -1,13 +1,18 @@
-export type CharId = 'dan' | 'narae' | 'eom' | 'judge' | 'daon' | 'soonja' | 'haeun' | 'seo' | 'gu';
+/** `operator` is the hidden human answering through Daon's monitor; `haeun` is her in person. */
+export type CharId = 'dan' | 'narae' | 'eom' | 'judge' | 'daon' | 'operator' | 'soonja' | 'haeun' | 'seo' | 'gu';
 export type Position = 'defense' | 'prosecution' | 'witness' | 'judge' | 'counsel' | 'defendant' | 'field';
 export type ShoutKind = 'objection' | 'holdit' | 'takethat';
 export type Voice = 'high' | 'mid' | 'low' | 'deep' | 'ai' | 'soft' | 'warm' | 'gruff';
 export type SfxName =
   | 'gavel' | 'gavel3' | 'shout' | 'damage' | 'heal' | 'reveal' | 'glitch'
-  | 'boot' | 'whoosh' | 'select' | 'open' | 'close' | 'evidence';
-export type BgmName = 'trial' | 'cross' | 'pursuit' | 'suspense' | 'investigate';
+  | 'boot' | 'whoosh' | 'select' | 'open' | 'close' | 'evidence'
+  | 'paper' | 'slam' | 'realize' | 'shock' | 'murmur' | 'step' | 'door' | 'typing' | 'heartbeat';
+export type BgmName =
+  | 'trial' | 'testimony' | 'cross' | 'pursuit' | 'suspense' | 'daon'
+  | 'investigate' | 'emptyroom' | 'serverroom' | 'sorrow';
+export type AmbienceName = 'court' | 'lobby' | 'clock' | 'hum' | 'lounge';
 export type DaonMode = 'normal' | 'glitch' | 'human';
-export type IconName = 'door' | 'autopsy' | 'card' | 'brochure' | 'log';
+export type IconName = 'door' | 'autopsy' | 'card' | 'brochure' | 'log' | 'contract' | 'mic';
 
 export interface Character {
   id: CharId;
@@ -32,6 +37,14 @@ export interface Profile {
   meta: string;
   color: string;
   summary: string;
+  /** Joins the court record only when a script adds it. */
+  later?: boolean;
+  /** Character whose sprite supplies the photo, cropped around `face`. */
+  sprite?: CharId;
+  /** Face centre in the sprite as fractions of its width and height. */
+  face?: [number, number];
+  /** Drawn as Daon's glowing orb instead of a photo. */
+  orb?: boolean;
 }
 
 export interface AskOption {
@@ -48,9 +61,11 @@ export type Cmd =
   | { t: 'fx'; kind: 'shake' | 'bigshake' | 'flash' }
   | { t: 'sfx'; name: SfxName }
   | { t: 'bgm'; name: BgmName | null }
+  | { t: 'ambience'; name: AmbienceName | null }
   | { t: 'wait'; ms: number }
   | { t: 'place'; lines: string[] }
   | { t: 'gauge'; delta: number }
+  | { t: 'gaugeSet'; value: number }
   | { t: 'evidence'; id: string | null }
   | { t: 'cross'; id: string }
   | { t: 'present'; prompt: string; answer: string; then: Script; wrong?: Script }
@@ -58,6 +73,8 @@ export type Cmd =
   | { t: 'reveal'; statements: string[] }
   | { t: 'daon'; mode: DaonMode }
   | { t: 'addEvidence'; id: string }
+  | { t: 'addProfile'; id: string }
+  | { t: 'field'; bg: string | null }
   | { t: 'flag'; name: string }
   | { t: 'if'; has: string; then: Script; else?: Script }
   | { t: 'investigate'; start: string; until: string[]; then: Script }
@@ -88,6 +105,8 @@ export interface Testimony {
   statements: Statement[];
   /** Plays after the testimony is heard once, before cross-examination starts. */
   beforeCross?: Script;
+  /** Music while the testimony is heard the first time (default: 'testimony'). */
+  hearing?: BgmName;
   /** Plays when accepted evidence is presented. */
   contradiction: Script;
   wrong?: Script;
@@ -122,6 +141,10 @@ export interface Location {
   name: string;
   /** Background id under src/assets/bg. */
   bg: string;
+  bgm?: BgmName;
+  ambience?: AmbienceName;
+  /** Played on arrival, after the footsteps (e.g. a door). */
+  arrive?: SfxName;
   person?: CharId;
   connects: string[];
   /** Plays the first time the player arrives. */

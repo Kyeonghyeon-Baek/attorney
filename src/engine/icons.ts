@@ -22,6 +22,14 @@ const PATHS: Record<IconName, string> = {
     <path d="M8 14l16-4 16 4 16-4v40l-16 4-16-4-16 4z"/>
     <path d="M24 10v40M40 14v40"/>
     <path d="M30 26l2-5 2 5 5 2-5 2-2 5-2-5-5-2z" fill="currentColor"/>`,
+  contract: `
+    <path d="M14 8h36v48H14z"/>
+    <path d="M20 18h24M20 25h24M20 32h16"/>
+    <path d="M20 46c3-5 6 3 9-2s5 2 8-1"/>
+    <circle cx="44" cy="45" r="5" fill="currentColor"/>`,
+  mic: `
+    <rect x="24" y="8" width="16" height="28" rx="8"/>
+    <path d="M16 30c0 9 7 16 16 16s16-7 16-16M32 46v10M22 56h20"/>`,
   log: `
     <path d="M14 8h28l8 8v40H14z"/>
     <path d="M42 8v8h8"/>
