@@ -69,6 +69,7 @@ src/
     portrait.ts           인물 사진(캐릭터 그림에서 얼굴 자르기)과 증거 그림
   assets/               ← 그림. 넣기만 하면 자동으로 인식돼요
 docs/art-guide.md       ← 그림 규칙과 Codex 프롬프트
+docs/series-bible.md    ← 시리즈 설계: 세계관, 인물, 1~4화 줄기
 ```
 
 ## 대본 쓰는 법
