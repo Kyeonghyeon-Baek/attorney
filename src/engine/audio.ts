@@ -1,4 +1,5 @@
 import { TRACKS, type Inst, type Part } from './music';
+import { onSettings, settings } from './settings';
 import type { AmbienceName, BgmName, SfxName, Voice } from './types';
 
 // Everything is synthesized with WebAudio, so the game ships no sound files.
@@ -15,6 +16,10 @@ let noiseBuf: AudioBuffer;
 let muted = false;
 
 const MASTER_VOL = 0.85;
+// Bus levels at full volume; the settings sliders scale them.
+const MUSIC_VOL = 0.38;
+const SFX_VOL = 0.9;
+const AMB_VOL = 0.5;
 
 export function initAudio(): void {
   if (ctx) {
@@ -33,9 +38,11 @@ export function initAudio(): void {
   master.gain.value = muted ? 0 : MASTER_VOL;
   master.connect(limiter);
 
-  musicBus = bus(0.38);
-  sfxBus = bus(0.9);
-  ambBus = bus(0.5);
+  musicBus = bus(0);
+  sfxBus = bus(0);
+  ambBus = bus(0);
+  applyVolumes();
+  onSettings(applyVolumes);
 
   reverb = ctx.createConvolver();
   reverb.buffer = impulse(2.6, 2.2);
@@ -47,6 +54,20 @@ export function initAudio(): void {
   const data = noiseBuf.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   setInterval(tick, 50);
+}
+
+/**
+ * Volume sliders are 0..10 with 8 as the mixed level, leaving a little boost above it.
+ * A squared curve sounds more even than a straight one.
+ */
+function applyVolumes(): void {
+  if (!ctx) return;
+  const { music, sfx: fx } = settings();
+  const curve = (n: number) => (n / 8) ** 2;
+  const t = ctx.currentTime;
+  musicBus.gain.setTargetAtTime(MUSIC_VOL * curve(music), t, 0.03);
+  sfxBus.gain.setTargetAtTime(SFX_VOL * curve(fx), t, 0.03);
+  ambBus.gain.setTargetAtTime(AMB_VOL * curve(fx), t, 0.03);
 }
 
 function bus(vol: number): GainNode {
@@ -326,19 +347,26 @@ const VOICES: Record<Voice, { f: number; type: OscillatorType; dur: number; vol:
   soft: { f: 520, type: 'triangle', dur: 0.05, vol: 0.36 },
   warm: { f: 430, type: 'triangle', dur: 0.05, vol: 0.38 },
   gruff: { f: 280, type: 'square', dur: 0.045, vol: 0.17 },
+  young: { f: 470, type: 'triangle', dur: 0.045, vol: 0.36 },
+  // A little upward slide on every syllable: the salesman's voice.
+  slick: { f: 400, type: 'square', dur: 0.032, vol: 0.15, glide: 450 },
+  granny: { f: 650, type: 'triangle', dur: 0.06, vol: 0.32 },
+  // Gadgets slide down, where 다온's voice slides up.
+  device: { f: 1500, type: 'sine', dur: 0.03, vol: 0.2, glide: 1150 },
 };
 
 export function blip(voice: Voice): void {
   if (!ctx) return;
   const v = VOICES[voice];
   // Human voices wobble a little. The AI voice is perfectly identical every time.
-  const jitter = voice === 'ai' ? 1 : 1 + (Math.random() - 0.5) * 0.08;
+  const machine = voice === 'ai' || voice === 'device';
+  const jitter = machine ? 1 : 1 + (Math.random() - 0.5) * (voice === 'granny' ? 0.14 : 0.08);
   const t = ctx.currentTime;
   const o = osc(v.type, v.f * jitter, t, t + v.dur + 0.02);
   if (v.glide) o.frequency.exponentialRampToValueAtTime(v.glide, t + v.dur);
   const g = perc(t, v.vol, v.dur);
   o.connect(g);
-  out(g, sfxBus, voice === 'ai' ? 0.25 : 0);
+  out(g, sfxBus, machine ? 0.25 : 0);
 }
 
 // ---------------------------------------------------------------- sound effects
@@ -521,6 +549,60 @@ export function sfx(name: SfxName): void {
       tone(60, t, 0.18, 'sine', 0.6, 0.2, 40);
       tone(55, t + 0.24, 0.2, 'sine', 0.45, 0.2, 38);
       break;
+    case 'chime':
+      // The convenience-store door: ding, dong.
+      INSTRUMENTS.bell(freqOf('E6'), t, 0.5, 0.1, sfxBus, 0.35);
+      INSTRUMENTS.bell(freqOf('C6'), t + 0.34, 0.5, 0.1, sfxBus, 0.35);
+      break;
+    case 'watch': {
+      // Smartwatch alert: three bright blips over a short buzz on the wrist.
+      ['A6', 'C#7', 'E7'].forEach((n, i) => tone(freqOf(n), t + i * 0.075, 0.07, 'sine', 0.16, 0.15));
+      const buzz = osc('square', 150, t, t + 0.32);
+      const am = osc('square', 28, t, t + 0.32);
+      const amGain = ctx.createGain();
+      amGain.gain.value = 0.012;
+      const g = sus(t, 0.012, 0.01, 0.26, 0.05);
+      am.connect(amGain).connect(g.gain);
+      buzz.connect(filter('lowpass', 500, 1)).connect(g);
+      out(g, sfxBus);
+      break;
+    }
+    case 'shutter': {
+      // A rolling shutter: a long metal rattle over a low rumble, ending in a clank.
+      for (let i = 0; i < 26; i++) {
+        hiss(t + i * 0.045, 0.04, 0.16 * (1 - i / 34), 'bandpass', 1300 + Math.random() * 1100, 2.5, 0.2);
+      }
+      tone(72, t, 1.2, 'sine', 0.3, 0.2, 60);
+      knock(t + 1.2);
+      break;
+    }
+    case 'detect':
+      // The camera AI flags something: two sharp beeps and a low buzz.
+      [0, 0.16].forEach((d) => {
+        tone(1320, t + d, 0.08, 'square', 0.13);
+        tone(990, t + d + 0.08, 0.08, 'square', 0.13);
+      });
+      tone(110, t, 0.4, 'sawtooth', 0.09, 0, 100);
+      break;
+    case 'tape': {
+      // A recorder's play button: click, motor whir, then hiss.
+      hiss(t, 0.02, 0.5, 'highpass', 3000, 0.7);
+      const whir = osc('triangle', 180, t + 0.03, t + 0.6);
+      whir.frequency.exponentialRampToValueAtTime(240, t + 0.4);
+      const wg = sus(t + 0.03, 0.08, 0.08, 0.35, 0.15);
+      whir.connect(wg);
+      out(wg, sfxBus);
+      hiss(t + 0.1, 0.9, 0.08, 'highpass', 5000, 0.5);
+      break;
+    }
+    case 'thud':
+      // A body against a steel shelf: a dull blow, then the shelf rings.
+      tone(58, t, 0.45, 'sine', 0.85, 0.3, 32);
+      hiss(t, 0.22, 0.5, 'lowpass', 450, 0.8, 0.3);
+      tone(342, t + 0.01, 0.9, 'sine', 0.05, 0.5);
+      tone(517, t + 0.01, 0.7, 'sine', 0.035, 0.5);
+      tone(1210, t + 0.01, 0.4, 'sine', 0.02, 0.5);
+      break;
   }
 }
 
@@ -674,6 +756,33 @@ export function playAmbience(name: AmbienceName | null): void {
       bed('lowpass', 350, 0.04);
       hum(100, 0.01);
       a.every = { period: 1, next: t + 0.5, play: clock };
+      break;
+    case 'store':
+      // Refrigerated shelves and a fluorescent tube in an empty shop.
+      bed('lowpass', 240, 0.07);
+      bed('highpass', 7000, 0.005);
+      hum(50, 0.03);
+      hum(100, 0.012);
+      hum(120, 0.004);
+      break;
+    case 'alley': {
+      // Night wind, and a car passing on the main road now and then.
+      bed('lowpass', 520, 0.05);
+      bed('bandpass', 260, 0.025, 0.6);
+      const car = (t0: number, dest: AudioNode) => {
+        const g = ctx!.createGain();
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.09, t0 + 1.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 3.4);
+        noiseSrc(t0, t0 + 3.5).connect(filter('lowpass', 420, 0.7)).connect(g).connect(dest);
+      };
+      a.every = { period: 11, next: t + 3, play: car };
+      break;
+    }
+    case 'tape':
+      // Recorder hiss with a little low rumble from the handling.
+      bed('highpass', 4200, 0.03);
+      bed('lowpass', 160, 0.04);
       break;
   }
   amb = a;

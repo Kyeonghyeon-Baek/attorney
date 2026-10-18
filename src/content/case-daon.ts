@@ -1,3 +1,4 @@
+import { bgImage } from '../engine/assets';
 import type { CaseData } from '../engine/game';
 import type { Evidence, Profile, Testimony } from '../engine/types';
 import { DAY3_EVIDENCE, DAY3_SCENES, DAY3_TESTIMONIES } from './chapter-day3';
@@ -111,7 +112,7 @@ const PROFILES: Profile[] = [
   },
   {
     id: 'eom', name: '엄정한', meta: '32세 · 검사', color: '#4A4F5C', sprite: 'eom', face: [0.51, 0.18],
-    summary: 'AI 수사 시스템을 신뢰하는 엘리트 검사. 즉결공판제 도입 이후 패소한 적이 없다.',
+    summary: '판관의 숫자를 신뢰하는 엘리트 검사. 즉결공판제 도입 뒤 진 재판은 단 세 번, 세 번 모두 상대가 강단비였다.',
   },
   {
     id: 'narae', name: '신나래', meta: '19세 · 조수', color: '#B8473A', sprite: 'narae', face: [0.56, 0.17],
@@ -362,9 +363,16 @@ const SELF: Testimony = {
 
 export const CASE_DAON: CaseData = {
   id: 'case4-daon',
+  ep: 4,
+  menu: {
+    no: '제4화',
+    title: '대체된 증인',
+    tagline: 'AI 상담원이 증언대에 섰다. 사람을 대신한다던 그 기계 뒤에는, 사람이 있었다.',
+    thumb: bgImage('serverroom'),
+  },
   caseNo: '2031고합417',
   caseName: '살인  피고인 박순자',
-  episode: '제4화 「대체된 증인」 프로토타입',
+  episode: '제4화 「대체된 증인」',
   start: 'investigation',
   evidence: [...EVIDENCE, ...HAEUN_EVIDENCE, ...DAY3_EVIDENCE],
   startEvidence: [],

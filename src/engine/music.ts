@@ -241,4 +241,119 @@ export const TRACKS: Record<BgmName, Track> = {
       { inst: 'pad', vol: 0.04, rev: 0.7, seq: holds(['F3+A3+C4', 'E3+G3+C4', 'D3+F3+A3', 'Bb2+D3+F3', 'F3+A3+C4', 'C3+E3+G3', 'Bb2+D3+F3', 'C3+E3+G3'], 8) },
     ],
   },
+
+  // 타이틀, 사건 기록부. 시리즈의 주제: 판을 뒤집는 순간을 향해 가는 오음음계 팡파르.
+  title: {
+    bpm: 104, div: 2,
+    parts: [
+      { inst: 'lead', vol: 0.045, rev: 0.35, seq: bars(
+        'A4 - D5 - E5 - F#5 -', 'A5 - - - F#5 E5 D5 -', 'B4 - D5 - E5 - D5 B4', 'A4 - - - - - . .',
+        'A4 - D5 - E5 - F#5 A5', 'B5 - - - A5 - F#5 -', 'E5 - F#5 E5 D5 - B4 -', 'D5 - - - - - . .') },
+      { inst: 'bell', vol: 0.03, rev: 0.6, seq: bars(
+        'A5 . . . . . . .', 'A6 . . . . . . .', 'B5 . . . . . . .', 'A5 . . . E6 . . .',
+        'A5 . . . . . . .', 'B6 . . . . . . .', 'E6 . . . . . . .', 'D6 . . . A5 . D6 .') },
+      { inst: 'strings', vol: 0.04, rev: 0.5, seq: holds(
+        ['D3+F#3+A3', 'F#2+A2+C#3', 'G2+B2+D3', 'A2+C#3+E3', 'D3+F#3+A3', 'B2+D3+F#3', 'A2+C#3+E3', 'D3+F#3+A3'], 8) },
+      { inst: 'bass', vol: 0.13, seq: bars(
+        'D2 . D2 . A2 . D2 .', 'F#2 . F#2 . C#3 . F#2 .', 'G2 . G2 . D3 . G2 .', 'A2 . A2 . E2 . A2 .',
+        'D2 . D2 . A2 . D2 .', 'B1 . B1 . F#2 . B1 .', 'A1 . A1 . E2 . A1 .', 'D2 . A2 . D2 . . .') },
+      { inst: 'kick', vol: 0.32, seq: 'x . . x x . . .' },
+      { inst: 'snare', vol: 0.12, rev: 0.2, seq: '. . X . . . X .' },
+      { inst: 'shaker', vol: 0.04, seq: 'x o x o x o x o' },
+      { inst: 'crash', vol: 0.07, rev: 0.3, seq: `X ${rest(63)}` },
+    ],
+  },
+
+  // 1화 프롤로그: 새벽 두 시 반의 무인 편의점. 냉장고 소리 같은 로파이.
+  night: {
+    bpm: 74, div: 2,
+    parts: [
+      { inst: 'piano', vol: 0.1, rev: 0.55, seq: holds(['F3+A3+C4+E4', 'E3+G3+B3+D4', 'D3+F3+A3+C4', 'C3+E3+G3+B3'], 8) },
+      { inst: 'bell', vol: 0.065, rev: 0.6, seq: bars(
+        '. . A5 - G5 - E5 -', '. . G5 - E5 - D5 -', '. . F5 - E5 - C5 -', 'D5 - - - - - . .') },
+      { inst: 'bass', vol: 0.14, seq: bars('F2 . . . . . C2 .', 'E2 . . . . . B1 .', 'D2 . . . . . A1 .', 'C2 . . . . . G1 .') },
+      { inst: 'kick', vol: 0.18, seq: 'x . . . . . x .' },
+      { inst: 'rim', vol: 0.04, rev: 0.3, seq: '. . x . . . x .' },
+      { inst: 'shaker', vol: 0.025, seq: 'x o . o x o . o' },
+    ],
+  },
+
+  // 오정택의 테마: 매끈한 영업용 미소. 걸어 다니는 베이스와 톡톡 끊는 멜로디.
+  oh: {
+    bpm: 118, div: 2,
+    parts: [
+      { inst: 'pluck', vol: 0.085, rev: 0.25, seq: bars(
+        'D5 . Bb4 . G4 . A4 Bb4', 'C5 . . Bb4 A4 . F#4 .', 'G4 . Bb4 . Eb5 . D5 C5', 'D5 . . . A4 . . .',
+        'D5 . Bb4 . G4 . A4 Bb4', 'C5 . Eb5 . D5 . C5 Bb4', 'A4 . C5 . F#4 . A4 .', 'G4 . . . . . . .') },
+      { inst: 'bass', vol: 0.14, seq: bars(
+        'G2 - Bb2 - C3 - C#3 -', 'D3 - C3 - Bb2 - A2 -', 'Eb2 - G2 - Bb2 - B2 -', 'C3 - Bb2 - A2 - D2 -',
+        'G2 - Bb2 - C3 - C#3 -', 'D3 - C3 - Bb2 - A2 -', 'D2 - F#2 - A2 - C3 -', 'G2 - D2 - G2 - . .') },
+      { inst: 'piano', vol: 0.06, rev: 0.3, seq: bars(
+        '. . G3+Bb3+D4 . . . G3+Bb3+D4 .', '. . D3+F#3+C4 . . . D3+F#3+C4 .',
+        '. . Eb3+G3+Bb3 . . . Eb3+G3+Bb3 .', '. . C3+Eb3+G3 . . . D3+F#3+A3 .',
+        '. . G3+Bb3+D4 . . . G3+Bb3+D4 .', '. . C3+Eb3+G3 . . . C3+Eb3+G3 .',
+        '. . D3+F#3+C4 . . . D3+F#3+C4 .', '. . G3+Bb3+D4 . . . . .') },
+      { inst: 'bell', vol: 0.025, rev: 0.6, seq: bars(rest(8), '. . . . . . G6 .', rest(8), '. . . . . . D6 .') },
+      { inst: 'kick', vol: 0.26, seq: 'x . . . x . . .' },
+      { inst: 'rim', vol: 0.06, rev: 0.2, seq: '. . x . . . x .' },
+      { inst: 'hat', vol: 0.04, seq: 'x o x o x o x o' },
+    ],
+  },
+
+  // 1화의 정(情): 폐기 삼각김밥과 골목 할머니. 가야금 같은 뜯는 소리, 굿거리처럼 셋씩 흔들리는 박.
+  jeong: {
+    bpm: 62, div: 3,
+    parts: [
+      { inst: 'pluck', vol: 0.14, rev: 0.45, seq: bars(
+        'D5 - E5 D5 B4 -', 'A4 - B4 G4 - -', 'E4 - G4 A4 B4 -', 'D5 - - - - -',
+        'E5 - G5 E5 D5 -', 'B4 - D5 B4 A4 -', 'G4 - A4 B4 - D5', 'G4 - - - - -') },
+      { inst: 'piano', vol: 0.1, rev: 0.5, seq: bars(
+        'G2 D3 G3 B3 G3 D3', 'E2 B2 E3 G3 E3 B2', 'C2 G2 C3 E3 C3 G2', 'D2 A2 D3 F#3 D3 A2',
+        'C2 G2 C3 E3 C3 G2', 'B1 F#2 B2 D3 B2 F#2', 'A1 E2 A2 C3 A2 E2', 'G2 D3 G3 B3 G3 D3') },
+      { inst: 'strings', vol: 0.05, rev: 0.6, seq: holds(
+        ['G3+B3+D4', 'E3+G3+B3', 'C3+E3+G3', 'D3+F#3+A3', 'C3+E3+G3', 'B2+D3+F#3', 'A2+C3+E3', 'G3+B3+D4'], 6) },
+      { inst: 'bell', vol: 0.03, rev: 0.7, seq: bars(rest(6), rest(6), rest(6), '. . . A5 . .', rest(6), rest(6), rest(6), '. . . G5 . .') },
+    ],
+  },
+
+  // 엄정한의 테마: 차갑고 정확한 초침. 모두진술과 검찰의 공세에.
+  eom: {
+    bpm: 104, div: 4,
+    parts: [
+      { inst: 'piano', vol: 0.11, rev: 0.35, seq: bars(
+        'C5 . . G4 . . Eb5 . D5 . . . . . . .', 'C5 . . G4 . . Ab5 . G5 . . . . . . .',
+        'F5 . . C5 . . Eb5 . D5 . . C5 . . B4 .', 'C5 . . . . . . . G4 . . . B4 . . .') },
+      { inst: 'strings', vol: 0.045, rev: 0.5, seq: holds(['C3+Eb3+G3', 'Ab2+C3+Eb3', 'F2+Ab2+C3', 'G2+B2+D3'], 16) },
+      { inst: 'bass', vol: 0.13, seq: bars(
+        'C2 . . . C3 . . . C2 . . . C3 . . .', 'Ab1 . . . Ab2 . . . Ab1 . . . Ab2 . . .',
+        'F1 . . . F2 . . . F1 . . . F2 . . .', 'G1 . . . G2 . . . G1 . . . B1 . . .') },
+      { inst: 'bell', vol: 0.03, rev: 0.7, seq: bars(`G6 ${rest(15)}`, rest(16), `Eb6 ${rest(15)}`, rest(16)) },
+      { inst: 'hat', vol: 0.04, seq: 'x . o . x . o . x . o . x . o .' },
+      { inst: 'kick', vol: 0.28, seq: `x ${rest(7)} x ${rest(7)}` },
+      { inst: 'rim', vol: 0.05, rev: 0.25, seq: `${rest(4)} x ${rest(7)} x ${rest(2)}` },
+    ],
+  },
+
+  // 반전. 올바른 증거가 꽂히고 증인이 흔들리는 순간부터.
+  objection: {
+    bpm: 152, div: 2,
+    parts: [
+      { inst: 'lead', vol: 0.05, rev: 0.25, seq: bars(
+        'D5 - F#5 - A5 - - B5', 'A5 - F#5 - D5 - E5 -', 'G5 - - - F#5 - E5 -', 'F#5 - - - - - . .',
+        'D5 - F#5 - A5 - - D6', 'C#6 - B5 - A5 - G5 -', 'F#5 - G5 - A5 - E5 -', 'D5 - - - - - . .') },
+      { inst: 'strings', vol: 0.045, rev: 0.3, seq: bars(
+        'D3+F#3+A3 . . D3+F#3+A3 . . D3+F#3+A3 .', 'A2+C#3+E3 . . A2+C#3+E3 . . A2+C#3+E3 .',
+        'G2+B2+D3 . . G2+B2+D3 . . G2+B2+D3 .', 'D3+F#3+A3 - - - D3+F#3+A3 . . .',
+        'D3+F#3+A3 . . D3+F#3+A3 . . D3+F#3+A3 .', 'A2+C#3+E3 . . A2+C#3+E3 . . A2+C#3+E3 .',
+        'G2+B2+D3 . . G2+B2+D3 . A2+C#3+E3 . .', 'D3+F#3+A3 - - - - - - -') },
+      { inst: 'bass', vol: 0.15, seq: bars(
+        'D2 D2 D3 D2 D2 D2 D3 D2', 'A1 A1 A2 A1 A1 A1 A2 A1', 'G1 G1 G2 G1 G1 G1 G2 G1', 'D2 D2 D3 D2 D2 D2 D3 D2',
+        'D2 D2 D3 D2 D2 D2 D3 D2', 'A1 A1 A2 A1 A1 A1 A2 A1', 'G1 G1 G2 G1 A1 A1 A2 A1', 'D2 D2 D3 D2 D2 . D2 .') },
+      { inst: 'bell', vol: 0.03, rev: 0.5, seq: bars(rest(8), rest(8), rest(8), '. . . . A6 . D7 .') },
+      { inst: 'kick', vol: 0.5, seq: 'x . x . x . x .' },
+      { inst: 'snare', vol: 0.17, rev: 0.15, seq: '. . X . . . X .' },
+      { inst: 'hat', vol: 0.06, seq: 'x x x x x x x x' },
+      { inst: 'crash', vol: 0.09, rev: 0.3, seq: `X ${rest(31)}` },
+    ],
+  },
 };

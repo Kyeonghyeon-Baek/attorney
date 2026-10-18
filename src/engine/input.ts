@@ -1,6 +1,6 @@
 export type Action =
   | 'advance' | 'left' | 'right' | 'up' | 'down'
-  | 'press' | 'present' | 'record' | 'back' | 'tab'
+  | 'press' | 'present' | 'record' | 'back' | 'tab' | 'hint'
   | 'n1' | 'n2' | 'n3' | 'n4';
 
 type Handler = (a: Action) => void;
@@ -17,8 +17,20 @@ export function push(handler: Handler): () => void {
   };
 }
 
+// Overlays the player can open at any moment (settings, line history) sit above the stack,
+// so a script that starts waiting for input while one is open can't take its keys.
+const modals: Handler[] = [];
+
+export function pushModal(handler: Handler): () => void {
+  modals.push(handler);
+  return () => {
+    const i = modals.lastIndexOf(handler);
+    if (i >= 0) modals.splice(i, 1);
+  };
+}
+
 export function emit(a: Action): void {
-  stack[stack.length - 1]?.(a);
+  (modals[modals.length - 1] ?? stack[stack.length - 1])?.(a);
 }
 
 export function waitFor(allowed: Action[]): Promise<Action> {
@@ -36,16 +48,25 @@ export function waitFor(allowed: Action[]): Promise<Action> {
 const KEYS: Record<string, Action> = {
   Enter: 'advance', NumpadEnter: 'advance', Space: 'advance',
   ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
-  KeyQ: 'press', KeyE: 'present', KeyR: 'record',
+  KeyQ: 'press', KeyE: 'present', KeyR: 'record', KeyH: 'hint',
   Escape: 'back', Backspace: 'back', Tab: 'tab',
   Digit1: 'n1', Digit2: 'n2', Digit3: 'n3', Digit4: 'n4',
 };
 
-export function bindKeyboard(onMute: () => void): void {
+/** M toggles sound, O opens the settings and L the line history, whatever else is on screen. */
+export function bindKeyboard(hotkeys: { mute: () => void; settings: () => void; backlog: () => void }): void {
   window.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.code === 'KeyM') {
-      onMute();
+      hotkeys.mute();
+      return;
+    }
+    if (e.code === 'KeyO' && !e.repeat) {
+      hotkeys.settings();
+      return;
+    }
+    if (e.code === 'KeyL' && !e.repeat) {
+      hotkeys.backlog();
       return;
     }
     const a = KEYS[e.code];

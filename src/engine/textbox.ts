@@ -1,9 +1,10 @@
 import { blip } from './audio';
 import { el, sleep } from './dom';
 import { push } from './input';
+import { CHAR_MS, settings } from './settings';
 import type { Voice } from './types';
 
-export type LineStyle = 'normal' | 'think' | 'testimony' | 'human' | 'notice';
+export type LineStyle = 'normal' | 'think' | 'testimony' | 'human' | 'notice' | 'tape';
 
 interface Glyph {
   ch: string;
@@ -72,13 +73,16 @@ export class TextBox {
     this.body.replaceChildren();
     this.arrow.classList.remove('on');
 
-    let skip = !!o.instant;
+    const speed = settings().text;
+    let skip = !!o.instant || (speed === 'instant' && !this.fast);
     const pop = push((a) => {
       if (a === 'advance') skip = true;
     });
     let span: HTMLElement | null = null;
     let count = 0;
-    const perChar = this.fast ? 1 : 30;
+    const perChar = this.fast ? 1 : CHAR_MS[speed];
+    // Pauses after punctuation shrink with the text speed.
+    const pauseScale = this.fast ? 0 : perChar / CHAR_MS.normal;
     for (const g of parse(o.text)) {
       if (!span || span.className !== g.cls) span = el('span', g.cls, this.body);
       span.textContent += g.ch;
@@ -87,7 +91,7 @@ export class TextBox {
         blip(o.voice);
         o.onBlip?.();
       }
-      await sleep(perChar + (this.fast ? 0 : g.pause));
+      await sleep(perChar + g.pause * pauseScale);
     }
     pop();
   }

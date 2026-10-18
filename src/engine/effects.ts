@@ -73,6 +73,55 @@ export class Effects {
     node.remove();
   }
 
+  /** A witness's name and role slide in over the scene the first time they appear. */
+  async nameplate(name: string, title: string, color: string): Promise<void> {
+    const node = el('div', 'nameplate', this.layer);
+    node.style.setProperty('--np', color);
+    el('div', 'np-title', node, title);
+    el('div', 'np-name', node, name);
+    sfx('whoosh');
+    await sleep(this.ms(1900));
+    node.classList.add('out');
+    await sleep(this.ms(300));
+    node.remove();
+  }
+
+  /** A short line in the middle of the screen, e.g. "증언 끝" over black. */
+  async caption(text: string): Promise<void> {
+    const node = el('div', 'caption', this.layer);
+    el('span', 'caption-rule', node);
+    el('span', 'caption-text', node, text);
+    el('span', 'caption-rule', node);
+    sfx('gavel');
+    await sleep(this.ms(1300));
+    node.classList.add('out');
+    await sleep(this.ms(300));
+    node.remove();
+  }
+
+  /** The episode's title card: number, 색동 rule, then the title stamped in. */
+  async episode(no: string, title: string): Promise<void> {
+    const node = el('div', 'episode', this.layer);
+    el('div', 'episode-series', node, '판 뒤집기');
+    el('div', 'episode-no', node, no);
+    el('div', 'saekdong episode-rule', node);
+    const name = el('div', 'episode-title', node);
+    sfx('reveal');
+    await sleep(this.ms(900));
+    for (const ch of title) {
+      const span = el('span', ch === ' ' ? 'gap' : '', name, ch);
+      if (ch.trim() && !'()'.includes(ch)) sfx('select');
+      void span;
+      await sleep(this.fast ? 0 : ch === ' ' ? 60 : 110);
+    }
+    sfx('gavel');
+    this.shake();
+    await sleep(this.ms(2600));
+    node.classList.add('out');
+    await sleep(this.ms(700));
+    node.remove();
+  }
+
   async place(lines: string[]): Promise<void> {
     const node = el('div', 'place', this.layer);
     for (const line of lines) {

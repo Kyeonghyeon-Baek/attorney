@@ -33,6 +33,7 @@ export class Stage {
   private emo = 'normal';
   private daonMode: DaonMode = 'normal';
   private fieldBg: string | null = null;
+  private firstPerson = true;
 
   constructor(parent: HTMLElement) {
     this.root = el('div', 'scene', parent);
@@ -56,8 +57,9 @@ export class Stage {
    * Investigation mode: everyone appears in front of the location background,
    * and the player's side (강단비, 신나래) stays off screen as first-person voices.
    */
-  setField(bg: string | null): void {
+  setField(bg: string | null, everyone = false): void {
     this.fieldBg = bg;
+    this.firstPerson = !everyone;
     this.root.classList.toggle('field', !!bg);
     this.who = null;
   }
@@ -73,7 +75,7 @@ export class Stage {
   }
 
   show(who: CharId, emo?: string): void {
-    if (this.fieldBg && (who === 'dan' || who === 'narae')) return;
+    if (this.fieldBg && this.firstPerson && (who === 'dan' || who === 'narae')) return;
     const nextEmo = emo ?? (who === this.who ? this.emo : 'normal');
     if (who === this.who && nextEmo === this.emo) return;
     const cut = who !== this.who;
@@ -119,6 +121,11 @@ export class Stage {
     } else {
       this.actor.appendChild(placeholder(ch.name, ch.color));
     }
+  }
+
+  setTint(mode: 'night' | null): void {
+    if (mode) this.root.dataset.tint = mode;
+    else delete this.root.dataset.tint;
   }
 
   /** Pushes the camera in on whoever is on screen, until the next cut. */

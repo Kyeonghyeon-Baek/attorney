@@ -208,7 +208,7 @@ Plain light grey background, facing the viewer. Same anime illustration style as
 
 ## Codex로 한 번에 만들기
 
-지금 들어 있는 그림 13장은 아래 방식으로 Codex CLI가 만들었어요. 새 표정이나 캐릭터를 추가할 때는 이 문서에 먼저 적고 같은 방식으로 요청하면 돼요.
+4화 그림은 아래 방식으로 Codex CLI가 만들었어요. 1화 그림 28장은 캐릭터 둘 / 배경·CG / 증거로 나눠 Codex 네 개를 동시에 돌려 10분 남짓 걸렸어요. 새 표정이나 캐릭터를 추가할 때는 이 문서에 먼저 적고 같은 방식으로 요청하면 돼요.
 
 ```bash
 codex exec --skip-git-repo-check -s workspace-write "Read docs/art-guide.md. Using your image generation tool, create src/assets/chars/soonja/shock.png using src/assets/chars/soonja/normal.png as the reference image. Character PNGs must be 1024x1536 with a real alpha-transparent background. Only write inside src/assets/."
@@ -222,3 +222,108 @@ codex exec --skip-git-repo-check -s workspace-write "Read docs/art-guide.md. Usi
 1. `normal.png`를 먼저 만들어요.
 2. 다른 표정은 `normal.png`를 **참조 이미지로 넣고** "같은 캐릭터, 같은 옷, 같은 화풍으로 표정과 자세만 바꿔줘"라고 요청해요. 그래야 얼굴이 바뀌지 않아요.
 3. 게임 스크립트에서 `emo: '<표정>'`으로 불러요.
+
+---
+
+# 제1화 「무인(無人)의 밤」
+
+2031년 3월, 마포구 골목의 무인 편의점 "오롯24". 매장 색은 **코랄(산호색)과 남색**이에요. 로고는 글자 없는 단순한 원형 마크로만 그려요. 실제 편의점 브랜드와 닮지 않게 해요.
+
+## 캐릭터
+
+| ID | 이름 | 방향 | 표정 파일 |
+|---|---|---|---|
+| `taeo` | 신태오 (피고인) | 정면 | `normal`, `sad`, `shock`, `smile` |
+| `oh` | 오정택 (본사 슈퍼바이저, 진범) | 정면 | `normal`, `sweat`, `shock`, `cornered`, `rage`, `breakdown` |
+| `malsun` | 조말순 (폐지 줍는 할머니) | 정면 | `normal`, `smile`, `sad` |
+| `dan` | 강단비 | 오른쪽 | 추가: `confident` |
+| `narae` | 신나래 | 오른쪽 | 추가: `sad` |
+
+### taeo — 신태오
+```
+Shin Taeo, 24, a gentle, soft-spoken young Korean man who works the night shift at an unmanned
+convenience store. Tall and lanky, slightly messy dark hair falling over his eyes, sleepy kind
+eyes with faint dark circles. Faded navy hoodie under a coral staff vest with navy trim and a
+plain round logo patch (no text), a small adhesive bandage on one finger. Facing the viewer.
+```
+- `normal`: 어깨를 움츠리고 미안한 듯 작게 웃음
+- `sad`: 시선을 떨구고 입술을 깨묾, 눈물이 맺힘
+- `shock`: 눈을 크게 뜨고 입을 벌림, 두 손을 가슴께에서 멈춤
+- `smile`: 뒷머리를 긁으며 쑥스럽게, 안도한 따뜻한 웃음
+
+### oh — 오정택
+```
+Oh Jeongtaek, 41, a slick franchise-headquarters supervisor. Glossy, heavily pomaded 2:8 side-parted
+black hair, thin neat mustache, narrow fox-like eyes, a polished salesman smile. Slim-fit navy suit,
+white shirt, coral tie, a navy lanyard with a white ID card, a chunky black smartwatch with a
+glowing cyan screen clearly visible on his left wrist, holding a thin work tablet. Facing the viewer.
+```
+- `normal`: 매끈한 영업용 미소, 한 손으로 넥타이를 고쳐 맴, 다른 손엔 태블릿
+- `sweat`: 미소가 굳은 채 식은땀, 곁눈질로 손목의 스마트워치를 봄
+- `shock`: 몸을 뒤로 젖히며 눈이 튀어나올 듯, 2:8 앞머리 한 가닥이 툭 빠짐
+- `cornered`: 이를 악물고 다른 손으로 스마트워치를 움켜쥠, 땀범벅, 앞머리가 몇 가닥 흘러내림
+- `rage`: 태블릿을 치켜들고 소리침, 관자놀이에 핏대, 머리가 반쯤 무너짐
+- `breakdown`: 2:8 머리가 완전히 무너져 헝클어짐, 넥타이가 풀림, 금이 간 스마트워치 화면이 빨갛게 빛남, 어깨가 축 처져 고개를 떨굼 (허리 위 구도 유지)
+
+### malsun — 조말순
+```
+Jo Malsun, 81, a tiny, slightly stooped Korean grandmother who collects scrap cardboard at night.
+Deeply wrinkled warm face, squinting kind eyes, short grey permed hair under a knitted wool hat.
+Flower-patterned quilted vest over a faded sweater, white cotton work gloves. Facing the viewer.
+```
+- `normal`: 눈을 가늘게 뜨고 온화하게 웃음
+- `smile`: 이가 하나 빠진 채 활짝 웃음, 두 손을 모음
+- `sad`: 장갑 낀 손으로 눈가를 훔침, 입을 꾹 다묾
+
+### dan / narae 추가 표정
+- `dan/confident`: 팔짱을 끼고 한쪽 입꼬리를 올린 여유 있는 미소, 모순을 찌른 뒤의 얼굴
+- `narae/sad`: 눈물을 글썽이며 소매로 눈가를 누름, 입술이 떨림
+
+## 배경 (1536×1024, 사람 없음, 글자 없음)
+
+| 파일 | 내용 |
+|---|---|
+| `bg/storeroom.png` | 밤, 무인 편의점의 좁은 창고. 양옆에 음료 상자와 컵라면 상자가 쌓인 철제 선반, 가운데 앞쪽에 회색 플라스틱 폐기함, 오른쪽 안쪽에 밀대가 달린 철문(뒷문), 천장 왼쪽 앞에 돔형 카메라. 왼쪽 안쪽 구석은 키 큰 선반 뒤로 짙은 그림자. 형광등 하나만 켜진 차가운 빛 |
+| `bg/office.png` | 법원 별관의 창문 없는 국선변호인 사무실. 서류 상자와 사건 기록이 쌓인 책상 두 개, 낡은 전기포트와 컵라면, 화이트보드, 작은 화분 하나, 벽에 붙은 달력(글자 없음). 늦은 오후 형광등 빛, 가운데가 비어 있음 |
+
+## 이벤트 CG
+
+| 경로 | 크기 | 배경 |
+|---|---|---|
+| `src/assets/cg/<id>.png` | 1536×1024 (가로) | 불투명. **사람이 나와도 돼요** |
+
+공통:
+```
+Event illustration (CG) for a Korean courtroom adventure game set in near-future Seoul (2031).
+Same clean anime-style line art and flat two-tone cel shading as the character sprites, cinematic
+composition, painterly lighting. No readable text, no logos, no frame. 1536x1024.
+```
+
+| ID | 그림 |
+|---|---|
+| `cctv` | 천장 구석 감시 카메라 시점(살짝 어안 렌즈)으로 내려다본 밤의 작은 무인 편의점. 가운데 오른쪽에서 코랄색 조끼를 입은 키 큰 청년이 냉장 진열대에 삼각김밥을 채우는 중. 앞쪽 유리문 밖은 내려간 철제 셔터. 형광등, 무인 계산대. 사람은 그 청년 한 명뿐 |
+| `watchglow` | 어두운 창고 안, 아래에서 올려다본 남자 얼굴의 클로즈업. 빛은 손목 스마트워치 화면의 차가운 청록색뿐. 기름 바른 2:8 가르마, 가는 콧수염, 땀. 뒤로 철제 선반. 화면 아래 구석 바닥에 움직이지 않는 나이 든 남자의 손(피 없음). 오싹한 분위기 |
+| `alley` | 편의점 뒤 밤 골목, 따뜻한 가로등 아래. 코랄색 조끼의 키 큰 청년이 비닐봉지에 담긴 삼각김밥을 작은 할머니에게 건넴. 할머니 옆에는 납작하게 접은 박스를 높이 실은 손수레. 열린 철제 뒷문 틈으로 형광등 빛이 새어 나옴. 다정하고 고요한 분위기 |
+
+## 증거 그림 (1024×1024, 투명 배경)
+
+| ID | 그림 |
+|---|---|
+| `iguardLog` | 감시 카메라 화면이 떠 있는 태블릿. 화면 속 작은 사람 실루엣 둘레에 빨간 감지 상자, 그 아래 기록 줄 목록 |
+| `scenePhoto` | 경찰 현장 사진(인화지). 어두운 창고 구석 바닥의 흰 테이프 윤곽선, 노란 번호 표지, 철제 선반 모서리 |
+| `shutterPhoto` | 인화한 사진. 밤에 내려간 편의점 철제 셔터와 거기 테이프로 붙인 흰 안내문 한 장 |
+| `layout` | 작은 매장 평면도 청사진. 카메라 아이콘 네 개와 부채꼴 시야 범위, 그중 하나(뒷문 쪽)는 빨간 X로 지워짐 |
+| `call112` | 클립보드에 끼운 통화 녹취록 출력지, 위쪽에 수화기 아이콘, 한 줄에 빨간 밑줄 |
+| `samgak` | 비닐 포장된 삼각김밥 두 개가 든 작은 비닐봉지, 포장에 빨간 원형 스티커 |
+| `recorder` | 작은 은색 디지털 녹음기, 빨간 녹음 불빛, 살짝 긁힌 자국 |
+| `doorLog` | 철문에 달린 검은 디지털 도어락(숫자 키패드, 작은 화면)과, 그 아래로 길게 늘어진 영수증 같은 기록 출력지. 출력지 한 줄에 빨간 동그라미 |
+
+## 인물 사진
+
+- `bang` — 방대식 (57, 오롯24 점주, 피해자):
+```
+ID-photo style head-and-shoulders portrait of Bang Daesik, 57, a gruff but kind Korean convenience
+store owner. Square face, short grey crew cut, thick dark eyebrows, deep frown lines, a faded
+brown fleece vest over a checked shirt. Plain light grey background, facing the viewer. Same anime
+illustration style as the sprites.
+```

@@ -17,6 +17,14 @@ const portraits = import.meta.glob('../assets/portraits/*.png', {
   eager: true, query: '?url', import: 'default',
 }) as Record<string, string>;
 
+const cgs = import.meta.glob('../assets/cg/*.png', {
+  eager: true, query: '?url', import: 'default',
+}) as Record<string, string>;
+
+export function cgImage(id: string): string | undefined {
+  return cgs[`../assets/cg/${id}.png`];
+}
+
 export function itemImage(id: string): string | undefined {
   return items[`../assets/items/${id}.png`];
 }
@@ -34,5 +42,8 @@ export function bgImage(id: string): string | undefined {
 }
 
 export function allImageUrls(): string[] {
-  return [...Object.values(chars), ...Object.values(backgrounds), ...Object.values(items), ...Object.values(portraits)];
+  return [
+    ...Object.values(chars), ...Object.values(backgrounds), ...Object.values(items),
+    ...Object.values(portraits), ...Object.values(cgs),
+  ];
 }

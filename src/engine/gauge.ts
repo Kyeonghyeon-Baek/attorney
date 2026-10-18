@@ -47,6 +47,12 @@ export class Gauge {
     return to >= 100;
   }
 
+  /** Draws the eye to the bar without changing it. */
+  pulse(): void {
+    sfx('heartbeat');
+    replay(this.root, 'pulse');
+  }
+
   private render(v: number): void {
     this.num.textContent = `${v.toFixed(1)}%`;
     this.fill.style.width = `${v}%`;

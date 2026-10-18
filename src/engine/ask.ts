@@ -7,18 +7,20 @@ const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3 };
 /** "질문 재구성": the AI only answers what it is asked, so the player picks the wording. */
 export class AskPanel {
   private root: HTMLElement;
+  private title: HTMLElement;
   private note: HTMLElement;
   private list: HTMLElement;
 
   constructor(parent: HTMLElement) {
     this.root = el('div', 'ask', parent);
     this.root.hidden = true;
-    el('div', 'ask-title', this.root, '질문 재구성');
+    this.title = el('div', 'ask-title', this.root);
     this.note = el('div', 'ask-note', this.root);
     this.list = el('div', 'ask-list', this.root);
   }
 
-  open(note: string, labels: string[], used: Set<number>): Promise<number> {
+  open(note: string, labels: string[], used: Set<number>, title = '질문 재구성'): Promise<number> {
+    this.title.textContent = title;
     this.note.textContent = note;
     this.root.hidden = false;
     let sel = labels.findIndex((_, i) => !used.has(i));

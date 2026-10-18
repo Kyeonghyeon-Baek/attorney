@@ -1,3 +1,5 @@
+import type { Entry } from './backlog';
+
 // One autosave slot per case, kept in this browser's localStorage.
 // Storage can be missing or full (private windows, blocked site data), so every
 // access is wrapped and a failed save simply means the game starts fresh next time.
@@ -32,6 +34,8 @@ export interface SaveData {
   wrongs: number;
   /** Play time so far, in ms. */
   elapsed: number;
+  /** The last lines of the line history, so 대사 기록 still has context after resuming. */
+  log?: Entry[];
 }
 
 const key = (caseId: string) => `pan-dwijibgi:save:${caseId}`;
@@ -61,5 +65,24 @@ export function clearSave(caseId: string): void {
     localStorage.removeItem(key(caseId));
   } catch {
     // Nothing to clear.
+  }
+}
+
+const clearKey = (caseId: string) => `pan-dwijibgi:clear:${caseId}`;
+
+/** Remembers that a case was played to its ending, for the episode list. */
+export function markCleared(caseId: string): void {
+  try {
+    localStorage.setItem(clearKey(caseId), String(Date.now()));
+  } catch {
+    // Not remembered; the episode just won't show as solved.
+  }
+}
+
+export function isCleared(caseId: string): boolean {
+  try {
+    return localStorage.getItem(clearKey(caseId)) !== null;
+  } catch {
+    return false;
   }
 }

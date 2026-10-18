@@ -4,7 +4,7 @@ import { push } from './input';
 import { paintFace, paintItem } from './portrait';
 import type { Evidence, Profile } from './types';
 
-type Tab = 'evidence' | 'profiles';
+type Tab = 'evidence' | 'profiles' | 'memo';
 const COLS = 3;
 
 /** Something held up in court: a piece of evidence or a person's profile. */
@@ -28,6 +28,11 @@ export class CourtRecord {
   private mode: 'view' | 'present' = 'view';
   private finish: ((id: string | null) => void) | null = null;
   private owned = new Set<string>();
+  /** Opens an evidence's map full screen; set by the game. */
+  onMap: ((mapId: string) => Promise<unknown>) | null = null;
+  /** 강단비's notebook lines, newest last; set by the game. The tab shows up once there is one. */
+  memos: () => string[] = () => [];
+  private body: HTMLElement;
 
   constructor(
     parent: HTMLElement,
@@ -43,8 +48,9 @@ export class CourtRecord {
     this.tabBtns = {
       evidence: el('button', 'folder-tab', tabs, '증거'),
       profiles: el('button', 'folder-tab', tabs, '인물'),
+      memo: el('button', 'folder-tab', tabs, '메모'),
     };
-    for (const t of ['evidence', 'profiles'] as Tab[]) {
+    for (const t of ['evidence', 'profiles', 'memo'] as Tab[]) {
       this.tabBtns[t].addEventListener('click', () => this.setTab(t));
     }
     const head = el('header', 'folder-head', folder);
@@ -52,6 +58,7 @@ export class CourtRecord {
     el('div', 'case-name', head, caseName);
     this.prompt = el('div', 'record-prompt', folder);
     const body = el('div', 'folder-body', folder);
+    this.body = body;
     this.grid = el('div', 'grid', body);
     this.sheet = el('article', 'sheet', body);
     const foot = el('footer', 'folder-foot', folder);
@@ -75,6 +82,12 @@ export class CourtRecord {
     if (ev) return { name: ev.name, evidence: ev };
     const p = this.getProfile(id);
     return p ? { name: p.name, profile: p } : null;
+  }
+
+  /** Updates an entry's summary in place; the change lasts for this session. */
+  revise(id: string, summary: string): void {
+    const entry = this.get(id) ?? this.getProfile(id);
+    if (entry) entry.summary = summary;
   }
 
   has(id: string): boolean {
@@ -104,12 +117,25 @@ export class CourtRecord {
     return this.profiles.filter((p) => this.owned.has(p.id));
   }
 
-  open(mode: 'view' | 'present', prompt = '', cancellable = true): Promise<string | null> {
+  /**
+   * `pin` keeps the statement being contradicted in view while the player reads evidence.
+   */
+  open(
+    mode: 'view' | 'present',
+    prompt = '',
+    cancellable = true,
+    pin?: { label: string; text: string },
+  ): Promise<string | null> {
     this.mode = mode;
     this.root.hidden = false;
     this.root.dataset.mode = mode;
-    this.prompt.textContent = prompt;
-    this.prompt.hidden = !prompt;
+    this.prompt.replaceChildren();
+    this.prompt.classList.toggle('pin', !!pin);
+    if (pin) {
+      el('span', 'pin-label', this.prompt, pin.label);
+      el('span', 'pin-text', this.prompt, `“${pin.text.replace(/\{[^}]*\}/g, '')}”`);
+    } else this.prompt.textContent = prompt;
+    this.prompt.hidden = !prompt && !pin;
     this.closeBtn.hidden = !cancellable;
     this.tab = 'evidence';
     this.render();
@@ -119,7 +145,8 @@ export class CourtRecord {
         if (a === 'back' && cancellable) this.close(null);
         else if (a === 'record' && mode === 'view') this.close(null);
         else if ((a === 'advance' || a === 'present') && mode === 'present') this.presentSelected();
-        else if (a === 'tab') this.setTab(this.tab === 'evidence' ? 'profiles' : 'evidence');
+        else if (a === 'advance' && mode === 'view') this.openMap();
+        else if (a === 'tab') this.setTab(this.nextTab());
         else if (a === 'left') this.move(-1);
         else if (a === 'right') this.move(1);
         else if (a === 'up') this.move(-COLS);
@@ -139,10 +166,22 @@ export class CourtRecord {
     this.finish?.(id);
   }
 
+  private nextTab(): Tab {
+    if (this.tab === 'evidence') return 'profiles';
+    if (this.tab === 'profiles' && this.memos().length) return 'memo';
+    return 'evidence';
+  }
+
   private presentSelected(): void {
-    if (this.mode !== 'present') return;
+    if (this.mode !== 'present' || this.tab === 'memo') return;
     const picked = this.tab === 'evidence' ? this.held[this.sel] : this.people[this.sel];
     if (picked) this.finish?.(picked.id);
+  }
+
+  /** In view mode, Space opens the selected evidence's map, if it has one. */
+  private openMap(): void {
+    const ev = this.tab === 'evidence' ? this.held[this.sel] : undefined;
+    if (ev?.map) void this.onMap?.(ev.map);
   }
 
   private setTab(t: Tab): void {
@@ -154,6 +193,10 @@ export class CourtRecord {
   }
 
   private move(d: number): void {
+    if (this.tab === 'memo') {
+      this.sheet.scrollBy({ top: d * 40 });
+      return;
+    }
     const n = this.tab === 'evidence' ? this.held.length : this.people.length;
     const next = this.sel + d;
     if (next < 0 || next >= n) return;
@@ -163,10 +206,18 @@ export class CourtRecord {
   }
 
   private render(): void {
-    for (const t of ['evidence', 'profiles'] as Tab[]) {
+    for (const t of ['evidence', 'profiles', 'memo'] as Tab[]) {
       this.tabBtns[t].classList.toggle('on', t === this.tab);
     }
-    this.presentBtn.hidden = this.mode !== 'present';
+    this.tabBtns.memo.hidden = this.memos().length === 0;
+    if (this.tab === 'memo' && this.tabBtns.memo.hidden) this.tab = 'evidence';
+    this.body.classList.toggle('memo-mode', this.tab === 'memo');
+    this.presentBtn.hidden = this.mode !== 'present' || this.tab === 'memo';
+    if (this.tab === 'memo') {
+      this.grid.replaceChildren();
+      this.renderMemo();
+      return;
+    }
     const items = this.tab === 'evidence' ? this.held : this.people;
     if (this.sel >= items.length) this.sel = Math.max(0, items.length - 1);
     this.presentBtn.disabled = items.length === 0;
@@ -191,6 +242,14 @@ export class CourtRecord {
     this.renderSheet();
   }
 
+  private renderMemo(): void {
+    this.sheet.replaceChildren();
+    el('div', 'sheet-label', this.sheet, '강단비의 수첩');
+    el('h2', 'sheet-title', this.sheet, '지금까지 알게 된 것');
+    const list = el('ol', 'memo-list', this.sheet);
+    for (const line of this.memos()) el('li', '', list, line);
+  }
+
   private renderSheet(): void {
     this.sheet.replaceChildren();
     if (this.tab === 'evidence') {
@@ -205,9 +264,27 @@ export class CourtRecord {
       el('div', 'sheet-label', titles, ev.label);
       el('h2', 'sheet-title', titles, ev.name);
       el('p', 'sheet-summary', this.sheet, ev.summary);
+      if (ev.map && this.onMap) {
+        const mapId = ev.map;
+        const b = el('button', 'btn sheet-map', this.sheet, '평면도 크게 보기  Space');
+        b.addEventListener('click', () => void this.onMap?.(mapId));
+      }
       const detail = el('div', 'sheet-detail', this.sheet);
+      if (ev.table) renderTable(detail, ev.table);
       for (const line of ev.detail) {
-        el('div', line.startsWith('※') ? 'note' : 'row', detail, line);
+        if (line.startsWith('※')) {
+          el('div', 'note', detail, line);
+          continue;
+        }
+        // "02:50  text" or "02:05~02:50  text": the time gets its own column.
+        const m = /^(\d\d:\d\d(?::\d\d)?(?:~\d\d:\d\d)?)\s{2,}(.*)$/.exec(line);
+        if (!m) {
+          el('div', 'row', detail, line);
+          continue;
+        }
+        const row = el('div', 'row timed', detail);
+        el('span', 'row-time', row, m[1]);
+        el('span', 'row-text', row, m[2]);
       }
     } else {
       const p = this.people[this.sel];
@@ -220,4 +297,15 @@ export class CourtRecord {
       el('p', 'sheet-summary', this.sheet, p.summary);
     }
   }
+}
+
+function renderTable(parent: HTMLElement, t: NonNullable<Evidence['table']>): void {
+  const table = el('table', 'sheet-table', parent);
+  const head = el('tr', '', el('thead', '', table));
+  for (const h of t.head) el('th', '', head, h);
+  const body = el('tbody', '', table);
+  t.rows.forEach((cells, i) => {
+    const tr = el('tr', t.quiet?.includes(i) ? 'quiet' : '', body);
+    for (const c of cells) el('td', '', tr, c);
+  });
 }

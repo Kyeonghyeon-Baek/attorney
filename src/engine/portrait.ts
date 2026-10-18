@@ -46,8 +46,8 @@ export function paintFace(box: HTMLElement, p: Profile): void {
 }
 
 /** Fills `box` with an evidence picture, or its line icon until art exists. */
-export function paintItem(box: HTMLElement, ev: Pick<Evidence, 'id' | 'icon'>): void {
-  const url = itemImage(ev.id);
+export function paintItem(box: HTMLElement, ev: Pick<Evidence, 'id' | 'icon' | 'art'>): void {
+  const url = itemImage(ev.art ?? ev.id);
   box.classList.toggle('pic', !!url);
   if (url) {
     box.replaceChildren();
