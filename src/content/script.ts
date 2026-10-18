@@ -1,6 +1,8 @@
 import type {
   AmbienceName, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, Script, SfxName, ShoutKind, StepOpts,
 } from '../engine/types';
+import type { MatchTask } from '../engine/match';
+import type { PhotoTask } from '../engine/photos';
 
 // Small helpers so case scripts read like a screenplay.
 
@@ -33,6 +35,10 @@ export const gaugeSet = (value: number): Cmd => ({ t: 'gaugeSet', value });
 export const predict = (value: number, reason: string, status?: string): Cmd => ({ t: 'predict', value, reason, status });
 /** Opens the court record on that evidence, at its newest unread addendum. */
 export const showRecord = (id: string): Cmd => ({ t: 'showRecord', id });
+/** Pairs a card from each of two records (1화: the 112 call and the alley recording). */
+export const match = (task: MatchTask, opts?: StepOpts): Cmd => ({ t: 'match', task, opts });
+/** Points at a part of a photo, then picks the frames around the change, inside the photo viewer. */
+export const photoTask = (set: string, task: PhotoTask, opts?: StepOpts): Cmd => ({ t: 'photoTask', set, task, opts });
 export const evidence = (id: string | null): Cmd => ({ t: 'evidence', id });
 export const cross = (id: string): Cmd => ({ t: 'cross', id });
 export const reveal = (...statements: string[]): Cmd => ({ t: 'reveal', statements });

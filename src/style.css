@@ -1871,6 +1871,9 @@ button { font: inherit; }
 .photoview { position: absolute; inset: 0; z-index: 16; display: grid; place-items: center; background: rgba(8, 12, 26, 0.82); }
 .photoview-panel {
   width: 1180px;
+  max-height: 704px;
+  overflow-y: auto;
+  scrollbar-width: thin;
   padding: 16px 22px 14px;
   color: var(--ink);
   background: var(--paper);
@@ -1882,8 +1885,12 @@ button { font: inherit; }
 .photoview-big { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
 .photo-fig.big figcaption { font-size: 14px; }
 .photoview-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.photo-thumb { padding: 3px 10px; font: inherit; font-size: 13px; background: #e6e0d0; border: 1px solid #9c937e; border-radius: 3px; cursor: pointer; }
-.photo-thumb.on { background: #2b3a73; color: var(--paper); }
+.photo-thumb { display: grid; gap: 2px; width: 104px; padding: 3px; font: inherit; font-size: 12px; background: #e6e0d0; border: 2px solid #9c937e; border-radius: 4px; cursor: pointer; }
+.photo-thumb-pic { display: block; overflow: hidden; border-radius: 2px; background: #1c1f25; }
+.photo-thumb-pic svg { display: block; width: 100%; height: auto; }
+.photo-thumb-time { font-family: var(--doc); font-variant-numeric: tabular-nums; }
+.photo-thumb.on { background: #2b3a73; border-color: #2b3a73; color: var(--paper); }
+.photo-thumb.focus { outline: 3px solid var(--ochre); outline-offset: 1px; }
 .photoview-notes { margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #4a4231; }
 .photoview-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .photoview-hint { flex: 1; font-size: 12px; color: #6b5f4a; }
@@ -1894,3 +1901,109 @@ button { font: inherit; }
 .card-screen.scene-select .card-actions { flex-wrap: wrap; max-width: 760px; justify-content: center; }
 
 .print svg { width: 100%; height: auto; border: 3px solid #f4f0e6; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); rotate: -4deg; }
+
+/* ---------------------------------------------------------------- 1화 R3: readability, HUD, shelves */
+
+/* Type roles: spoken lines and UI chrome keep the pixel face; anything read like a document
+   (record sheets, notebook, hints, photo captions) uses a plain gothic with steady line spacing. */
+.sheet-summary,
+.sheet-detail .row,
+.sheet-detail .note,
+.sheet-detail .addendum,
+.sheet-detail .opinion,
+.sheet-scope,
+.sheet-empty,
+.memo-list,
+.hintview-list li,
+.photo-fig figcaption,
+.ask-note { font-family: var(--doc); }
+.sheet-summary { line-height: 1.65; }
+.sheet-detail .row { line-height: 1.7; }
+
+/* The secondary buttons stay put but step back until they are pointed at. */
+.hud-tools .btn { opacity: 0.62; transition: opacity 0.15s; }
+.hud-tools:hover .btn,
+.hud-tools .btn:focus-visible { opacity: 1; }
+.stage.card-open .hud-record { display: none; }
+
+/* Shelves in the court record grid. */
+.grid-shelf {
+  grid-column: 1 / -1;
+  margin: 4px 2px -2px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: rgba(244, 240, 230, 0.6);
+  border-bottom: 1px solid rgba(244, 240, 230, 0.18);
+}
+.grid-shelf:first-child { margin-top: 0; }
+.folder-tab.unread { color: var(--paper); box-shadow: inset 0 3px 0 var(--ochre); }
+
+/* One-click menus (where to go next) need no confirm step. */
+.ask.quick .ask-option { cursor: pointer; }
+
+/* The analysis layer: close-ups and the expert drawing, apart from the original stills. */
+.photoview-extra:empty { display: none; }
+.photo-analysis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; padding: 8px; background: rgba(255, 179, 71, 0.1); border: 1px dashed #c98a2c; border-radius: 4px; }
+.photo-fig.zoom figcaption,
+.photo-fig.diagram figcaption { font-size: 12px; color: #6b4a14; }
+.photo-fig.diagram .photo-pic { border-color: #c98a2c; background: #f4f0e6; }
+.photo-sheet-analysis { margin-top: 6px; }
+
+/* The photo step (1화 16:00): which part, then which two frames. */
+.photoview.task .photoview-panel { width: 1120px; }
+.photoview-step { padding: 3px 10px; font-size: 13px; color: var(--paper); background: #2b3a73; border-radius: 3px; }
+.photoview-prompt { margin: 8px 0 0; font-family: var(--doc); font-size: 17px; line-height: 1.5; color: var(--ink); word-break: keep-all; }
+.photoview-big .photo-fig.solo { grid-column: 1 / -1; width: 760px; justify-self: center; }
+.photo-pic.spots { position: relative; }
+.photo-spot {
+  position: absolute;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px dashed rgba(244, 240, 230, 0.55);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.photo-spot:hover,
+.photo-spot.on { background: rgba(232, 169, 59, 0.22); border: 3px solid var(--ochre); }
+.photo-pic.empty { display: grid; place-items: center; aspect-ratio: 16 / 9; font-family: var(--doc); font-size: 15px; color: rgba(244, 240, 230, 0.7); }
+.photoview-say { min-height: 1.5em; margin: 8px 0 0; font-family: var(--doc); font-size: 16px; line-height: 1.5; color: #8a3a2a; word-break: keep-all; }
+.photoview-say.good { color: #2b5a2b; }
+.photoview-say.on { animation: row-in 0.3s ease-out both; }
+.photoview-closing { grid-column: 1 / -1; margin: 6px 0 0; font-family: var(--doc); font-size: 16px; line-height: 1.55; color: var(--ink); }
+.photo-analysis .photoview-closing { grid-column: 1 / -1; }
+
+/* Pairing two records (1화: the 112 call and the alley recording). */
+.matchview { position: absolute; inset: 0; z-index: 16; display: grid; place-items: center; background: rgba(8, 12, 26, 0.82); }
+.matchview-panel { width: 1120px; padding: 18px 22px 16px; color: var(--ink); background: var(--paper); border-radius: 6px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+.matchview-title { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; }
+.matchview-prompt { margin: 6px 0 10px; font-family: var(--doc); font-size: 17px; line-height: 1.5; word-break: keep-all; }
+.matchview-rows { display: grid; gap: 10px; }
+.match-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: stretch; padding: 8px; border-radius: 4px; background: rgba(43, 58, 115, 0.06); }
+.match-row.active { background: rgba(232, 169, 59, 0.14); }
+.match-label { display: grid; align-content: center; font-size: 15px; color: #2b3a73; word-break: keep-all; }
+.match-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.match-card {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: #fffdf6;
+  border: 2px solid #c9bfa6;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.match-card:hover { border-color: #2b3a73; }
+.match-card.focus { outline: 3px solid var(--ochre); outline-offset: 1px; }
+.match-card.on { background: #2b3a73; border-color: #2b3a73; color: var(--paper); }
+.match-card.dim { opacity: 0.35; }
+.match-time { font-family: var(--doc); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px; }
+.match-who { font-size: 12px; opacity: 0.8; }
+.match-text { font-family: var(--doc); font-size: 14px; line-height: 1.4; word-break: keep-all; }
+.matchview-say { min-height: 1.5em; margin: 10px 0 0; font-family: var(--doc); font-size: 16px; line-height: 1.5; color: #8a3a2a; word-break: keep-all; }
+.matchview-say.good { color: #2b5a2b; }
+.matchview-say.on { animation: row-in 0.3s ease-out both; }
+.matchview-foot { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.matchview-hint { flex: 1; font-size: 12px; color: #6b5f4a; }

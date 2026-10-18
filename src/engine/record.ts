@@ -1,12 +1,11 @@
 import { sfx } from './audio';
-import { el, replay } from './dom';
+import { el, replay, scrollWithin } from './dom';
 import { fromSpace, push } from './input';
 import { paintCompare } from './photos';
 import { paintFace, paintItem } from './portrait';
 import type { Evidence, Profile } from './types';
 
 type Tab = 'evidence' | 'profiles' | 'memo';
-const COLS = 3;
 
 /** Something held up in court: a piece of evidence or a person's profile. */
 export interface HeldItem {
@@ -51,6 +50,8 @@ export class CourtRecord {
   memos: () => string[] = () => [];
   private body: HTMLElement;
   private promptText = '';
+  /** Where the player left the record when only reading it, to come back to the same page. */
+  private lastView: { tab: Tab; id: string; scroll: number } | null = null;
 
   constructor(
     parent: HTMLElement,
@@ -141,9 +142,15 @@ export class CourtRecord {
     return [...this.evidence, ...this.profiles].map((x) => x.id).filter((id) => this.owned.has(id));
   }
 
-  /** Evidence the player holds, in case-file order. */
+  /** Evidence the player holds: by shelf when the case has shelves, otherwise in case-file order. */
   private get held(): Evidence[] {
-    return this.evidence.filter((e) => this.owned.has(e.id));
+    const held = this.evidence.filter((e) => this.owned.has(e.id));
+    const order = [...new Set(this.evidence.map((e) => e.group ?? ''))];
+    return held.sort((a, b) => order.indexOf(a.group ?? '') - order.indexOf(b.group ?? ''));
+  }
+
+  private memoUnread(): number {
+    return Math.max(0, this.memos().length - (this.addendaSeen.get('memo') ?? 0));
   }
 
   private get people(): Profile[] {
@@ -183,12 +190,27 @@ export class CourtRecord {
     this.tab = 'evidence';
     // Presenting starts with nothing chosen, so a stray Enter can never present by itself.
     this.sel = mode === 'present' ? -1 : 0;
+    let scroll = 0;
+    const back = mode === 'view' && !focus ? this.lastView : null;
+    if (back) {
+      const list: { id: string }[] = back.tab === 'profiles' ? this.people : this.held;
+      const i = list.findIndex((x) => x.id === back.id);
+      if (back.tab === 'memo' || i >= 0) {
+        this.tab = back.tab;
+        this.sel = Math.max(0, i);
+        scroll = back.scroll;
+      }
+    }
     if (focus) {
       const i = this.held.findIndex((e) => e.id === focus);
       if (i >= 0) this.sel = i;
     }
     this.render();
-    if (focus) this.scrollToUnread();
+    // Once the sheet is laid out (a timer, not a frame: frames pause in a background tab).
+    setTimeout(() => {
+      if (focus) this.scrollToUnread();
+      else if (scroll) this.sheet.scrollTop = scroll;
+    }, 30);
     sfx('paper');
     return new Promise((resolve) => {
       const pop = push((a) => {
@@ -201,10 +223,14 @@ export class CourtRecord {
         else if (a === 'tab') this.setTab(this.nextTab());
         else if (a === 'left') this.move(-1);
         else if (a === 'right') this.move(1);
-        else if (a === 'up') this.move(-COLS);
-        else if (a === 'down') this.move(COLS);
+        else if (a === 'up') this.moveRow(-1);
+        else if (a === 'down') this.moveRow(1);
       }, { strict: true });
       this.finish = (id) => {
+        if (this.mode === 'view') {
+          const cur = this.tab === 'memo' ? { id: '' } : this.tab === 'evidence' ? this.held[this.sel] : this.people[this.sel];
+          this.lastView = cur ? { tab: this.tab, id: cur.id, scroll: this.sheet.scrollTop } : null;
+        }
         pop();
         this.observer?.disconnect();
         this.root.hidden = true;
@@ -269,11 +295,40 @@ export class CourtRecord {
     this.render();
   }
 
+  /** Up and down follow the tiles on screen, which shelf headings break into uneven rows. */
+  private moveRow(dir: 1 | -1): void {
+    if (this.tab === 'memo') {
+      this.move(dir);
+      return;
+    }
+    const tiles = [...this.grid.querySelectorAll<HTMLElement>('.tile')];
+    if (!tiles.length) return;
+    if (this.sel < 0) {
+      this.move(1);
+      return;
+    }
+    const cur = tiles[this.sel];
+    const below = tiles.filter((t) => (dir > 0 ? t.offsetTop > cur.offsetTop + 4 : t.offsetTop < cur.offsetTop - 4));
+    if (!below.length) return;
+    const tops = below.map((t) => t.offsetTop);
+    const rowTop = dir > 0 ? Math.min(...tops) : Math.max(...tops);
+    const row = below.filter((t) => Math.abs(t.offsetTop - rowTop) < 4);
+    const best = row.reduce((a, b) => (Math.abs(b.offsetLeft - cur.offsetLeft) < Math.abs(a.offsetLeft - cur.offsetLeft) ? b : a));
+    this.sel = tiles.indexOf(best);
+    sfx('select');
+    this.render();
+    const tile = this.grid.querySelectorAll('.tile')[this.sel];
+    if (tile) scrollWithin(this.grid, tile, 'nearest');
+  }
+
   private render(): void {
     for (const t of ['evidence', 'profiles', 'memo'] as Tab[]) {
       this.tabBtns[t].classList.toggle('on', t === this.tab);
     }
     this.tabBtns.memo.hidden = this.memos().length === 0;
+    const unread = this.tab === 'memo' ? 0 : this.memoUnread();
+    this.tabBtns.memo.textContent = unread ? `메모 ${unread}` : '메모';
+    this.tabBtns.memo.classList.toggle('unread', unread > 0);
     if (this.tab === 'memo' && this.tabBtns.memo.hidden) this.tab = 'evidence';
     this.body.classList.toggle('memo-mode', this.tab === 'memo');
     this.presentBtn.hidden = this.mode !== 'present' || this.tab === 'memo';
@@ -287,7 +342,11 @@ export class CourtRecord {
     this.presentBtn.disabled = this.sel < 0;
     this.presentBtn.textContent = this.tab === 'evidence' ? '이 증거를 제시한다  Enter' : '이 인물을 제시한다  Enter';
     this.grid.replaceChildren();
+    let shelf: string | undefined;
     items.forEach((item, i) => {
+      const g = 'icon' in item ? item.group : undefined;
+      if (g && g !== shelf) el('div', 'grid-shelf', this.grid, g);
+      shelf = g;
       const tile = el('button', 'tile', this.grid);
       tile.classList.toggle('on', i === this.sel);
       if ('icon' in item) paintItem(el('span', 'tile-pic', tile), item);
@@ -310,6 +369,11 @@ export class CourtRecord {
   }
 
   private renderMemo(): void {
+    const n = this.memos().length;
+    if ((this.addendaSeen.get('memo') ?? 0) < n) {
+      this.addendaSeen.set('memo', n);
+      this.onSeen?.('memo', n);
+    }
     this.sheet.replaceChildren();
     el('div', 'sheet-label', this.sheet, '강단비의 수첩');
     el('h2', 'sheet-title', this.sheet, '지금까지 알게 된 것');
@@ -319,7 +383,7 @@ export class CourtRecord {
 
   private scrollToUnread(): void {
     const target = this.sheet.querySelector('.addendum.unread') ?? this.sheet.querySelector('.addendum:last-of-type');
-    target?.scrollIntoView({ block: 'center' });
+    if (target) scrollWithin(this.sheet, target, 'center');
   }
 
   private renderSheet(): void {
@@ -381,7 +445,10 @@ export class CourtRecord {
         const nav = el('div', 'sheet-nav', this.sheet);
         sections.forEach((s, k) => {
           const b = el('button', 'btn btn-small', nav, s.slice(1, -1));
-          b.addEventListener('click', () => this.sheet.querySelector(`[data-sec="${k}"]`)?.scrollIntoView({ block: 'start' }));
+          b.addEventListener('click', () => {
+            const sec = this.sheet.querySelector(`[data-sec="${k}"]`);
+            if (sec) scrollWithin(this.sheet, sec, 'start');
+          });
         });
       }
       const detail = el('div', 'sheet-detail', this.sheet);

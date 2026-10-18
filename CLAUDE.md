@@ -48,6 +48,7 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 - Pressing a statement runs its `press` script, then jumps to any statement that replaced it.
 - Presenting evidence checks `accept` first, then `nearMiss` (a hint with no penalty), then plays the wrong-answer script and calls `penalty()`. A testimony or step with `free` costs nothing.
 - In 4화 a game over resets the gauge and `revealed` to their values at the start of that cross-examination. In 1화 running out of chances calls `outOfChances()`: "기록 보고 이어하기" opens the record and refills the chances; "이 심문 처음부터" resets `revealed`. Neither touches the prediction.
+- 1화 also has two in-screen puzzles that cost nothing when wrong: `match` (engine/match.ts, pair a card from each of two records) and `photoTask` (engine/photos.ts, point at a part of a photo, then pick the last frame with it and the first without it).
 - With `hintMode: 'manual'` (1화) hints only open on request: `HintPanel` (`engine/hints.ts`) shows `Testimony.hintText` or a step's `opts.hints`, one stage per press. Without it, `Testimony.hints` scripts play on loop-back and on H (4화).
 
 **Input** goes through a handler stack in `engine/input.ts`. Only the top handler receives actions, so an open overlay blocks what is underneath; scripts wait with `waitFor([...])`. The settings and backlog panels are modals that sit above the stack. Keys are matched by `KeyboardEvent.code`, so they still work while the Korean IME is on. Choice screens push with `{ strict: true }`: they ignore key repeat and any key already held when they opened, so mashing Enter through dialogue never picks an answer. Enter and Space both emit `'advance'`; `fromSpace()` tells them apart (the court record uses Space for the large map/photo view, Enter to present).
@@ -57,7 +58,7 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 **Saves** use one localStorage slot per case, `pan-dwijibgi:save:<caseId>`.
 - Checkpoints are written at each scene start, at each investigation menu and at each cross-examination statement.
 - `end` clears the save and marks the case as solved.
-- When a rewrite makes old saves meaningless, change `CaseData.id`. 1화 also stores `CaseData.revision` (`EP1-R2`) in the save and rejects a mismatch; `legacyIds` lists the old ids so an unsolved player gets a one-time "내용이 개정되었어요" card.
+- When a rewrite makes old saves meaningless, change `CaseData.id`. 1화 also stores `CaseData.revision` (`EP1-R3`) in the save and rejects a mismatch; `legacyIds` lists the old ids so an unsolved player gets a one-time "내용이 개정되었어요" card.
 - `CaseData.checkpoints` (1화 CP1–CP8) say what evidence, flags and prediction a scene starts with. They drive "장면 선택" on a solved case and `?scene=` jumps; a jump to a scene without one uses the nearest earlier checkpoint plus all evidence.
 
 **Art is matched by file path only** (`engine/assets.ts`, eager `import.meta.glob`):
@@ -69,6 +70,7 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 | Evidence | `items/<evidenceId or art>.png` | |
 | Profile photos | `portraits/<profileId>.png` | Otherwise cropped from the sprite via `sprite` and `face` |
 | Event CG | `cg/<id>.png` | |
+| Photo-set plates | `photos/<image>.png` | One background under every frame of a photo set; `engine/photos.ts` draws what changes on top |
 
 Missing art falls back to a placeholder. Every image is preloaded on the title screen; `src/assets` is about 125 MB of PNG today.
 

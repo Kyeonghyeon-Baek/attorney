@@ -1,11 +1,12 @@
 import { AskPanel } from './ask';
 import { Backlog } from './backlog';
 import { HintPanel } from './hints';
+import { MatchView } from './match';
 import { PhotoView } from './photos';
 import { allImageUrls, bgImage } from './assets';
 import { initAudio, isMuted, playAmbience, playBgm, setMuted, sfx } from './audio';
 import { Cinema } from './cinema';
-import { el, josa, replay, sleep } from './dom';
+import { el, flash, josa, replay, sleep } from './dom';
 import { Effects } from './effects';
 import { Gauge } from './gauge';
 import { bindKeyboard, emit, waitFor } from './input';
@@ -66,7 +67,7 @@ export interface CaseData {
   crossBgm?: BgmName;
   /** Stop the music the moment a correct objection lands; the script starts the next track. */
   cutMusicOnObjection?: boolean;
-  /** Script revision (1화: 'EP1-R2'). A save from another revision is never resumed. */
+  /** Script revision (1화: 'EP1-R3'). A save from another revision is never resumed. */
   revision?: string;
   /** Earlier save ids of this case, so the list can say the episode was revised. */
   legacyIds?: string[];
@@ -138,6 +139,7 @@ export class Game {
   private lastSaveOk = true;
   private saveFlash: HTMLElement;
   private memoFlash: HTMLElement;
+  private memoBurst = 0;
   private toast: HTMLElement;
   private chances = 0;
   private chanceUi: HTMLElement;
@@ -161,7 +163,8 @@ export class Game {
     this.chanceUi = el('div', 'chances', hud);
     this.chanceUi.hidden = true;
     const tools = el('div', 'hud-tools', hud);
-    const recordBtn = el('button', 'btn btn-small', tools, '법원기록  R');
+    // Hidden while a card screen is up (game over, ending): the record cannot open there.
+    const recordBtn = el('button', 'btn btn-small hud-record', tools, '법원기록  R');
     recordBtn.addEventListener('click', () => emit('record'));
     const logBtn = el('button', 'btn btn-small', tools, '대사 기록  L');
     logBtn.addEventListener('click', () => void this.openBacklog());
@@ -171,9 +174,12 @@ export class Game {
     this.muteBtn.addEventListener('click', () => this.toggleMute());
     this.paintMute();
     this.saveFlash = el('div', 'save-flash', hud, '자동 저장됨');
+    this.saveFlash.hidden = true;
     // In the HUD column, so it always sits under the prediction, the chances and the buttons.
-    this.memoFlash = el('div', 'memo-flash', hud, '✎ 수첩에 적었다  (법원기록 → 메모)');
+    this.memoFlash = el('div', 'memo-flash', hud);
+    this.memoFlash.hidden = true;
     this.toast = el('div', 'toast', this.stage);
+    this.toast.hidden = true;
 
     this.ask = new AskPanel(this.stage);
     this.fx = new Effects(this.stage, fast);
@@ -506,7 +512,7 @@ export class Game {
       log: this.backlog.recent(LOG_KEEP),
     };
     this.lastSaveOk = writeSave(this.lastSave);
-    if (this.lastSaveOk && label !== this.lastSaveLabel) replay(this.saveFlash, 'on');
+    if (this.lastSaveOk && label !== this.lastSaveLabel) flash(this.saveFlash, 'on', 1800);
     this.lastSaveLabel = label;
   }
 
@@ -569,7 +575,7 @@ export class Game {
         if (!this.flags.has(`memo:${cmd.text}`)) {
           this.flags.add(`memo:${cmd.text}`);
           sfx('paper');
-          replay(this.memoFlash, 'on');
+          this.flashMemo();
         }
         return;
       case 'tint':
@@ -654,6 +660,24 @@ export class Game {
       case 'showRecord':
         this.box.hide();
         await this.record.open('view', '', true, undefined, cmd.id);
+        return;
+      case 'match':
+        this.box.hide();
+        this.stepHints(cmd.opts, cmd.task.title, cmd.task.title);
+        try {
+          await new MatchView().open(this.stage, cmd.task);
+        } finally {
+          this.hintCtx = null;
+        }
+        return;
+      case 'photoTask':
+        this.box.hide();
+        this.stepHints(cmd.opts, cmd.task.region.prompt, '사진 비교');
+        try {
+          await new PhotoView().task(this.stage, cmd.set, cmd.task);
+        } finally {
+          this.hintCtx = null;
+        }
         return;
       case 'evidence':
         this.scene.showEvidence(this.record.item(cmd.id));
@@ -977,7 +1001,16 @@ export class Game {
 
   private showToast(text: string): void {
     this.toast.textContent = text;
-    replay(this.toast, 'on');
+    flash(this.toast, 'on', 3200);
+  }
+
+  /** "Noted" for a few seconds. Lines written in a row are counted in one notice, not stacked. */
+  private flashMemo(): void {
+    this.memoBurst++;
+    const total = [...this.flags].filter((f) => f.startsWith('memo:')).length;
+    const where = total <= 3 ? '  (법원기록 → 메모)' : '';
+    this.memoFlash.textContent = this.memoBurst > 1 ? `✎ 수첩에 ${this.memoBurst}줄 적었다${where}` : `✎ 수첩에 적었다${where}`;
+    flash(this.memoFlash, 'on', 2600, () => (this.memoBurst = 0));
   }
 
   /** Plays the testimony's next hint; they go from vague to concrete and the last one repeats. */
@@ -1114,7 +1147,8 @@ export class Game {
         this.scene.show(cmd.who);
         this.box.hide();
         this.ask.onHint = this.hintCtx ? () => void this.openHintWindow() : null;
-        const idx = await this.ask.open(cmd.note, cmd.options.map((o) => o.label), used, cmd.title);
+        // Without a right answer it is only a "where next" menu: one click is enough.
+        const idx = await this.ask.open(cmd.note, cmd.options.map((o) => o.label), used, cmd.title, !hasCorrect);
         this.ask.onHint = null;
         used.add(idx);
         const opt = cmd.options[idx];

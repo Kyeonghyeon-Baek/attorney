@@ -183,6 +183,8 @@ export class Effects {
   async card(build: (body: HTMLElement) => void, buttons: string | CardButton[], cls = ''): Promise<number> {
     const list: CardButton[] = typeof buttons === 'string' ? [{ label: buttons, primary: true }] : buttons;
     const node = el('div', `card-screen ${cls}`, this.stage);
+    // The HUD stays visible, but the court record cannot open over a card, so its button goes.
+    this.stage.classList.add('card-open');
     const body = el('div', 'card-body', node);
     build(body);
     const row = el('div', 'card-actions', body);
@@ -211,6 +213,7 @@ export class Effects {
       btns.forEach((b, i) => b.addEventListener('click', () => press(i)));
     });
     node.remove();
+    if (!this.stage.querySelector('.card-screen')) this.stage.classList.remove('card-open');
     return chosen;
   }
 }

@@ -21,6 +21,15 @@ const cgs = import.meta.glob('../assets/cg/*.png', {
   eager: true, query: '?url', import: 'default',
 }) as Record<string, string>;
 
+const photos = import.meta.glob('../assets/photos/*.png', {
+  eager: true, query: '?url', import: 'default',
+}) as Record<string, string>;
+
+/** The background plate of a still-photo set (see engine/photos.ts). */
+export function photoImage(id: string): string | undefined {
+  return photos[`../assets/photos/${id}.png`];
+}
+
 export function cgImage(id: string): string | undefined {
   return cgs[`../assets/cg/${id}.png`];
 }
@@ -44,6 +53,6 @@ export function bgImage(id: string): string | undefined {
 export function allImageUrls(): string[] {
   return [
     ...Object.values(chars), ...Object.values(backgrounds), ...Object.values(items),
-    ...Object.values(portraits), ...Object.values(cgs),
+    ...Object.values(portraits), ...Object.values(cgs), ...Object.values(photos),
   ];
 }

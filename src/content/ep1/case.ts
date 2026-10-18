@@ -1,13 +1,13 @@
 import { cgImage } from '../../engine/assets';
 import type { CaseData, Checkpoint } from '../../engine/game';
 import { say, think } from '../script';
-import { ANN_AUTOPSY, ANN_CALL112, ANN_SHARE, FINALE_SCENES, FINALE_TESTIMONIES } from './finale';
+import { ANN_AUTOPSY, ANN_CALL112, ANN_RECORDER, ANN_SHARE, FINALE_SCENES, FINALE_TESTIMONIES } from './finale';
 import { OPENING_SCENES } from './opening';
 import { EVIDENCE, PROFILES } from './records';
 import { TAPE_SCENES, TAPE_TESTIMONIES } from './tape';
 import { TRIAL_SCENES, TRIAL_TESTIMONIES } from './trial';
 
-// 제1화 「무인(無人)의 밤」 — 시리즈의 첫 사건이자 튜토리얼 (개정 EP1-R2).
+// 제1화 「무인(無人)의 밤」 — 시리즈의 첫 사건이자 튜토리얼 (개정 EP1-R3).
 // 범인을 먼저 보여 주는 도치 서술. 녹음기가 담은 02:41의 첫 폭행을 사망 순간으로 읽을 뻔하다가,
 // 오정택의 인정 뒤에도 치명상 시각이 남는다는 것을 확인하고, 상처 조각 감정 + 112 현장 공유 사진 + 골목 녹음으로
 // 태오가 그 10초에 없었음을 자백 전에 입증한다.
@@ -55,7 +55,7 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: 'CP6 · 상패와 머리 손상 심문',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
-      'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', `ann:call112|${ANN_CALL112}`,
+      'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`,
       'memo:[장면 선택] 오정택은 02:57까지 창고 안에 있었다(도어락). 통화 중 태오는 골목에 있었다(녹음기·도어락).',
     ],
     gauge: 24.0,
@@ -65,7 +65,7 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: 'CP7 · 오후 4시 감정 결과',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
-      'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:compareNeeded', `ann:call112|${ANN_CALL112}`,
+      'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:compareNeeded', `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`,
       'memo:[장면 선택] 상처 속 조각과 가방 속 판 본체의 대조 결과를 기다렸다(오후 4시).',
     ],
     gauge: 24.0,
@@ -77,7 +77,7 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     flags: [
       'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:compareNeeded', 'ep1:fragmentMatch',
       'ep1:injuryWindow', 'ep1:defenseComplete', 'ep1:reportFalse', 'photomark:share112',
-      `ann:call112|${ANN_CALL112}`, `ann:autopsy|${ANN_AUTOPSY}`, `ann:share112|${ANN_SHARE}`,
+      `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`, `ann:autopsy|${ANN_AUTOPSY}`, `ann:share112|${ANN_SHARE}`,
     ],
     gauge: 0,
     status: '판결 확정',
@@ -85,10 +85,10 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
 };
 
 export const CASE_EP1: CaseData = {
-  // r2: 2026-10 두 번째 개정(EP1-R2). 예전 저장(case1-orot, case1-orot-v2)은 이어하지 않고 지우지도 않는다.
-  id: 'case1-orot-r2',
-  revision: 'EP1-R2',
-  legacyIds: ['case1-orot', 'case1-orot-v2'],
+  // r3: 2026-10 세 번째 개정(EP1-R3, GPT 플레이 피드백). 예전 저장(case1-orot, -v2, -r2)은 이어하지 않고 지우지도 않는다.
+  id: 'case1-orot-r3',
+  revision: 'EP1-R3',
+  legacyIds: ['case1-orot', 'case1-orot-v2', 'case1-orot-r2'],
   ep: 1,
   menu: {
     no: '제1화',

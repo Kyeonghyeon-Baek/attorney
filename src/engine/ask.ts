@@ -5,9 +5,10 @@ import { push, type Action } from './input';
 const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3 };
 
 /**
- * "질문 재구성" (4화) and plain choices (1화). The panel opens with nothing chosen: arrows, number
+ * "질문 재구성" (4화) and plain choices (1화). An answer opens with nothing chosen: arrows, number
  * keys or a click choose an option, and only Enter, the confirm button or a second click on the
- * same option submits it.
+ * same option submits it. A `quick` menu (where to go next, nothing to get wrong) starts on the
+ * first option and takes a single click or number key.
  */
 export class AskPanel {
   private root: HTMLElement;
@@ -34,12 +35,14 @@ export class AskPanel {
     this.hintBtn.addEventListener('click', () => this.onHint?.());
   }
 
-  open(note: string, labels: string[], used: Set<number>, title = '질문 재구성'): Promise<number> {
+  open(note: string, labels: string[], used: Set<number>, title = '질문 재구성', quick = false): Promise<number> {
     this.title.textContent = title;
     this.note.textContent = note;
     this.root.hidden = false;
+    this.root.classList.toggle('quick', quick);
     this.hintBtn.hidden = !this.onHint;
-    let sel = -1;
+    this.confirm.hidden = quick;
+    let sel = quick ? 0 : -1;
     const buttons = labels.map((label, i) => {
       const b = el('button', 'ask-option', this.list);
       el('span', 'ask-key', b, String(i + 1));
@@ -50,7 +53,9 @@ export class AskPanel {
     const paint = () => {
       buttons.forEach((b, i) => b.classList.toggle('on', i === sel));
       this.confirm.disabled = sel < 0;
-      this.readout.textContent = sel < 0 ? '↑ ↓ 또는 숫자로 고른 뒤 Enter' : '고른 답: ' + (sel + 1) + '번';
+      this.readout.textContent = quick
+        ? '클릭하거나 숫자를 누르면 바로 정해져요'
+        : sel < 0 ? '↑ ↓ 또는 숫자로 고른 뒤 Enter' : '고른 답: ' + (sel + 1) + '번';
       this.readout.classList.remove('nudge');
     };
     paint();
@@ -75,14 +80,19 @@ export class AskPanel {
       };
       buttons.forEach((b, i) =>
         b.addEventListener('click', () => {
-          if (sel === i) choose();
-          else pick(i);
+          if (sel === i || quick) {
+            sel = i;
+            choose();
+          } else pick(i);
         }),
       );
       this.confirm.onclick = () => choose();
       const pop = push((a) => {
         const n = NUM[a];
-        if (n !== undefined && n < labels.length) pick(n);
+        if (n !== undefined && n < labels.length) {
+          pick(n);
+          if (quick) choose();
+        }
         else if (a === 'up') pick(sel <= 0 ? 0 : sel - 1);
         else if (a === 'down') pick(sel < 0 ? 0 : Math.min(labels.length - 1, sel + 1));
         else if (a === 'advance') choose();

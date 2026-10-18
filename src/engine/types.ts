@@ -1,3 +1,5 @@
+import type { MatchTask } from './match';
+import type { PhotoTask } from './photos';
 /**
  * `operator` is the hidden human answering through Daon's monitor; `haeun` is her in person.
  * `bang`, `watch` and `iguard` are voices only (a victim heard in the prologue and on tape,
@@ -54,6 +56,8 @@ export interface Evidence {
   limits?: string[];
   /** A set of still photos the court record can compare side by side (see src/engine/photos.ts). */
   photos?: string;
+  /** Shelf in the court record ("카메라·현장", "녹음·통화"…). Groups keep the order they first appear in. */
+  group?: string;
 }
 
 export interface Profile {
@@ -103,6 +107,10 @@ export type Cmd =
   | { t: 'predict'; value: number; reason: string; status?: string }
   /** Opens the court record on one piece of evidence, scrolled to its newest unread addendum. */
   | { t: 'showRecord'; id: string }
+  /** Two records side by side: the player pairs a card from each row (see engine/match.ts). */
+  | { t: 'match'; task: MatchTask; opts?: StepOpts }
+  /** A step inside a photo set's viewer: point at a part, then pick two frames (see engine/photos.ts). */
+  | { t: 'photoTask'; set: string; task: PhotoTask; opts?: StepOpts }
   | { t: 'evidence'; id: string | null }
   | { t: 'cross'; id: string }
   /** `nearMiss`: evidence that is right but not enough yet. It plays with no penalty and the question stays open. */
