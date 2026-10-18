@@ -1,7 +1,7 @@
 import type { Script, Testimony } from '../../engine/types';
 import {
   addEvidence, addProfile, ambience, bgm, bigshake, board, boardOff, cg, choose, cross, evidence, fadeIn, fadeOut,
-  field, flag, flash, goto, introduce, memo, note, option, place, predict, present, rec, recNote, row, say, sfx, shake,
+  field, flag, flash, goto, introduce, issue, memo, note, option, place, predict, present, rec, recNote, row, say, sfx, shake,
   show, tape, think, wait, when,
 } from '../script';
 
@@ -248,7 +248,8 @@ export const TAPE_SCENES: Record<string, Script> = {
         bigshake,
         sfx('murmur'),
         say('eom', '…이 녹음대로라면, 2시 41분 충돌 때 피고인은 매장에 있었습니다. 그건 인정하죠.', 'normal'),
-        predict(48.0, '첫 충돌 당시 피고인 부재 · 치명상 시점 미확인'),
+        predict(48.0, '첫 충돌 당시 피고인 부재 · 치명상 시점 미확인', '치명상 시점 미확인'),
+        issue('02:41 충돌은 태오 씨가 들어오기 전. 머리 치명상은 언제 생겼나?'),
         memo('[확인] 02:41 충돌 때 태오는 매장에 있었다(녹음기 순서 · CAM1).'),
       ], true),
       option('02:55의 파손음을 진입 시각과 비교합니다', [
@@ -335,7 +336,7 @@ export const TAPE_SCENES: Record<string, Script> = {
       hints: ['지금 입증한 것은 첫 충돌까지인가, 모든 상처까지인가?', '부검에서 머리 손상과 손목·옆구리 손상이 어떻게 적혀 있는지 보자.', '"머리 손상은 따로 보겠다"를 고르자.'],
       hintKey: 'q07',
     }),
-    predict(39.6, '첫 폭행의 다른 행위자 확인'),
+    predict(48.0, '첫 폭행의 다른 행위자 확인 · 머리 타격 혐의는 그대로'),
     memo('[확인] 02:41 폭행은 오정택(본인 인정, 시계 02:41:09). 손목·옆구리 손상과 맞는다.'),
     bgm('suspense'),
     say('oh', '하지만 그 뒤의 일은 다릅니다. 2시 45분쯤 나갔습니다. 사장님은 살아 계셨어요.', 'sweat'),
@@ -364,12 +365,12 @@ export const TAPE_SCENES: Record<string, Script> = {
     say('taeo', '근데 왜… 왜 저를 안 부르셨을까요.'),
     say('dan', '…그건 아직 모르는 일이에요. 지금 아는 척하지 않을게요.', 'normal'),
     when('ep1:careful', [
-      say('dan', '녹음이 보여 준 건 2시 41분까지였어. 그 뒤는 이제부터 봐야 해.', 'normal'),
+      say('dan', '녹음으로 첫 충돌은 확인했어. 머리 치명상이 언제 생겼는지는 아직 남아 있어.', 'normal'),
     ], [
       say('dan', '…아까 내가 너무 빨랐어. 맞는 녹음을, 내가 원하는 데까지 읽어 버렸어.', 'sweat'),
     ]),
     say('narae', '그럼 우리가 확실히 아는 것부터 다시 적자. 내가 받아 적을게.', 'normal'),
-    bgm('investigate'),
+    bgm('waitroom'),
     board('확실한 것과, 누군가의 말', [
       row('02:41', '오정택이 사장님을 밀쳤다 (녹음기 · 시계 · 본인 인정)', 'key', '확인'),
       row('02:42', '사장님의 희미한 신음 (녹음기)', undefined, '기록'),

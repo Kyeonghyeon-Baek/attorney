@@ -100,7 +100,7 @@ src/
     invest.ts             조사 메뉴, 조사 포인트 고르기, 이동·대화 목록
     gauge.ts              AI 판결 예측 (4화: 유죄 확률 = 체력, 1화: 서사가 정하는 값 + 상태 배지)
     audio.ts              악기·잔향·효과음·환경음 (전부 코드로 합성)
-    music.ts              배경음악 악보 (곡 19개)
+    music.ts              배경음악 악보 (곡 24개)
     portrait.ts           인물 사진(캐릭터 그림에서 얼굴 자르기)과 증거 그림
   assets/               ← 그림. 넣기만 하면 자동으로 인식돼요
 docs/art-guide.md       ← 그림 규칙과 Codex 프롬프트
@@ -205,11 +205,13 @@ present('질문', ['autopsy', 'sceneItems'], [맞을 때], [틀릴 때], { share
 choose('제목', '질문', [option(…)], 'dan', { free: true, hints: [...], hintKey: 'q09' }),
 pinpoint('orot', '질문', 'desk', [맞을 때], [틀릴 때], { free: true, hints: [...] }),
 match({ title, prompt, rows: [{ label, cards: [{ id, time, who, text }] }, { … }],
-  answer: [['c44', 'a40']], wrong: { c16: '…', 'c52|a40': '…', default: '…' }, done: '…' }, { hints }),
+  answer: [['c44', 'a40']], wrong: { c16: '…', 'c52|a40': '…', default: '…' }, done: '…', confirm: '이 둘을 맞세운다' }, { hints }),
 photoTask('share112', { region: { frame, view, prompt, spots, answer, wrong, done },
   frames: { prompt, answer: [1, 2], bothIntact, bothBroken, gap, done }, closing }, { hints }),
 ```
 
+- `issue('…')`는 판관 예측 아래에 "지금의 쟁점" 한 줄을 띄워요(저장에 남고, `issue(null)`로 지워요). 정답을 미리 말하지 않는 질문으로 써요.
+- `dimHud(true)`는 클라이맥스 동안 HUD를 흐리게 하고, `dimHud(false)`로 되돌려요.
 - `match`는 두 기록을 위아래 줄의 카드로 놓고, 한 장씩 골라 짝짓게 해요. 정답 쌍을 여러 개 줄 수 있고, 오답은 `위|아래`, 위 카드, 아래 카드, `default` 순서로 찾은 피드백 한 줄만 보여 줘요(기회는 줄지 않아요).
 - `photoTask`는 사진 세트의 뷰어 안에서 두 단계를 이어서 해요. 한 장의 사진에서 부분을 지목하고(`spots`, 사진 좌표), 그 부분이 남은 마지막 사진과 사라진 첫 사진을 고르면 확대와 감정 도식이 나와요.
 
@@ -259,7 +261,7 @@ photoTask('share112', { region: { frame, view, prompt, spots, answer, wrong, don
 
 모든 소리는 WebAudio로 합성해요. 파일이 없어도 돼요.
 
-- **배경음악** (`src/engine/music.ts`): 타이틀 테마, 법정·증언·반대신문·추궁·진범 추궁·긴장·다온 테마·조사(로비/고객센터/서버실)·슬픔·무죄·에필로그, 1화의 새벽 편의점(`night`)·오정택 테마(`oh`)·정(情) 테마(`jeong`)·엄정한 테마(`eom`)·반전(`objection`). 음표를 글자로 적는 악보 형식이라 대본처럼 고칠 수 있어요.
+- **배경음악** (`src/engine/music.ts`): 타이틀 테마, 법정·증언·반대신문·추궁·진범 추궁·긴장·다온 테마·조사(로비/고객센터/서버실)·슬픔·무죄·에필로그, 1화의 새벽 편의점(`night`)·오정택 테마(`oh`)·정(情) 테마(`jeong`)·엄정한 테마(`eom`)·반전(`objection`)·대기실(`waitroom`)·후반 반대신문과 증언(`crossTense`·`testimonyTense`, 같은 동기의 긴장 변주)·진상 직전(`climax`)·추궁(`pursuitTruth`, 타이틀 동기를 펼친 마지막 한 방). 증언에 `hearing`·`crossBgm`을 주면 그 반대신문만 곡이 바뀌어요. 음표를 글자로 적는 악보 형식이라 대본처럼 고칠 수 있어요.
 - **환경음**: 법정, 로비, 고객센터(시계 초침), 서버실(팬 소리), 대기실, 편의점(냉장고 소리), 밤 골목, 녹음기 잡음.
 - **효과음**: 책상 치기, 깨달음 차임, 충격 스팅, 방청석 웅성거림, 발소리, 문, 타자 소리, 편의점 문 차임, 스마트워치 알림, 셔터, AI 감지 경고, 녹음기 재생, 둔탁한 충돌 등. `sfx('realize')`처럼 대본에 넣어요.
 - 설정(O)의 음악·효과음 크기는 0~10, 기본 8이에요.

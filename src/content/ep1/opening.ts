@@ -1,7 +1,7 @@
 import type { Script } from '../../engine/types';
 import {
   addEvidence, ambience, bgm, bigshake, board, boardOff, box, cctv, cctvOff, cg, choose, cross, detect, episode,
-  evidence, fadeIn, fadeOut, field, flag, goto, hud, introduce, memo, note, option, place, plan, planOff, pulse,
+  evidence, fadeIn, fadeOut, field, flag, goto, hud, introduce, issue, memo, note, option, place, plan, planOff, pulse,
   redflash, row, say, sfx, shake, show, think, tint, wait,
 } from '../script';
 
@@ -93,7 +93,7 @@ export const OPENING_SCENES: Record<string, Script> = {
     show('dan', 'sweat'),
     think('(국선전담변호사 1년 차. 처음 맡은 살인 사건. …손이 떨린다.)'),
     sfx('door'),
-    bgm('investigate'),
+    bgm('waitroom'),
     say('narae', '저기요!! 국선변호사님 맞죠? 신태오 변호하는!', 'surprised'),
     say('narae', '저 신나래예요! 태오 오빠 사촌 동생! 우리 오빠, 여름에 모기도 못 잡아서 맨날 물리는 사람이에요.', 'angry'),
     say('narae', '"걔도 먹고살아야지" 이러면서! 그런 사람이 사람을 죽여요!?'),
@@ -272,6 +272,7 @@ export const OPENING_SCENES: Record<string, Script> = {
     say('judge', '2분이라…. 컵라면도 못 익을 시간이로군요.'),
     say('eom', '사람을 해치는 데는 2초면 충분합니다.'),
     memo('[검찰 주장] 태오가 02:50~02:52 창고에서 점주의 머리를 내리쳤다. 근거: CAM3 창고 진입, 02:55:16 신고 "머리를 다쳤다".'),
+    issue('태오 씨가 창고에 있던 2분(02:50~02:52) 동안, 머리 손상이 생겼는가?'),
     memo('[기록] 부검: 머리 손상 한 곳, 상처 속 투명 조각 3점(대조 감정 결과는 오늘 오후). 사망 추정 02:30~03:20.'),
     boardOff,
     say('taeo', '…저는, 사장님을 다치게 한 적 없어요.', 'sad'),

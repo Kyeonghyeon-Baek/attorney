@@ -17,62 +17,67 @@ const BASE = ['iguardLog', 'autopsy', 'scenePhoto', 'sceneItems', 'layout', 'shu
 
 const CHECKPOINTS: Record<string, Checkpoint> = {
   trial: {
-    label: 'CP1 · 첫 공판',
+    label: '1. 첫 공판',
     evidence: BASE,
     flags: ['ep1:foodTold', 'memo:[장면 선택] 태오: 봉지는 점주가 허락해 온 폐기 음식, 받는 분은 조말순 할머니. 할머니께 출석 요청.'],
     gauge: 96.4,
     status: '신고 내용 미검증',
   },
   witness1: {
-    label: 'CP2 · 오정택의 첫 목격 증언',
+    label: '2. 오정택의 첫 목격 증언',
     evidence: BASE,
-    flags: ['ep1:foodTold', 'memo:[장면 선택] 아이가드의 "1명"은 매장 구역의 관측. 창고 구석과 뒷문은 카메라 밖.'],
+    flags: [
+      'issue|태오 씨가 창고에 있던 2분(02:50~02:52) 동안, 머리 손상이 생겼는가?','ep1:foodTold', 'memo:[장면 선택] 아이가드의 "1명"은 매장 구역의 관측. 창고 구석과 뒷문은 카메라 밖.'],
     gauge: 90.2,
     status: '진술 검토 중',
   },
   grandma: {
-    label: 'CP3 · 조말순 할머니의 증언',
+    label: '3. 조말순 할머니의 증언',
     evidence: [...BASE, 'oh'],
-    flags: ['ep1:foodTold', 'memo:[장면 선택] 셔터 때문에 "봤다"는 철회. 02:45 무렵 태오는 CAM1에 계속 찍혔다.'],
+    flags: [
+      'issue|태오 씨가 창고에 있던 2분(02:50~02:52) 동안, 머리 손상이 생겼는가?','ep1:foodTold', 'memo:[장면 선택] 셔터 때문에 "봤다"는 철회. 02:45 무렵 태오는 CAM1에 계속 찍혔다.'],
     gauge: 69.1,
     status: '진술 검토 중',
   },
   tape: {
-    label: 'CP4 · 녹음기',
+    label: '4. 녹음기',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder'],
-    flags: ['ep1:foodTold', 'memo:[장면 선택] 봉지는 점주가 허락해 온 폐기 음식. 그 바닥에서 녹음기가 나왔다.'],
+    flags: [
+      'issue|태오 씨가 창고에 있던 2분(02:50~02:52) 동안, 머리 손상이 생겼는가?','ep1:foodTold', 'memo:[장면 선택] 봉지는 점주가 허락해 온 폐기 음식. 그 바닥에서 녹음기가 나왔다.'],
     gauge: 60.9,
     status: '진술 검토 중',
   },
   afternoon: {
-    label: 'CP5 · 오후 도어락 심문',
-    evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
-    flags: ['ep1:foodTold', 'ep1:firstAssault', 'memo:[장면 선택] 02:41 첫 폭행은 오정택(본인 인정). 머리 치명상이 언제 생겼는지는 아직. 오정택: "02:45쯤 나갔다".'],
-    gauge: 39.6,
-    status: '진술 검토 중',
-  },
-  callcross: {
-    label: 'CP6 · 상패와 머리 손상 심문',
+    label: '5. 오후 도어락 심문',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
+      'issue|02:41 충돌은 태오 씨가 들어오기 전. 머리 치명상은 언제 생겼나?','ep1:foodTold', 'ep1:firstAssault', 'memo:[장면 선택] 02:41 첫 폭행은 오정택(본인 인정). 머리 치명상이 언제 생겼는지는 아직. 오정택: "02:45쯤 나갔다".'],
+    gauge: 48.0,
+    status: '치명상 시점 미확인',
+  },
+  callcross: {
+    label: '6. 상패와 머리 손상 심문',
+    evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
+    flags: [
+      'issue|머리 상처와 상패는 같은 일인가? 그렇다면 언제였나?',
       'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`,
       'memo:[장면 선택] 오정택은 02:57까지 창고 안에 있었다(도어락). 통화 중 태오는 골목에 있었다(녹음기·도어락).',
     ],
-    gauge: 24.0,
-    status: '진술 검토 중',
+    gauge: 42.0,
+    status: '치명상 시점 미확인',
   },
   result: {
-    label: 'CP7 · 오후 4시 감정 결과',
+    label: '7. 오후 4시 감정 결과',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
       'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:compareNeeded', `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`,
       'memo:[장면 선택] 상처 속 조각과 가방 속 판 본체의 대조 결과를 기다렸다(오후 4시).',
     ],
-    gauge: 24.0,
+    gauge: 42.0,
     status: '감정 대기',
   },
   epilogue: {
-    label: 'CP8 · 판결 뒤 에필로그',
+    label: '8. 판결 뒤 에필로그',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
       'ep1:foodTold', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:compareNeeded', 'ep1:fragmentMatch',

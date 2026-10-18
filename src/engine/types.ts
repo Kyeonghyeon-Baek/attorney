@@ -22,7 +22,8 @@ export type BgmName =
   | 'trial' | 'testimony' | 'cross' | 'pursuit' | 'suspense' | 'daon'
   | 'investigate' | 'emptyroom' | 'serverroom' | 'sorrow'
   | 'cornered' | 'victory' | 'ending'
-  | 'title' | 'night' | 'oh' | 'jeong' | 'eom' | 'objection';
+  | 'title' | 'night' | 'oh' | 'jeong' | 'eom' | 'objection'
+  | 'crossTense' | 'testimonyTense' | 'climax' | 'pursuitTruth' | 'waitroom';
 export type AmbienceName = 'court' | 'lobby' | 'clock' | 'hum' | 'lounge' | 'store' | 'alley' | 'tape';
 export type DaonMode = 'normal' | 'glitch' | 'human';
 export type IconName = 'door' | 'autopsy' | 'card' | 'brochure' | 'log' | 'contract' | 'mic';
@@ -107,6 +108,10 @@ export type Cmd =
   | { t: 'predict'; value: number; reason: string; status?: string }
   /** Opens the court record on one piece of evidence, scrolled to its newest unread addendum. */
   | { t: 'showRecord'; id: string }
+  /** The question the trial is on right now, one line under the prediction (null clears it). */
+  | { t: 'issue'; text: string | null }
+  /** Steps the HUD back during a climax so the evidence and faces hold the eye. */
+  | { t: 'dimHud'; on: boolean }
   /** Two records side by side: the player pairs a card from each row (see engine/match.ts). */
   | { t: 'match'; task: MatchTask; opts?: StepOpts }
   /** A step inside a photo set's viewer: point at a part, then pick two frames (see engine/photos.ts). */

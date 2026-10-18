@@ -118,6 +118,10 @@ export const planOff: Cmd = { t: 'plan', map: null };
 export const memo = (text: string): Cmd => ({ t: 'memo', text });
 /** Hides the HUD for cinematic stretches (a prologue); `hud(true)` brings it back. */
 export const hud = (on: boolean): Cmd => ({ t: 'hud', on });
+/** One line under the prediction: what the trial is trying to settle now. `issue(null)` clears it. */
+export const issue = (text: string | null): Cmd => ({ t: 'issue', text });
+/** Fades the HUD back (true) or brings it forward again (false). */
+export const dimHud = (on: boolean): Cmd => ({ t: 'dimHud', on });
 /** Night lighting over backgrounds and people; `tint(null)` restores daylight. */
 export const tint = (mode: 'night' | null): Cmd => ({ t: 'tint', mode });
 /** The episode's title card. */

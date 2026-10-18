@@ -355,7 +355,7 @@ export const TRIAL_SCENES: Record<string, Script> = {
     say('narae', '아까 오빠 말 끝까지 들어 줬잖아요. 다들 숫자만 보고 있는데.', 'normal'),
     say('narae', '우리 할머니가 그랬어. 사람 편 드는 사람 옆에는 꼭 붙어 있으라고. …그러니까, 언니.'),
     say('dan', '…좋아요. 아니, 좋아. 나래야.', 'confident'),
-    bgm('investigate'),
+    bgm('waitroom'),
     choose('휴정 30분', '지금까지 밝혀진 것을 정리하고 갈까?', [
       option('지금까지 정리해 보기', [
         say('dan', '첫째. 아이가드의 "1명"은 매장 카메라가 센 거야. 창고 구석과 뒷문은 카메라 밖이고.'),

@@ -1996,7 +1996,10 @@ button { font: inherit; }
   cursor: pointer;
 }
 .match-card:hover { border-color: #2b3a73; }
-.match-card.focus { outline: 3px solid var(--ochre); outline-offset: 1px; }
+.match-card { position: relative; }
+.match-card.focus { outline: 3px dashed var(--ochre); outline-offset: 2px; }
+.match-check { position: absolute; top: 6px; right: 8px; padding: 1px 6px; font-size: 11px; color: #16204a; background: var(--ochre); border-radius: 3px; }
+.matchview-picks { margin: 8px 0 0; font-family: var(--doc); font-size: 14px; color: #2b3a73; min-height: 1.4em; }
 .match-card.on { background: #2b3a73; border-color: #2b3a73; color: var(--paper); }
 .match-card.dim { opacity: 0.35; }
 .match-time { font-family: var(--doc); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px; }
@@ -2007,3 +2010,11 @@ button { font: inherit; }
 .matchview-say.on { animation: row-in 0.3s ease-out both; }
 .matchview-foot { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .matchview-hint { flex: 1; font-size: 12px; color: #6b5f4a; }
+
+/* 1화 R4: the question on the table, and a quieter HUD at the climax. */
+.issue { max-width: 300px; padding: 4px 10px; font-family: var(--doc); font-size: 13px; line-height: 1.4; color: var(--paper); background: rgba(18, 26, 51, 0.86); border-left: 3px solid var(--ochre); border-radius: 3px; word-break: keep-all; }
+.issue.on { animation: row-in 0.35s ease-out both; }
+.hud { transition: opacity 0.4s; }
+.stage.hud-dim .hud { opacity: 0.22; }
+.stage.hud-dim .hud:hover { opacity: 1; }
+.sheet-detail .addendum { white-space: pre-line; }

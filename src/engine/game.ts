@@ -140,6 +140,7 @@ export class Game {
   private saveFlash: HTMLElement;
   private memoFlash: HTMLElement;
   private memoBurst = 0;
+  private issueUi!: HTMLElement;
   private toast: HTMLElement;
   private chances = 0;
   private chanceUi: HTMLElement;
@@ -161,6 +162,8 @@ export class Game {
     const hud = el('div', 'hud', this.stage);
     this.gauge = new Gauge(hud, 0, fast);
     this.chanceUi = el('div', 'chances', hud);
+    this.issueUi = el('div', 'issue', hud);
+    this.issueUi.hidden = true;
     this.chanceUi.hidden = true;
     const tools = el('div', 'hud-tools', hud);
     // Hidden while a card screen is up (game over, ending): the record cannot open there.
@@ -308,6 +311,8 @@ export class Game {
     } else {
       scene = picked ?? jump ?? this.data.start;
       const cp = this.data.checkpoints?.[scene];
+      // Started part-way (scene select or a jump): the ending says so instead of posing as a full clear.
+      if (scene !== this.data.start) this.flags.add(`replay|${cp?.label ?? this.data.sceneLabels[scene] ?? scene}`);
       if (scene === this.data.start) this.data.startEvidence.forEach((id) => this.record.add(id));
       else if (cp) this.applyCheckpoint(cp);
       else {
@@ -349,6 +354,14 @@ export class Game {
     this.applyRecordEdits();
     this.gauge.set(cp.gauge);
     if (cp.status) this.gauge.setStatus(cp.status);
+    this.paintIssue();
+  }
+
+  /** Shows the question kept in the flags (after a resume or a checkpoint start). */
+  private paintIssue(): void {
+    const f = [...this.flags].find((x) => x.startsWith('issue|'));
+    this.issueUi.textContent = f ? `지금의 쟁점 · ${f.slice(6)}` : '';
+    this.issueUi.hidden = !f;
   }
 
   /** The logo screen. The first press also starts the audio (browsers need a click first). */
@@ -475,6 +488,7 @@ export class Game {
       const m = /^seen:([^|]+)\|(\d+)$/.exec(f);
       if (m) this.record.restoreSeen(m[1], Number(m[2]));
     }
+    this.paintIssue();
     this.wrongs = save.wrongs;
     this.startedAt = performance.now() - save.elapsed;
     this.resumeLoc = save.loc ?? null;
@@ -560,6 +574,17 @@ export class Game {
         return;
       case 'hud':
         this.stage.classList.toggle('no-hud', !cmd.on);
+        return;
+      case 'issue':
+        // Kept as a flag so a resumed save shows the same question.
+        for (const f of [...this.flags]) if (f.startsWith('issue|')) this.flags.delete(f);
+        if (cmd.text) this.flags.add(`issue|${cmd.text}`);
+        this.issueUi.textContent = cmd.text ? `지금의 쟁점 · ${cmd.text}` : '';
+        this.issueUi.hidden = !cmd.text;
+        if (cmd.text) replay(this.issueUi, 'on');
+        return;
+      case 'dimHud':
+        this.stage.classList.toggle('hud-dim', cmd.on);
         return;
       case 'fade':
         if (cmd.black) this.box.hide();
@@ -665,7 +690,9 @@ export class Game {
         this.box.hide();
         this.stepHints(cmd.opts, cmd.task.title, cmd.task.title);
         try {
-          await new MatchView().open(this.stage, cmd.task);
+          await new MatchView().open(this.stage, cmd.task, () => {
+            if (cmd.task.cutMusic) this.music(null);
+          });
         } finally {
           this.hintCtx = null;
         }
@@ -1313,9 +1340,11 @@ export class Game {
       markCleared(this.data.id);
     }
     const secs = Math.round((performance.now() - this.startedAt) / 1000);
+    const replayFrom = [...this.flags].find((f) => f.startsWith('replay|'))?.slice(7);
     await this.fx.card((body) => {
       el('p', 'card-kicker', body, this.data.episode);
-      el('h2', 'card-title', body, this.data.endingTitle);
+      el('h2', 'card-title', body, replayFrom ? '장면 재생 완료' : this.data.endingTitle);
+      if (replayFrom) el('p', 'ending-note', body, `「${replayFrom}」부터 다시 본 기록이에요. 처음부터 해결한 기록은 그대로예요.`);
       const stats = el('dl', 'stats', body);
       const rows = [
         ['플레이 시간', `${Math.floor(secs / 60)}분 ${secs % 60}초`],

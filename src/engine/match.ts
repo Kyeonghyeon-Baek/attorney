@@ -24,20 +24,26 @@ export interface MatchTask {
   /** Feedback for a wrong pair, looked up as `top|bottom`, then the top id, then the bottom id, then `default`. */
   wrong: Record<string, string>;
   done: string;
+  /** Label of the check button (default: "같은 시각에 놓기"). */
+  confirm?: string;
+  /** Stop the music the moment the right pair lands (the climax beat), not after "계속". */
+  cutMusic?: boolean;
 }
 
 export class MatchView {
-  open(stage: HTMLElement, t: MatchTask): Promise<void> {
+  open(stage: HTMLElement, t: MatchTask, onSolve?: () => void): Promise<void> {
     const root = el('div', 'matchview', stage);
     const panel = el('div', 'matchview-panel', root);
     el('h2', 'matchview-title', panel, t.title);
     el('p', 'matchview-prompt', panel, t.prompt);
     const rows = el('div', 'matchview-rows', panel);
+    const picks = el('p', 'matchview-picks', panel);
     const say = el('p', 'matchview-say', panel);
     say.setAttribute('aria-live', 'polite');
     const foot = el('footer', 'matchview-foot', panel);
-    const hint = el('span', 'matchview-hint', foot, '↑ ↓ 줄 바꾸기 · ← → 고르기 · Space 놓기 · Enter 확인');
-    const go = el('button', 'btn btn-primary', foot, '같은 시각에 놓기  Enter');
+    const hint = el('span', 'matchview-hint', foot, '클릭 또는 Space로 카드 고르기 · ↑ ↓ 줄 · ← → 카드 · 두 줄에서 한 장씩 고르면 Enter');
+    const label = `${t.confirm ?? '같은 시각에 놓기'}  Enter`;
+    const go = el('button', 'btn btn-primary', foot, label);
 
     const chosen: [number, number] = [-1, -1];
     let row = 0;
@@ -61,6 +67,7 @@ export class MatchView {
           b.classList.toggle('on', chosen[ri] === ci);
           b.classList.toggle('focus', ri === row && ci === col && !done);
           b.classList.toggle('dim', done && chosen[ri] !== ci);
+          if (chosen[ri] === ci) el('span', 'match-check', b, '✓ 고름');
           el('span', 'match-time', b, c.time);
           el('span', 'match-who', b, c.who);
           el('span', 'match-text', b, c.text);
@@ -73,7 +80,9 @@ export class MatchView {
         });
       });
       go.disabled = !done && (chosen[0] < 0 || chosen[1] < 0);
-      go.textContent = done ? '계속  Enter' : '같은 시각에 놓기  Enter';
+      const name = (ri: number) => (chosen[ri] < 0 ? '아직 안 고름' : `${t.rows[ri].cards[chosen[ri]].time} ${t.rows[ri].cards[chosen[ri]].who}`);
+      picks.textContent = done ? '' : `고른 카드 — 위: ${name(0)} · 아래: ${name(1)}${go.disabled ? '' : '  → Enter로 확인'}`;
+      go.textContent = done ? '계속  Enter' : label;
       hint.hidden = done;
     };
 
@@ -93,6 +102,7 @@ export class MatchView {
       const b = t.rows[1].cards[chosen[1]].id;
       if (t.answer.some(([x, y]) => x === a && y === b)) {
         done = true;
+        onSolve?.();
         sfx('realize');
         tell(t.done, true);
         root.classList.add('solved');

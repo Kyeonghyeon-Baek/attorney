@@ -356,4 +356,118 @@ export const TRACKS: Record<BgmName, Track> = {
       { inst: 'crash', vol: 0.09, rev: 0.3, seq: `X ${rest(31)}` },
     ],
   },
+  // 1화 후반 반대신문: 같은 동기를 한 음 올려, 옥타브로 펌핑하는 베이스와 마디 끝 스네어 롤로 몰아붙인다.
+  // 뒷 네 마디는 더 높이 올라가 딸림화음에서 숨을 멈춘다.
+  crossTense: {
+    bpm: 144, div: 2,
+    parts: [
+      { inst: 'lead', vol: 0.05, rev: 0.25, seq: bars(
+        'F#5 - B5 - A5 F#5 E5 -', 'E5 - A5 - G5 E5 C#5 -', 'D5 - G5 - F#5 D5 B4 -', 'C#5 D5 E5 F#5 A#5 - - -',
+        'B5 - C#6 D6 F#6 - E6 D6', 'C#6 - A5 - E6 - D6 C#6', 'B5 - D6 B5 F#5 - G5 A5', 'A#5 - F#5 - A#5 - C#6 -') },
+      { inst: 'pluck', vol: 0.05, rev: 0.2, seq: rep(bars(
+        'B3 D4 F#4 D4 B3 D4 F#4 D4', 'A3 C#4 E4 C#4 A3 C#4 E4 C#4',
+        'G3 B3 D4 B3 G3 B3 D4 B3', 'F#3 A#3 C#4 A#3 F#3 A#3 C#4 E4'), 2) },
+      { inst: 'bass', vol: 0.15, seq: rep(bars(
+        'B1 B2 B1 B2 B1 B2 B1 B2', 'A1 A2 A1 A2 A1 A2 A1 A2',
+        'G1 G2 G1 G2 G1 G2 G1 G2', 'F#1 F#2 F#1 F#2 F#1 F#2 A#1 C#2'), 2) },
+      { inst: 'strings', vol: 0.04, rev: 0.4, seq: rep(bars(
+        'B2+D3+F#3 . . B2+D3+F#3 . . B2+D3+F#3 .', 'A2+C#3+E3 . . A2+C#3+E3 . . A2+C#3+E3 .',
+        'G2+B2+D3 . . G2+B2+D3 . . G2+B2+D3 .', 'F#2+A#2+C#3 - - - F#2+A#2+C#3 - - -'), 2) },
+      { inst: 'kick', vol: 0.48, seq: 'x . x . x . x .' },
+      { inst: 'snare', vol: 0.16, rev: 0.15, seq: bars(rep('. . X . . . X .', 3), '. . X . X x X X') },
+      { inst: 'hat', vol: 0.06, seq: 'x o x x x o x x' },
+      { inst: 'crash', vol: 0.09, rev: 0.3, seq: `X ${rest(31)}` },
+    ],
+  },
+
+  // 1화 후반 증언: 같은 멜로디 위로 반음씩 내려앉는 베이스. 평온한 척하는 목소리 아래의 균열.
+  testimonyTense: {
+    bpm: 108, div: 2,
+    parts: [
+      { inst: 'piano', vol: 0.1, rev: 0.3, seq: bars(
+        'E5 - - C5 D5 - E5 -', 'F5 - E5 - D5 - C5 -', 'E5 - - G5 - - E5 -', 'D#5 - - - - - . .',
+        'E5 - - C5 D5 - E5 -', 'F5 - A5 - G5 - F5 -', 'E5 - D#5 - D5 - C5 -', 'B4 - - - G#4 - - -') },
+      { inst: 'bass', vol: 0.13, rev: 0.05, seq: bars(
+        'A2 . A2 A2 . A2 . A2', 'G#2 . G#2 G#2 . G#2 . G#2', 'G2 . G2 G2 . G2 . G2', 'F#2 . F#2 F#2 . F#2 . F#2',
+        'F2 . F2 F2 . F2 . F2', 'D2 . D2 D2 . D2 . D2', 'E2 . E2 E2 . E2 . E2', 'E2 . E2 . E1 . E2 .') },
+      { inst: 'pad', vol: 0.03, rev: 0.5, seq: holds(
+        ['A2+C3+E3', 'G#2+C3+E3', 'G2+C3+E3', 'F#2+A2+D#3', 'F2+A2+C3', 'D2+F2+A2', 'E2+G#2+B2', 'E2+G#2+B2'], 8) },
+      { inst: 'kick', vol: 0.3, seq: 'x . . x x . . .' },
+      { inst: 'hat', vol: 0.05, seq: 'x o o x x o o x' },
+      { inst: 'rim', vol: 0.07, rev: 0.2, seq: '. . x . . . x .' },
+    ],
+  },
+
+  // 1화 16:00, 진상 직전: 느린 심장 박동 같은 16분음 베이스 위로 현이 한 계단씩 올라간다. 아직 터지지 않는다.
+  climax: {
+    bpm: 96, div: 4,
+    parts: [
+      { inst: 'bass', vol: 0.13, seq: bars(
+        'D2 . D2 . D2 . D2 . D2 . D2 . D2 . D2 .', 'Bb1 . Bb1 . Bb1 . Bb1 . Bb1 . Bb1 . Bb1 . Bb1 .',
+        'G1 . G1 . G1 . G1 . G1 . G1 . G1 . G1 .', 'A1 . A1 . A1 . A1 . A1 . A1 . C#2 . E2 .') },
+      { inst: 'strings', vol: 0.05, rev: 0.55, seq: bars(
+        hold('D3+F3+A3', 16), hold('D3+F3+Bb3', 16), hold('D3+G3+Bb3', 16), hold('C#3+E3+A3', 8), hold('E3+G3+C#4', 8),
+        hold('F3+A3+D4', 16), hold('F3+Bb3+D4', 16), hold('G3+Bb3+E4', 16), hold('A3+C#4+E4', 8), hold('A3+E4+G4', 8)) },
+      { inst: 'piano', vol: 0.08, rev: 0.45, seq: bars(
+        'D5 . . . A4 . . . F5 . . . E5 . . .', 'D5 . . . Bb4 . . . F5 . . . G5 . . .',
+        'G5 . . . D5 . . . Bb5 . . . A5 . . .', 'A5 . . . . . . . G5 . . . E5 . C#5 .',
+        'F5 . . . D5 . . . A5 . . . G5 . . .', 'F5 . . . D5 . . . Bb5 . . . A5 . . .',
+        'Bb5 . . . G5 . . . E6 . . . D6 . . .', 'C#6 . . . . . . . E6 . . . A5 . . .') },
+      { inst: 'bell', vol: 0.03, rev: 0.75, seq: bars(`A6 ${rest(15)}`, rest(16), `D7 ${rest(15)}`, rest(16)) },
+      { inst: 'kick', vol: 0.34, seq: `x ${rest(3)} x ${rest(3)} ${rest(4)} x ${rest(3)}` },
+      { inst: 'shaker', vol: 0.025, seq: 'x . o . x . o . x . o . x . o .' },
+      { inst: 'snare', vol: 0.12, rev: 0.3, seq: bars(rest(16), rest(16), rest(16), `${rest(8)} x . x . X x X X`) },
+    ],
+  },
+
+  // 1화 추궁: 마지막 한 방. 타이틀의 "판을 뒤집는" 오음음계 동기(A–D–E–F#)를 빠르고 높게 펼친다.
+  // 16마디, 뒤 8마디는 한 옥타브 위에서 같은 길을 다시 달려 으뜸화음으로 내려앉는다.
+  pursuitTruth: {
+    bpm: 168, div: 2,
+    parts: [
+      { inst: 'lead', vol: 0.055, rev: 0.25, seq: bars(
+        'A4 - D5 - E5 - F#5 -', 'G5 - - - E5 - C5 -', 'D5 - G5 - A5 - B5 -', 'C#6 - - - A5 - - -',
+        'B5 - A5 - F#5 - D5 -', 'G5 - F#5 - E5 - D5 -', 'E5 - F#5 - G5 - B5 -', 'A5 - - - - - . .',
+        'A5 - D6 - C#6 - A5 -', 'G5 - C6 - B5 - G5 -', 'B5 - D6 - E6 - D6 -', 'C#6 - E6 - A5 - C#6 -',
+        'D6 - - - C#6 - B5 -', 'B5 - - - A5 - G5 -', 'A5 - B5 - C#6 - E6 -', 'D6 - - - - - . .') },
+      { inst: 'bell', vol: 0.03, rev: 0.5, seq: bars(
+        rest(8), rest(8), rest(8), '. . . . E6 . A6 .', rest(8), rest(8), rest(8), '. . . . A6 . C#7 .',
+        rest(8), rest(8), rest(8), '. . . . E6 . A6 .', rest(8), rest(8), rest(8), '. . . . D7 . . .') },
+      { inst: 'bass', vol: 0.16, seq: bars(
+        'D2 D3 D2 D3 D2 D3 D2 D3', 'C2 C3 C2 C3 C2 C3 C2 C3', 'G1 G2 G1 G2 G1 G2 G1 G2', 'A1 A2 A1 A2 A1 A2 A1 A2',
+        'B1 B2 B1 B2 B1 B2 B1 B2', 'G1 G2 G1 G2 G1 G2 G1 G2', 'E2 E3 E2 E3 E2 E3 E2 E3', 'A1 A2 A1 A2 A1 A2 C#2 E2',
+        'D2 D3 D2 D3 D2 D3 D2 D3', 'C2 C3 C2 C3 C2 C3 C2 C3', 'G1 G2 G1 G2 G1 G2 G1 G2', 'A1 A2 A1 A2 A1 A2 A1 A2',
+        'B1 B2 B1 B2 B1 B2 B1 B2', 'G1 G2 G1 G2 G1 G2 G1 G2', 'A1 A2 A1 A2 A1 A2 A1 A2', 'D2 D3 D2 D3 D2 . D2 .') },
+      { inst: 'strings', vol: 0.05, rev: 0.35, seq: bars(
+        'D3+F#3+A3 . . D3+F#3+A3 . . D3+F#3+A3 .', 'C3+E3+G3 . . C3+E3+G3 . . C3+E3+G3 .',
+        'G2+B2+D3 . . G2+B2+D3 . . G2+B2+D3 .', 'A2+C#3+E3 - - - A2+C#3+E3 - - -',
+        'B2+D3+F#3 . . B2+D3+F#3 . . B2+D3+F#3 .', 'G2+B2+D3 . . G2+B2+D3 . . G2+B2+D3 .',
+        'E3+G3+B3 . . E3+G3+B3 . . E3+G3+B3 .', 'A2+C#3+E3 - - - A2+C#3+E3 - - -',
+        'D3+F#3+A3 . . D3+F#3+A3 . . D3+F#3+A3 .', 'C3+E3+G3 . . C3+E3+G3 . . C3+E3+G3 .',
+        'G2+B2+D3 . . G2+B2+D3 . . G2+B2+D3 .', 'A2+C#3+E3 - - - A2+C#3+E3 - - -',
+        'B2+D3+F#3 . . B2+D3+F#3 . . B2+D3+F#3 .', 'G2+B2+D3 . . G2+B2+D3 . . G2+B2+D3 .',
+        'A2+C#3+E3 . . A2+C#3+E3 . . A2+C#3+E3 .', 'D3+F#3+A3 - - - - - - -') },
+      { inst: 'kick', vol: 0.52, seq: 'x . x . x . x .' },
+      { inst: 'snare', vol: 0.18, rev: 0.15, seq: bars(rep('. . X . . . X .', 7), '. . X . X x X X') },
+      { inst: 'hat', vol: 0.065, seq: 'x x x x x x x x' },
+      { inst: 'crash', vol: 0.1, rev: 0.3, seq: `X ${rest(63)}` },
+    ],
+  },
+
+  // 1화 피고인 대기실: 휴정의 숨 돌림. 따뜻한 로파이 피아노와 느슨한 림샷.
+  waitroom: {
+    bpm: 80, div: 2,
+    parts: [
+      { inst: 'piano', vol: 0.1, rev: 0.45, seq: bars(
+        'F3+A3+C4+E4 . . . . . A3+C4+E4 .', 'E3+G3+B3+D4 . . . . . G3+B3+D4 .',
+        'D3+F3+A3+C4 . . . . . F3+A3+C4 .', 'G2+B2+D3+F3 . . . . . C3+E3+G3 .') },
+      { inst: 'bell', vol: 0.045, rev: 0.6, seq: bars(
+        'C5 - A4 - C5 D5 E5 -', 'D5 - B4 - G4 - . .', 'A4 - C5 - F5 - E5 D5', 'D5 - - - C5 - . .',
+        'C5 - A4 - C5 D5 E5 G5', 'F5 - E5 - D5 - B4 -', 'C5 - D5 - A4 - F4 -', 'G4 - - - - - . .') },
+      { inst: 'bass', vol: 0.12, seq: bars('F2 . . . C3 . . .', 'E2 . . . B2 . . .', 'D2 . . . A2 . . .', 'G1 . . . G2 . C2 .') },
+      { inst: 'kick', vol: 0.2, seq: 'x . . . . . x .' },
+      { inst: 'rim', vol: 0.05, rev: 0.25, seq: '. . x . . . x .' },
+      { inst: 'shaker', vol: 0.025, seq: 'x o x o x o x o' },
+    ],
+  },
 };
