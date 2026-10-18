@@ -48,6 +48,12 @@ export interface Evidence {
   detail: string[];
   /** A log better read as columns (shown above `detail`). Rows listed in `quiet` are dimmed. */
   table?: { head: string[]; rows: string[][]; quiet?: number[] };
+  /** Where the record comes from, what it shows, and what it cannot show on its own. */
+  source?: string;
+  proves?: string[];
+  limits?: string[];
+  /** A set of still photos the court record can compare side by side (see src/engine/photos.ts). */
+  photos?: string;
 }
 
 export interface Profile {
@@ -90,18 +96,31 @@ export type Cmd =
   | { t: 'place'; lines: string[] }
   | { t: 'gauge'; delta: number }
   | { t: 'gaugeSet'; value: number }
+  /**
+   * The AI prediction as the story sets it (1화): an exact value, why it moved, and what it rests on.
+   * Wrong answers never change it.
+   */
+  | { t: 'predict'; value: number; reason: string; status?: string }
+  /** Opens the court record on one piece of evidence, scrolled to its newest unread addendum. */
+  | { t: 'showRecord'; id: string }
   | { t: 'evidence'; id: string | null }
   | { t: 'cross'; id: string }
-  | { t: 'present'; prompt: string; answer: string | string[]; then: Script; wrong?: Script }
-  | { t: 'ask'; who: CharId; note: string; options: AskOption[]; title?: string }
+  /** `nearMiss`: evidence that is right but not enough yet. It plays with no penalty and the question stays open. */
+  | {
+    t: 'present'; prompt: string; answer: string | string[]; then: Script; wrong?: Script;
+    nearMiss?: Record<string, Script>; opts?: StepOpts;
+  }
+  | { t: 'ask'; who: CharId; note: string; options: AskOption[]; title?: string; opts?: StepOpts }
   /** The player points at a spot on a map (e.g. the store's floor plan); `answer` is a region id. */
-  | { t: 'pinpoint'; map: string; prompt: string; answer: string; then: Script; wrong?: Script }
+  | { t: 'pinpoint'; map: string; prompt: string; answer: string; then: Script; wrong?: Script; opts?: StepOpts }
   | { t: 'reveal'; statements: string[] }
   | { t: 'daon'; mode: DaonMode }
   | { t: 'addEvidence'; id: string }
   | { t: 'addEvidenceSet'; label: string; ids: string[] }
   /** Rewrites what the court record says about a piece of evidence or a person. */
   | { t: 'revise'; id: string; summary: string }
+  /** Adds a dated line under a piece of evidence (a later finding), leaving the original text as it was. */
+  | { t: 'annotate'; id: string; text: string }
   | { t: 'addProfile'; id: string }
   | { t: 'field'; bg: string | null; everyone?: boolean }
   | { t: 'flag'; name: string }
@@ -110,7 +129,8 @@ export type Cmd =
   | { t: 'cg'; id: string | null }
   | { t: 'cctv'; cam: string | null; time?: string; status?: string }
   | { t: 'detect'; boxes: DetectBox[] }
-  | { t: 'tape'; title: string | null }
+  /** `art` picks the device picture (an item id); the default is the 1화 recorder. */
+  | { t: 'tape'; title: string | null; art?: string }
   | { t: 'intro'; who: CharId; title: string }
   | { t: 'episode'; no: string; title: string }
   /** Fades the whole picture to black (true) or back (false). The text box stays usable. */
@@ -130,12 +150,24 @@ export type Cmd =
 
 export type Script = Cmd[];
 
+/** Options for a single question (present, choice, map pick). */
+export interface StepOpts {
+  /** A wrong answer here costs no review chance (tutorials, concept checks). */
+  free?: boolean;
+  /** Hints on request, vague to concrete (manual hint mode). */
+  hints?: string[];
+  /** Keeps hint progress apart from other questions; defaults to the prompt. */
+  hintKey?: string;
+}
+
 /** One line on a briefing board. */
 export interface BoardRow {
   time: string;
   text: string;
-  /** 'key' is highlighted, 'claim' marks the prosecution's claim, 'muted' is greyed out. */
-  tag?: 'key' | 'claim' | 'muted';
+  /** 'key' is highlighted, 'claim' marks someone's claim, 'muted' is greyed out, 'struck' is crossed out. */
+  tag?: 'key' | 'claim' | 'muted' | 'struck';
+  /** A word saying what kind of line this is ("기록", "진술", "주장"), so colour is not the only cue. */
+  badge?: string;
 }
 
 /** A box the store's camera AI draws around what it sees, in stage pixels (1280×720). */
@@ -177,6 +209,10 @@ export interface Testimony {
   crossBgm?: BgmName;
   /** How far a wrong piece of evidence pushes the verdict here (default: the case's). */
   penalty?: number;
+  /** With review chances (1화): wrong evidence here costs no chance (tutorials). */
+  free?: boolean;
+  /** Hints on request, vague to concrete (manual hint mode); replaces `hints`. */
+  hintText?: string[];
   /**
    * Hints from vague to concrete. One plays each time the player loops back past the last
    * statement, or right away on the hint button (H). The last one repeats.

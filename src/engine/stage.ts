@@ -50,6 +50,8 @@ export class Stage {
     el('div', 'daon-scan', screen);
     this.daonStatus = el('div', 'daon-status', screen, DAON_STATUS.normal);
     el('div', 'daon-neck', this.daon);
+    // Only 4화's witness stand shows the monitor; render() turns it on there.
+    this.daon.hidden = true;
     this.evCard = el('div', 'ev-card', this.root);
   }
 

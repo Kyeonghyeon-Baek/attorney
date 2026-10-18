@@ -207,7 +207,7 @@ export class Effects {
         if (a === 'advance') press(focused());
         else if (a === 'right' || a === 'down') btns[(focused() + 1) % btns.length].focus();
         else if (a === 'left' || a === 'up') btns[(focused() - 1 + btns.length) % btns.length].focus();
-      });
+      }, { strict: true });
       btns.forEach((b, i) => b.addEventListener('click', () => press(i)));
     });
     node.remove();

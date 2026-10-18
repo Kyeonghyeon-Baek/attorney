@@ -23,9 +23,12 @@ export interface MapDef {
   regions: MapRegion[];
 }
 
-// 오롯24 floor plan, drawn to match the case: the store floor at the bottom, the storeroom
-// above it, the back door on the storeroom's top-left wall, and the tall drinks shelf that
-// hides the left half of the storeroom from CAM3.
+// 오롯24 floor plan: the store floor at the bottom, the storeroom above it, the back door on the
+// storeroom's top-left wall. A passage runs along the top wall from the back door to the right-hand
+// aisle. Two floor-to-ceiling shelves (the long one under the passage, the tall drinks shelf down to
+// the store wall) close off a nook whose only way in is the gap at the left wall: nobody walking the
+// passage or standing in CAM3's view can see the owner's desk inside it. The police marked where the
+// victim lay on top of HQ's camera plan.
 const OROT_SVG = `
   <defs>
     <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -37,13 +40,15 @@ const OROT_SVG = `
     ${Array.from({ length: 24 }, (_, i) => `<line x1="${i * 45}" y1="0" x2="${i * 45}" y2="640"/>`).join('')}
     ${Array.from({ length: 15 }, (_, i) => `<line x1="0" y1="${i * 45}" x2="1000" y2="${i * 45}"/>`).join('')}
   </g>
-  <text class="mp-out" x="500" y="38">뒷골목 · 큰길로 빠지는 지름길</text>
+  <text class="mp-out" x="70" y="34" style="text-anchor:start">← 큰길 (약 30m)</text>
+  <text class="mp-out" x="560" y="34">뒷골목</text>
+  <text class="mp-out" x="932" y="34" style="text-anchor:end">골목 끝 가로등 (약 50m) →</text>
   <text class="mp-out" x="500" y="628">앞길 (마포 골목)</text>
 
   <!-- camera views -->
   <polygon class="mp-cone" points="80,318 935,322 935,592 320,592"/>
   <polygon class="mp-cone" points="792,588 640,470 900,470"/>
-  <polygon class="mp-cone" points="795,292 455,76 935,76 935,260"/>
+  <polygon class="mp-cone" points="795,292 470,76 935,76 935,260"/>
 
   <!-- walls -->
   <rect x="60" y="70" width="880" height="530" fill="none" stroke="#f4f0e6" stroke-width="6"/>
@@ -65,17 +70,28 @@ const OROT_SVG = `
   <rect x="420" y="592" width="160" height="16" fill="url(#hatch)" stroke="#f4f0e6" stroke-width="2"/>
   <text class="mp-label" x="500" y="584">정문 · 셔터</text>
 
-  <!-- storeroom furniture -->
-  <rect class="mp-shelf" x="420" y="80" width="26" height="200"/>
-  <text class="mp-small" x="500" y="292">키 큰 음료 선반</text>
-  <rect class="mp-shelf" x="120" y="150" width="300" height="18"/>
-  <text class="mp-onshelf" x="350" y="164">가로 선반</text>
-  <rect class="mp-shelf" x="860" y="84" width="70" height="150"/>
-  <rect class="mp-thing" x="232" y="104" width="54" height="38" rx="4"/>
-  <text class="mp-small" x="332" y="128">폐기 봉지</text>
-  <rect class="mp-thing" x="690" y="222" width="58" height="44" rx="4"/>
-  <text class="mp-small" x="719" y="214">음료 박스</text>
-  <text class="mp-room" x="640" y="190">창고</text>
+  <!-- storeroom: the passage, the two shelves and the nook behind them -->
+  <rect class="mp-shelf" x="130" y="150" width="316" height="18"/>
+  <text class="mp-onshelf" x="290" y="164">가로 선반 (천장까지)</text>
+  <rect class="mp-shelf" x="420" y="168" width="26" height="128"/>
+  <text class="mp-small" x="456" y="250" style="text-anchor:start">키 큰 음료 선반</text>
+  <text class="mp-small" x="456" y="268" style="text-anchor:start">(천장까지)</text>
+  <rect class="mp-shelf" x="866" y="90" width="64" height="140"/>
+  <rect class="mp-thing" x="196" y="84" width="52" height="34" rx="4"/>
+  <text class="mp-small" x="258" y="106" style="text-anchor:start">폐기 봉지 자리</text>
+  <text class="mp-small" x="94" y="186">틈</text>
+  <path d="M94 192 L94 214" stroke="rgba(244,240,230,0.6)" stroke-width="2" stroke-dasharray="3 3"/>
+  <rect class="mp-thing" x="168" y="198" width="86" height="40" rx="4"/>
+  <text class="mp-small" x="211" y="223">운반대</text>
+  <rect class="mp-thing" x="300" y="240" width="112" height="50" rx="3"/>
+  <text class="mp-small" x="356" y="262">점주 책상</text>
+  <text class="mp-small" x="356" y="280">(상패)</text>
+  <g class="mp-found">
+    <line x1="314" y1="200" x2="334" y2="220"/><line x1="334" y1="200" x2="314" y2="220"/>
+    <text x="344" y="215">발견 위치</text>
+  </g>
+  <text class="mp-room" x="660" y="200">창고</text>
+  <text class="mp-small" x="300" y="128" style="text-anchor:start">위쪽 통로</text>
 
   <!-- store floor furniture -->
   <rect class="mp-shelf" x="180" y="380" width="380" height="20"/>
@@ -91,26 +107,33 @@ const OROT_SVG = `
   <g class="mp-cam"><circle cx="792" cy="588" r="11"/><text x="818" y="584">CAM2</text></g>
   <g class="mp-cam"><circle cx="795" cy="292" r="11"/><text x="830" y="282">CAM3</text></g>
   <g class="mp-cam mp-gone">
-    <circle cx="205" cy="92" r="11"/>
-    <line x1="192" y1="79" x2="218" y2="105"/><line x1="218" y1="79" x2="192" y2="105"/>
-    <text x="228" y="98">CAM4 · 3월 1일 철거</text>
+    <circle cx="214" cy="54" r="11"/>
+    <line x1="201" y1="41" x2="227" y2="67"/><line x1="227" y1="41" x2="201" y2="67"/>
+    <text x="236" y="60">CAM4 · 3월 1일 철거</text>
   </g>
 `;
 
 export const MAPS: Record<string, MapDef> = {
   orot: {
-    title: '오롯24 매장 카메라 배치도',
+    title: '오롯24 평면도 · 카메라 배치와 현장 표시',
     width: 1000,
     height: 640,
     svg: OROT_SVG,
-    legend: ['초록 부채꼴 = 카메라가 보는 곳', '빨간 X = 철거된 카메라', '작성: 오롯리테일 운영지원팀 오정택'],
+    legend: [
+      '초록 부채꼴 = 카메라가 보는 곳',
+      '빨간 X = 철거된 카메라 · 주황 X = 경찰이 표시한 피해자 발견 위치',
+      '선반은 모두 천장까지 닿는다',
+    ],
     regions: [
-      { id: 'backdoor', label: '뒷문', x: 100, y: 48, w: 92, h: 44 },
-      { id: 'doorway', label: '뒷문 아래 통로', x: 64, y: 96, w: 54, h: 198 },
-      { id: 'rackTop', label: '가로 선반 위쪽 · 폐기 봉지 자리', x: 122, y: 100, w: 294, h: 46 },
-      { id: 'victim', label: '두 선반 사이 구석', x: 170, y: 172, w: 246, h: 78 },
-      { id: 'aisle', label: '창고 오른쪽 통로', x: 452, y: 80, w: 230, h: 214 },
-      { id: 'boxes', label: '음료 박스', x: 684, y: 204, w: 70, h: 66 },
+      { id: 'alley', label: '뒷골목 (왼쪽 큰길 약 30m, 오른쪽 골목 끝 가로등 약 50m)', x: 64, y: 8, w: 872, h: 36 },
+      { id: 'backdoor', label: '뒷문', x: 100, y: 46, w: 92, h: 42 },
+      { id: 'bagSpot', label: '폐기 봉지 자리', x: 192, y: 80, w: 60, h: 42 },
+      { id: 'passage', label: '위쪽 통로 (뒷문 ↔ 창고 오른쪽 통로)', x: 256, y: 90, w: 210, h: 56 },
+      { id: 'nookGap', label: '가로 선반 끝 틈 (구석으로 들어가는 유일한 길)', x: 64, y: 146, w: 64, h: 44 },
+      { id: 'nook', label: '구석 안쪽 (선반 두 개에 가려진 곳)', x: 64, y: 192, w: 96, h: 104 },
+      { id: 'cart', label: '운반대', x: 162, y: 190, w: 100, h: 56 },
+      { id: 'desk', label: '점주 책상 · 상패 · 피해자 발견 위치', x: 270, y: 196, w: 146, h: 100 },
+      { id: 'aisle', label: '창고 오른쪽 통로 (CAM3가 보는 곳)', x: 470, y: 80, w: 386, h: 210 },
       { id: 'storeDoor', label: '창고 문', x: 748, y: 290, w: 94, h: 40 },
       { id: 'shelves', label: '매장 진열대', x: 176, y: 370, w: 390, h: 108 },
       { id: 'fridge', label: '냉장 진열대', x: 895, y: 326, w: 40, h: 178 },
@@ -226,7 +249,7 @@ export class MapView {
           if (mode === 'pick') pick();
           else finish(null);
         } else if (a === 'record' && openRecord) void viewRecord();
-      });
+      }, { strict: true });
       const viewRecord = async () => {
         busy = true;
         root.hidden = true;

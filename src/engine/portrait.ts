@@ -1,6 +1,7 @@
 import { charImage, itemImage, portraitImage } from './assets';
 import { el } from './dom';
 import { icon } from './icons';
+import { PHOTO_SETS } from './photos';
 import type { Evidence, Profile } from './types';
 
 // How many tile-widths wide the sprite is drawn when cropped to a face.
@@ -46,7 +47,15 @@ export function paintFace(box: HTMLElement, p: Profile): void {
 }
 
 /** Fills `box` with an evidence picture, or its line icon until art exists. */
-export function paintItem(box: HTMLElement, ev: Pick<Evidence, 'id' | 'icon' | 'art'>): void {
+export function paintItem(box: HTMLElement, ev: Pick<Evidence, 'id' | 'icon' | 'art' | 'photos'>): void {
+  const set = ev.photos ? PHOTO_SETS[ev.photos] : undefined;
+  if (set && !itemImage(ev.art ?? ev.id)) {
+    // A photo set is its own picture: the first frame, as a small print.
+    const f = set.frames[0];
+    box.classList.add('pic', 'print');
+    box.innerHTML = `<svg viewBox="0 0 ${set.width} ${set.height}" aria-hidden="true">${f.svg}</svg>`;
+    return;
+  }
   const url = itemImage(ev.art ?? ev.id);
   box.classList.toggle('pic', !!url);
   if (url) {

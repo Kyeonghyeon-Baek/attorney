@@ -19,6 +19,7 @@ export class Cinema {
   private status: HTMLElement;
   private boxes: HTMLElement;
   private tape: HTMLElement;
+  private tapeImg: HTMLImageElement | null = null;
   private tapeTitle: HTMLElement;
   private tapeClock: HTMLElement;
   private wave: HTMLElement;
@@ -61,6 +62,7 @@ export class Cinema {
       img.src = pic;
       img.alt = '';
       img.draggable = false;
+      this.tapeImg = img;
     }
     el('i', 'tape-led', device);
     const side = el('div', 'tape-side', deck);
@@ -120,7 +122,9 @@ export class Cinema {
       const k = `${r.time}|${r.text}`;
       const node = el('div', `board-row ${r.tag ?? ''}`, this.boardRows);
       el('span', 'board-time', node, r.time);
-      el('span', 'board-text', node, r.text);
+      const text = el('span', 'board-text', node);
+      if (r.badge) el('em', 'board-badge', text, r.badge);
+      text.append(r.text);
       if (!this.shownRows.has(k)) {
         node.classList.add('new');
         this.shownRows.add(k);
@@ -237,13 +241,17 @@ export class Cinema {
     if (list.length) sfx(alert ? 'detect' : 'select');
   }
 
-  setTape(title: string | null): void {
+  /** `art` swaps the device picture, so two different recordings never look like the same machine. */
+  setTape(title: string | null, art = 'recorder'): void {
     if (!title) {
       this.tape.hidden = true;
       this.talking(false);
       this.sync();
       return;
     }
+    const pic = itemImage(art);
+    if (this.tapeImg && pic) this.tapeImg.src = pic;
+    this.tape.dataset.art = art;
     this.tapeTitle.textContent = title;
     this.tapeClock.textContent = '--:--:--';
     this.tape.hidden = false;

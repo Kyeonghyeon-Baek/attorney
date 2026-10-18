@@ -1,6 +1,7 @@
 import { sfx } from './audio';
-import { el } from './dom';
-import { push } from './input';
+import { el, replay } from './dom';
+import { fromSpace, push } from './input';
+import { paintCompare } from './photos';
 import { paintFace, paintItem } from './portrait';
 import type { Evidence, Profile } from './types';
 
@@ -23,16 +24,33 @@ export class CourtRecord {
   private prompt: HTMLElement;
   private closeBtn: HTMLButtonElement;
   private presentBtn: HTMLButtonElement;
+  private hintBtn: HTMLButtonElement;
   private tab: Tab = 'evidence';
+  /** -1 = nothing chosen yet (presenting always starts that way). */
   private sel = 0;
   private mode: 'view' | 'present' = 'view';
   private finish: ((id: string | null) => void) | null = null;
   private owned = new Set<string>();
+  /** Later findings shown under an evidence's original text, oldest first. */
+  private addenda = new Map<string, string[]>();
+  /** Items the player has opened, and how many of each item's addenda they have scrolled to. */
+  private viewed = new Set<string>();
+  private addendaSeen = new Map<string, number>();
+  private observer: IntersectionObserver | null = null;
   /** Opens an evidence's map full screen; set by the game. */
   onMap: ((mapId: string) => Promise<unknown>) | null = null;
+  /** Opens a photo set full screen; set by the game. */
+  onPhotos: ((setId: string) => Promise<unknown>) | null = null;
+  /** Whether a photo set's matched corner may be ringed yet (after the expert result). */
+  photoMarked: (setId: string) => boolean = () => false;
+  /** Persists what has been read: (id, addenda read). */
+  onSeen: ((id: string, n: number) => void) | null = null;
+  /** Opens the hint window for the current question; null hides the button. */
+  onHint: (() => void) | null = null;
   /** 강단비's notebook lines, newest last; set by the game. The tab shows up once there is one. */
   memos: () => string[] = () => [];
   private body: HTMLElement;
+  private promptText = '';
 
   constructor(
     parent: HTMLElement,
@@ -63,9 +81,11 @@ export class CourtRecord {
     this.sheet = el('article', 'sheet', body);
     const foot = el('footer', 'folder-foot', folder);
     this.closeBtn = el('button', 'btn', foot, '닫기  Esc');
+    this.hintBtn = el('button', 'btn record-hint', foot, '힌트  H');
     this.presentBtn = el('button', 'btn btn-primary', foot, '이 증거를 제시한다  Enter');
     this.closeBtn.addEventListener('click', () => this.close(null));
     this.presentBtn.addEventListener('click', () => this.presentSelected());
+    this.hintBtn.addEventListener('click', () => this.onHint?.());
   }
 
   get(id: string): Evidence | undefined {
@@ -88,6 +108,19 @@ export class CourtRecord {
   revise(id: string, summary: string): void {
     const entry = this.get(id) ?? this.getProfile(id);
     if (entry) entry.summary = summary;
+  }
+
+  /** Adds a later finding under a piece of evidence; the same line is only added once. */
+  annotate(id: string, text: string): void {
+    const lines = this.addenda.get(id) ?? [];
+    if (!lines.includes(text)) lines.push(text);
+    this.addenda.set(id, lines);
+  }
+
+  /** Puts back what a save says was already read. */
+  restoreSeen(id: string, n: number): void {
+    this.viewed.add(id);
+    this.addendaSeen.set(id, Math.max(n, this.addendaSeen.get(id) ?? 0));
   }
 
   has(id: string): boolean {
@@ -117,14 +150,22 @@ export class CourtRecord {
     return this.profiles.filter((p) => this.owned.has(p.id));
   }
 
+  private badge(id: string): '' | '새로' | '갱신' {
+    if (!this.viewed.has(id)) return '새로';
+    const n = this.addenda.get(id)?.length ?? 0;
+    return n > (this.addendaSeen.get(id) ?? 0) ? '갱신' : '';
+  }
+
   /**
    * `pin` keeps the statement being contradicted in view while the player reads evidence.
+   * `focus` opens on that evidence, scrolled to its newest unread addendum.
    */
   open(
     mode: 'view' | 'present',
     prompt = '',
     cancellable = true,
     pin?: { label: string; text: string },
+    focus?: string,
   ): Promise<string | null> {
     this.mode = mode;
     this.root.hidden = false;
@@ -135,25 +176,37 @@ export class CourtRecord {
       el('span', 'pin-label', this.prompt, pin.label);
       el('span', 'pin-text', this.prompt, `“${pin.text.replace(/\{[^}]*\}/g, '')}”`);
     } else this.prompt.textContent = prompt;
+    this.promptText = prompt;
     this.prompt.hidden = !prompt && !pin;
     this.closeBtn.hidden = !cancellable;
+    this.hintBtn.hidden = !this.onHint;
     this.tab = 'evidence';
+    // Presenting starts with nothing chosen, so a stray Enter can never present by itself.
+    this.sel = mode === 'present' ? -1 : 0;
+    if (focus) {
+      const i = this.held.findIndex((e) => e.id === focus);
+      if (i >= 0) this.sel = i;
+    }
     this.render();
+    if (focus) this.scrollToUnread();
     sfx('paper');
     return new Promise((resolve) => {
       const pop = push((a) => {
         if (a === 'back' && cancellable) this.close(null);
         else if (a === 'record' && mode === 'view') this.close(null);
+        // Space is for the large map or photo view, so presenting always takes Enter (or E).
+        else if (a === 'advance' && fromSpace()) this.openExtra();
         else if ((a === 'advance' || a === 'present') && mode === 'present') this.presentSelected();
-        else if (a === 'advance' && mode === 'view') this.openMap();
+        else if (a === 'advance' && mode === 'view') this.openExtra();
         else if (a === 'tab') this.setTab(this.nextTab());
         else if (a === 'left') this.move(-1);
         else if (a === 'right') this.move(1);
         else if (a === 'up') this.move(-COLS);
         else if (a === 'down') this.move(COLS);
-      });
+      }, { strict: true });
       this.finish = (id) => {
         pop();
+        this.observer?.disconnect();
         this.root.hidden = true;
         this.finish = null;
         resolve(id);
@@ -175,19 +228,29 @@ export class CourtRecord {
   private presentSelected(): void {
     if (this.mode !== 'present' || this.tab === 'memo') return;
     const picked = this.tab === 'evidence' ? this.held[this.sel] : this.people[this.sel];
-    if (picked) this.finish?.(picked.id);
+    if (picked) {
+      this.finish?.(picked.id);
+      return;
+    }
+    // Nothing chosen: say how to choose instead of presenting.
+    this.prompt.hidden = false;
+    if (!this.prompt.querySelector('.pin-label')) this.prompt.textContent = this.promptText || '';
+    const n = el('span', 'record-nudge', this.prompt, '  ← → 나 클릭으로 증거를 먼저 고르세요');
+    replay(n, 'on');
+    setTimeout(() => n.remove(), 1600);
   }
 
-  /** In view mode, Space opens the selected evidence's map, if it has one. */
-  private openMap(): void {
+  /** Space (and Enter in view mode) opens the selected evidence's map or photos, if it has one. */
+  private openExtra(): void {
     const ev = this.tab === 'evidence' ? this.held[this.sel] : undefined;
     if (ev?.map) void this.onMap?.(ev.map);
+    else if (ev?.photos) void this.onPhotos?.(ev.photos);
   }
 
   private setTab(t: Tab): void {
     if (t === this.tab) return;
     this.tab = t;
-    this.sel = 0;
+    this.sel = this.mode === 'present' ? -1 : 0;
     sfx('select');
     this.render();
   }
@@ -198,7 +261,8 @@ export class CourtRecord {
       return;
     }
     const n = this.tab === 'evidence' ? this.held.length : this.people.length;
-    const next = this.sel + d;
+    if (!n) return;
+    const next = this.sel < 0 ? 0 : this.sel + d;
     if (next < 0 || next >= n) return;
     this.sel = next;
     sfx('select');
@@ -219,8 +283,8 @@ export class CourtRecord {
       return;
     }
     const items = this.tab === 'evidence' ? this.held : this.people;
-    if (this.sel >= items.length) this.sel = Math.max(0, items.length - 1);
-    this.presentBtn.disabled = items.length === 0;
+    if (this.sel >= items.length) this.sel = items.length - 1;
+    this.presentBtn.disabled = this.sel < 0;
     this.presentBtn.textContent = this.tab === 'evidence' ? '이 증거를 제시한다  Enter' : '이 인물을 제시한다  Enter';
     this.grid.replaceChildren();
     items.forEach((item, i) => {
@@ -229,7 +293,10 @@ export class CourtRecord {
       if ('icon' in item) paintItem(el('span', 'tile-pic', tile), item);
       else paintFace(el('span', 'face', tile), item);
       el('span', 'tile-name', tile, item.name);
+      const b = 'icon' in item ? this.badge(item.id) : '';
+      if (b) el('span', `tile-badge ${b === '갱신' ? 'upd' : 'new'}`, tile, b);
       tile.addEventListener('click', () => {
+        // A click chooses; presenting takes the button, Enter, or a second click on the same item.
         if (this.sel === i && this.mode === 'present') {
           this.presentSelected();
           return;
@@ -250,34 +317,93 @@ export class CourtRecord {
     for (const line of this.memos()) el('li', '', list, line);
   }
 
+  private scrollToUnread(): void {
+    const target = this.sheet.querySelector('.addendum.unread') ?? this.sheet.querySelector('.addendum:last-of-type');
+    target?.scrollIntoView({ block: 'center' });
+  }
+
   private renderSheet(): void {
+    this.observer?.disconnect();
     this.sheet.replaceChildren();
     if (this.tab === 'evidence') {
       const ev = this.held[this.sel];
       if (!ev) {
-        el('p', 'sheet-empty', this.sheet, '아직 모은 증거가 없어요. 조사하면서 찾아보세요.');
+        el('p', 'sheet-empty', this.sheet, this.held.length
+          ? '왼쪽에서 증거를 고르면 내용이 보여요. (← → 또는 클릭)'
+          : '아직 모은 증거가 없어요.');
         return;
       }
+      const wasNew = !this.viewed.has(ev.id);
+      this.viewed.add(ev.id);
       const top = el('div', 'sheet-top', this.sheet);
       paintItem(el('div', 'sheet-icon', top), ev);
       const titles = el('div', '', top);
       el('div', 'sheet-label', titles, ev.label);
       el('h2', 'sheet-title', titles, ev.name);
+      const adds = this.addenda.get(ev.id) ?? [];
+      const seen = this.addendaSeen.get(ev.id) ?? 0;
+      if (adds.length > seen) {
+        const pill = el('button', 'sheet-upd', titles, `갱신 ${adds.length - seen}건 · 보기`);
+        pill.addEventListener('click', () => this.scrollToUnread());
+      }
       el('p', 'sheet-summary', this.sheet, ev.summary);
+      if (ev.source || ev.proves || ev.limits) {
+        const scope = el('dl', 'sheet-scope', this.sheet);
+        if (ev.source) {
+          el('dt', '', scope, '출처');
+          el('dd', '', scope, ev.source);
+        }
+        if (ev.proves?.length) {
+          el('dt', '', scope, '확인되는 것');
+          el('dd', '', scope, ev.proves.join(' · '));
+        }
+        if (ev.limits?.length) {
+          el('dt', 'lim', scope, '이것만으로는 알 수 없는 것');
+          el('dd', 'lim', scope, ev.limits.join(' · '));
+        }
+      }
       if (ev.map && this.onMap) {
         const mapId = ev.map;
         const b = el('button', 'btn sheet-map', this.sheet, '평면도 크게 보기  Space');
         b.addEventListener('click', () => void this.onMap?.(mapId));
       }
+      if (ev.photos) {
+        const setId = ev.photos;
+        paintCompare(this.sheet, setId, this.photoMarked(setId));
+        if (this.onPhotos) {
+          const b = el('button', 'btn sheet-map', this.sheet, '사진 크게 비교 · 전체 목록  Space');
+          b.addEventListener('click', () => void this.onPhotos?.(setId));
+        }
+      }
+      // Sections ("[골목 · 02:52~03:14]") get jump buttons when there are several.
+      const sections = ev.detail.filter((l) => /^\[.+\]$/.test(l));
+      if (sections.length > 1) {
+        const nav = el('div', 'sheet-nav', this.sheet);
+        sections.forEach((s, k) => {
+          const b = el('button', 'btn btn-small', nav, s.slice(1, -1));
+          b.addEventListener('click', () => this.sheet.querySelector(`[data-sec="${k}"]`)?.scrollIntoView({ block: 'start' }));
+        });
+      }
       const detail = el('div', 'sheet-detail', this.sheet);
       if (ev.table) renderTable(detail, ev.table);
+      let sec = 0;
       for (const line of ev.detail) {
+        if (/^\[.+\]$/.test(line)) {
+          const h = el('div', 'sec', detail, line.slice(1, -1));
+          h.dataset.sec = String(sec++);
+          continue;
+        }
         if (line.startsWith('※')) {
           el('div', 'note', detail, line);
           continue;
         }
-        // "02:50  text" or "02:05~02:50  text": the time gets its own column.
-        const m = /^(\d\d:\d\d(?::\d\d)?(?:~\d\d:\d\d)?)\s{2,}(.*)$/.exec(line);
+        if (line.startsWith('▷')) {
+          // A quoted opinion (e.g. the police's first reading), kept apart from the record itself.
+          el('blockquote', 'opinion', detail, line.slice(1).trim());
+          continue;
+        }
+        // "02:50  text" or "02:05~02:50:20  text": the time gets its own column.
+        const m = /^(\d\d:\d\d(?::\d\d)?(?:~\d\d:\d\d(?::\d\d)?)?)\s{2,}(.*)$/.exec(line);
         if (!m) {
           el('div', 'row', detail, line);
           continue;
@@ -286,9 +412,32 @@ export class CourtRecord {
         el('span', 'row-time', row, m[1]);
         el('span', 'row-text', row, m[2]);
       }
+      // Findings added during the trial, set apart so the original record still reads as it was.
+      adds.forEach((line, k) => {
+        const a = el('div', k >= seen ? 'addendum unread' : 'addendum', detail, line);
+        a.dataset.k = String(k);
+      });
+      if (adds.length > seen) {
+        const last = detail.querySelector('.addendum:last-of-type');
+        const id = ev.id;
+        this.observer = new IntersectionObserver((entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          this.addendaSeen.set(id, adds.length);
+          this.onSeen?.(id, adds.length);
+          this.observer?.disconnect();
+          // Repaint the tiles so the "갱신" badge goes away, keeping the scroll position.
+          this.grid.querySelectorAll('.tile')[this.sel]?.querySelector('.tile-badge')?.remove();
+          this.sheet.querySelector('.sheet-upd')?.remove();
+        }, { root: this.sheet, threshold: 0.6 });
+        if (last) this.observer.observe(last);
+      } else if (wasNew) this.onSeen?.(ev.id, seen);
+      if (wasNew) this.grid.querySelectorAll('.tile')[this.sel]?.querySelector('.tile-badge.new')?.remove();
     } else {
       const p = this.people[this.sel];
-      if (!p) return;
+      if (!p) {
+        el('p', 'sheet-empty', this.sheet, '왼쪽에서 인물을 고르면 내용이 보여요.');
+        return;
+      }
       const top = el('div', 'sheet-top', this.sheet);
       paintFace(el('div', 'sheet-face', top), p);
       const titles = el('div', '', top);

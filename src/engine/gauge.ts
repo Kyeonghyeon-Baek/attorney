@@ -6,6 +6,9 @@ export class Gauge {
   private root: HTMLElement;
   private num: HTMLElement;
   private fill: HTMLElement;
+  private status: HTMLElement;
+  private reason: HTMLElement;
+  private reasonTimer = 0;
   private _value: number;
 
   constructor(parent: HTMLElement, initial: number, private fast: boolean) {
@@ -19,7 +22,30 @@ export class Gauge {
     const track = el('div', 'gauge-track', this.root);
     this.fill = el('div', 'gauge-fill', track);
     el('div', 'gauge-line', track);
+    this.status = el('div', 'gauge-status', this.root);
+    this.status.hidden = true;
+    this.reason = el('div', 'gauge-reason', parent);
+    this.reason.hidden = true;
     this.render(initial);
+  }
+
+  /** The small badge under the number: what the prediction currently rests on. */
+  setStatus(text: string | null): void {
+    this.status.hidden = !text;
+    this.status.textContent = text ?? '';
+  }
+
+  get statusText(): string {
+    return this.status.hidden ? '' : this.status.textContent ?? '';
+  }
+
+  /** Shows why the number moved, briefly, without covering the dialogue. */
+  explain(text: string): void {
+    clearTimeout(this.reasonTimer);
+    this.reason.textContent = text;
+    this.reason.hidden = false;
+    replay(this.reason, 'on');
+    this.reasonTimer = window.setTimeout(() => (this.reason.hidden = true), this.fast ? 1500 : 4500);
   }
 
   get value(): number {

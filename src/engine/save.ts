@@ -31,7 +31,13 @@ export interface SaveData {
   evidence: string[];
   revealed: string[];
   gauge: number;
+  /** The badge under the prediction (1화). */
+  status?: string;
   wrongs: number;
+  /** Review chances left (1화). */
+  chances?: number;
+  /** The case's script revision when saved. A different revision is never resumed. */
+  revision?: string;
   /** Play time so far, in ms. */
   elapsed: number;
   /** The last lines of the line history, so 대사 기록 still has context after resuming. */
@@ -40,23 +46,36 @@ export interface SaveData {
 
 const key = (caseId: string) => `pan-dwijibgi:save:${caseId}`;
 
-export function loadSave(caseId: string): SaveData | null {
+export function loadSave(caseId: string, revision?: string): SaveData | null {
   try {
     const raw = localStorage.getItem(key(caseId));
     if (!raw) return null;
     const data = JSON.parse(raw) as SaveData;
     if (data.v !== VERSION || data.caseId !== caseId || typeof data.scene !== 'string') return null;
+    if ((data.revision ?? '') !== (revision ?? '')) return null;
     return data;
   } catch {
     return null;
   }
 }
 
-export function writeSave(data: Omit<SaveData, 'v' | 'savedAt'>): void {
+/** Whether any save sits under this case id, readable or not (for "the episode was revised"). */
+export function hasSave(caseId: string): boolean {
+  try {
+    return localStorage.getItem(key(caseId)) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/** Returns false when the browser refused to store it. */
+export function writeSave(data: Omit<SaveData, 'v' | 'savedAt'>): boolean {
   try {
     localStorage.setItem(key(data.caseId), JSON.stringify({ ...data, v: VERSION, savedAt: Date.now() }));
+    return true;
   } catch {
     // Storage unavailable: keep playing without saves.
+    return false;
   }
 }
 

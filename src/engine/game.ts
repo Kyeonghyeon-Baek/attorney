@@ -1,5 +1,7 @@
 import { AskPanel } from './ask';
 import { Backlog } from './backlog';
+import { HintPanel } from './hints';
+import { PhotoView } from './photos';
 import { allImageUrls, bgImage } from './assets';
 import { initAudio, isMuted, playAmbience, playBgm, setMuted, sfx } from './audio';
 import { Cinema } from './cinema';
@@ -11,16 +13,27 @@ import { InvestigateUi } from './invest';
 import { MapView } from './maps';
 import { chooseEpisode, SettingsPanel, type EpisodeEntry } from './menu';
 import { CourtRecord } from './record';
-import { clearSave, isCleared, loadSave, markCleared, writeSave, type CrossResume, type SaveData } from './save';
+import { clearSave, hasSave, isCleared, loadSave, markCleared, writeSave, type CrossResume, type SaveData } from './save';
 import { Stage } from './stage';
 import { TextBox, type LineOptions } from './textbox';
-import type { BgmName, Cmd, Evidence, Location, Profile, Script, Statement, Testimony } from './types';
+import type { BgmName, Cmd, Evidence, Location, Profile, Script, Statement, StepOpts, Testimony } from './types';
 import { CHARACTERS } from '../content/characters';
 
 const STOP = Symbol('stop');
 /** Lines of history kept in the save. */
 const LOG_KEEP = 120;
 type Result = void | typeof STOP;
+
+/** Where scene select and ?scene= jumps start, and what the player holds by then. */
+export interface Checkpoint {
+  label: string;
+  /** Evidence and later profiles held at that point. */
+  evidence: string[];
+  /** Flags already set (memos, `ann:` addenda, facts). */
+  flags?: string[];
+  gauge: number;
+  status?: string;
+}
 
 export interface CaseData {
   /** Save-slot key. Change it when a rewrite makes old saves meaningless. */
@@ -53,6 +66,21 @@ export interface CaseData {
   crossBgm?: BgmName;
   /** Stop the music the moment a correct objection lands; the script starts the next track. */
   cutMusicOnObjection?: boolean;
+  /** Script revision (1화: 'EP1-R2'). A save from another revision is never resumed. */
+  revision?: string;
+  /** Earlier save ids of this case, so the list can say the episode was revised. */
+  legacyIds?: string[];
+  /**
+   * Review chances (1화). A wrong answer spends one instead of raising the prediction; with none
+   * left, a window offers to carry on or restart the cross-examination. No guilty game over.
+   */
+  chances?: number;
+  /** Badge under the prediction at the start (with `predict`). */
+  gaugeStatus?: string;
+  /** 'manual': hints only on request, in a window. Otherwise testimony hints play on loop-back. */
+  hintMode?: 'manual';
+  /** Checkpoints by scene id, for scene select after clearing and for ?scene= jumps. */
+  checkpoints?: Record<string, Checkpoint>;
   /** Fallback reactions, used when a testimony or statement has none of its own. */
   defaultPress: Script;
   defaultWrong: Script;
@@ -94,6 +122,8 @@ export class Game {
   private muteBtn: HTMLButtonElement;
   private revealed = new Set<string>();
   private flags = new Set<string>();
+  /** What the player last presented, so scripts can answer that choice (see `ifPresented`). */
+  private presented: string | null = null;
   private next: string | null = null;
   private bgm: BgmName | null = null;
   private wrongs = 0;
@@ -104,8 +134,18 @@ export class Game {
   private resumeLoc: string | null = null;
   private resumeCross: CrossResume | null = null;
   private lastSaveLabel = '';
+  private lastSave: Omit<SaveData, 'v' | 'savedAt'> | null = null;
+  private lastSaveOk = true;
   private saveFlash: HTMLElement;
   private memoFlash: HTMLElement;
+  private toast: HTMLElement;
+  private chances = 0;
+  private chanceUi: HTMLElement;
+  private hintPanel = new HintPanel();
+  /** Hints for whatever question is open right now (manual hint mode). */
+  private hintCtx: { key: string; title: string; lines: string[] } | null = null;
+  /** The cross-examination in progress, for "현재 심문 처음부터". */
+  private inCross: string | null = null;
 
   constructor(root: HTMLElement, private slots: EpisodeSlot[], private fast: boolean) {
     const viewport = el('div', 'viewport', root);
@@ -118,6 +158,8 @@ export class Game {
 
     const hud = el('div', 'hud', this.stage);
     this.gauge = new Gauge(hud, 0, fast);
+    this.chanceUi = el('div', 'chances', hud);
+    this.chanceUi.hidden = true;
     const tools = el('div', 'hud-tools', hud);
     const recordBtn = el('button', 'btn btn-small', tools, '법원기록  R');
     recordBtn.addEventListener('click', () => emit('record'));
@@ -129,7 +171,9 @@ export class Game {
     this.muteBtn.addEventListener('click', () => this.toggleMute());
     this.paintMute();
     this.saveFlash = el('div', 'save-flash', hud, '자동 저장됨');
-    this.memoFlash = el('div', 'memo-flash', this.stage, '✎ 수첩에 적었다  (법원기록 → 메모)');
+    // In the HUD column, so it always sits under the prediction, the chances and the buttons.
+    this.memoFlash = el('div', 'memo-flash', hud, '✎ 수첩에 적었다  (법원기록 → 메모)');
+    this.toast = el('div', 'toast', this.stage);
 
     this.ask = new AskPanel(this.stage);
     this.fx = new Effects(this.stage, fast);
@@ -140,6 +184,7 @@ export class Game {
       mute: () => this.toggleMute(),
       settings: () => void this.openSettings(),
       backlog: () => void this.openBacklog(),
+      hint: () => this.openHint(),
     });
 
     const judgeBg = bgImage('judge');
@@ -169,6 +214,8 @@ export class Game {
     let data: CaseData | null = this.cases().find((c) => c.ep === opts.ep) ?? null;
     const jump = data && opts.jump && data.scenes[opts.jump] ? opts.jump : null;
     let save: SaveData | null = null;
+    // A scene picked from scene select (after clearing): starts there, with saving on.
+    let picked: string | null = null;
     await this.titleCard(!!data);
     if (!jump) {
       for (;;) {
@@ -180,8 +227,44 @@ export class Game {
           }
           data = this.cases().find((c) => c.id === id)!;
         }
-        save = loadSave(data.id);
-        if (!save) break;
+        save = loadSave(data.id, data.revision);
+        if (!save) {
+          const d = data;
+          // An older version's progress: say so, and leave that data alone.
+          if (!isCleared(d.id) && (d.legacyIds?.some((id) => hasSave(id)) || hasSave(d.id))) {
+            const c = await this.fx.card((body) => {
+              el('p', 'card-kicker', body, d.menu.no);
+              el('h2', 'card-title', body, d.menu.title);
+              el('p', '', body, `${d.menu.no} 내용이 개정되었습니다. 이전 진행은 새 구성과 맞지 않아 이어할 수 없어요.`);
+              el('p', '', body, '새 구성으로 처음부터 시작할 수 있어요. 이전 저장은 지우지 않아요.');
+            }, [{ label: '새 구성으로 시작', primary: true }, { label: '사건 기록부로' }], 'title');
+            if (c === 1) {
+              data = null;
+              continue;
+            }
+          }
+          if (isCleared(d.id) && d.checkpoints) {
+            const c = await this.fx.card((body) => {
+              el('p', 'card-kicker', body, d.menu.no);
+              el('h2', 'card-title', body, d.menu.title);
+              el('p', '', body, '해결한 사건이에요. 처음부터 다시 하거나, 원하는 장면부터 볼 수 있어요.');
+            }, [{ label: '처음부터 하기', primary: true }, { label: '장면 선택' }, { label: '사건 기록부로' }], 'title');
+            if (c === 2) {
+              data = null;
+              continue;
+            }
+            if (c === 1) {
+              const ids = Object.keys(d.checkpoints);
+              const k = await this.fx.card((body) => {
+                el('h2', 'card-title', body, '장면 선택');
+                el('p', '', body, '그 장면까지 모았을 증거와 사실을 가진 채로 시작해요.');
+              }, [...ids.map((id) => ({ label: d.checkpoints![id].label })), { label: '돌아가기' }], 'title scene-select');
+              if (k >= ids.length) continue;
+              picked = ids[k];
+            }
+          }
+          break;
+        }
         const s = save;
         const choice = await this.fx.card((body) => {
           el('p', 'card-kicker', body, data!.menu.no);
@@ -217,9 +300,16 @@ export class Game {
       scene = save.scene;
       this.restore(save);
     } else {
-      scene = jump ?? this.data.start;
+      scene = picked ?? jump ?? this.data.start;
+      const cp = this.data.checkpoints?.[scene];
       if (scene === this.data.start) this.data.startEvidence.forEach((id) => this.record.add(id));
-      else this.record.ownAll();
+      else if (cp) this.applyCheckpoint(cp);
+      else {
+        // A jump between checkpoints holds everything, and knows what the last checkpoint knew.
+        const before = this.checkpointBefore(scene);
+        if (before) this.applyCheckpoint(before);
+        this.record.ownAll();
+      }
       this.data.profiles.filter((p) => !p.later).forEach((p) => this.record.add(p.id));
       this.startedAt = performance.now();
     }
@@ -234,6 +324,25 @@ export class Game {
       await this.run(this.data.scenes[cur]);
       cur = this.next;
     }
+  }
+
+  /** The nearest checkpoint at or before a scene, in the order the scenes are listed. */
+  private checkpointBefore(scene: string): Checkpoint | undefined {
+    const ids = Object.keys(this.data.scenes);
+    for (let k = ids.indexOf(scene); k >= 0; k--) {
+      const cp = this.data.checkpoints?.[ids[k]];
+      if (cp) return cp;
+    }
+    return undefined;
+  }
+
+  /** Puts the player where a checkpoint says: what they hold, what they know, the prediction. */
+  private applyCheckpoint(cp: Checkpoint): void {
+    cp.evidence.forEach((id) => this.record.add(id));
+    (cp.flags ?? []).forEach((f) => this.flags.add(f));
+    this.applyRecordEdits();
+    this.gauge.set(cp.gauge);
+    if (cp.status) this.gauge.setStatus(cp.status);
   }
 
   /** The logo screen. The first press also starts the audio (browsers need a click first). */
@@ -267,14 +376,25 @@ export class Game {
   private entries(): EpisodeEntry[] {
     return this.slots.map((slot) => {
       if ('locked' in slot) return { no: slot.no, title: slot.title, tagline: slot.tagline };
-      const save = loadSave(slot.id);
+      const save = loadSave(slot.id, slot.revision);
       const solved = isCleared(slot.id);
+      // The solved stamp of an earlier version stays; its saves are not resumed.
+      const solvedBefore = !!slot.legacyIds?.some((id) => isCleared(id));
+      const revised = !save && !solved && (!!slot.legacyIds?.some((id) => hasSave(id)) || hasSave(slot.id));
       return {
         ...slot.menu,
         caseNo: slot.caseNo,
         caseId: slot.id,
-        solved,
-        status: save ? `이어하기 · ${save.label}` : solved ? '해결한 사건 · 다시 하기' : '새 사건',
+        solved: solved || solvedBefore,
+        status: save
+          ? `이어하기 · ${save.label}`
+          : revised
+            ? '내용이 개정되었어요 · 새 구성으로 시작'
+            : solved
+              ? '해결한 사건 · 다시 하기 · 장면 선택'
+              : solvedBefore
+                ? '해결한 사건(개정 전) · 새 구성으로 다시 하기'
+                : '새 사건',
       };
     });
   }
@@ -283,13 +403,51 @@ export class Game {
     this.data = data;
     this.record = new CourtRecord(this.stage, data.evidence, data.profiles, data.caseNo, data.caseName);
     this.record.onMap = (mapId) => new MapView().open(this.stage, mapId, 'view');
+    this.record.onPhotos = (setId) => new PhotoView().open(this.stage, setId, this.flags.has(`photomark:${setId}`));
+    this.record.photoMarked = (setId) => this.flags.has(`photomark:${setId}`);
+    this.record.onSeen = (id, n) => {
+      for (const f of [...this.flags]) if (f.startsWith(`seen:${id}|`)) this.flags.delete(f);
+      this.flags.add(`seen:${id}|${n}`);
+    };
     this.record.memos = () => [...this.flags].filter((f) => f.startsWith('memo:')).map((f) => f.slice(5));
     this.gauge.set(data.gaugeStart);
+    this.gauge.setStatus(data.gaugeStatus ?? null);
+    this.chances = data.chances ?? 0;
+    this.chanceUi.hidden = !data.chances;
+    this.paintChances();
+  }
+
+  private paintChances(): void {
+    if (!this.data?.chances) return;
+    this.chanceUi.replaceChildren();
+    el('span', 'chances-label', this.chanceUi, '재검토 기회');
+    for (let k = 0; k < this.data.chances; k++) el('i', k < this.chances ? 'on' : '', this.chanceUi);
   }
 
   private async openSettings(): Promise<void> {
     if (this.settingsPanel.isOpen || this.backlog.isOpen) return;
-    await this.settingsPanel.open(this.stage);
+    const actions: { label: string; run: () => void }[] = [];
+    if (this.data && !this.stage.classList.contains('title-mode')) {
+      if (this.inCross && this.data.chances) actions.push({ label: '현재 심문 처음부터', run: () => emit('restart') });
+      actions.push({ label: '사건 기록부로', run: () => void this.toCaseList() });
+    }
+    await this.settingsPanel.open(this.stage, actions);
+  }
+
+  /** Back to the episode list, but only once the latest checkpoint is safely stored (written again now). */
+  private async toCaseList(): Promise<void> {
+    for (;;) {
+      if (this.lastSave) this.lastSaveOk = writeSave(this.lastSave);
+      if (!this.saving || !this.lastSave || this.lastSaveOk) {
+        location.href = location.pathname;
+        return;
+      }
+      const c = await this.fx.card((body) => {
+        el('h2', 'card-title', body, '저장하지 못했어요');
+        el('p', '', body, '이 브라우저가 저장을 거부했어요. 지금 나가면 마지막 진행이 남지 않아요.');
+      }, [{ label: '다시 저장', primary: true }, { label: '돌아가지 않기' }], 'gameover');
+      if (c === 1) return;
+    }
   }
 
   private async openBacklog(): Promise<void> {
@@ -300,9 +458,17 @@ export class Game {
   private restore(save: SaveData): void {
     save.flags.forEach((f) => this.flags.add(f));
     save.evidence.forEach((id) => this.record.add(id));
+    this.applyRecordEdits();
     this.data.profiles.filter((p) => !p.later).forEach((p) => this.record.add(p.id));
     this.revealed = new Set(save.revealed);
     this.gauge.set(save.gauge);
+    this.gauge.setStatus(save.status ?? this.data.gaugeStatus ?? null);
+    if (this.data.chances) this.chances = save.chances ?? this.data.chances;
+    this.paintChances();
+    for (const f of save.flags) {
+      const m = /^seen:([^|]+)\|(\d+)$/.exec(f);
+      if (m) this.record.restoreSeen(m[1], Number(m[2]));
+    }
     this.wrongs = save.wrongs;
     this.startedAt = performance.now() - save.elapsed;
     this.resumeLoc = save.loc ?? null;
@@ -311,10 +477,21 @@ export class Game {
     this.backlog.restore(save.log ?? []);
   }
 
+  /** Revisions and addenda live in flags (`rev:<id>|<text>`, `ann:<id>|<text>`) so they survive a save. */
+  private applyRecordEdits(): void {
+    for (const f of this.flags) {
+      const m = /^(rev|ann):([^|]+)\|(.*)$/s.exec(f);
+      if (!m) continue;
+      if (m[1] === 'rev') this.record.revise(m[2], m[3]);
+      else this.record.annotate(m[2], m[3]);
+    }
+  }
+
   private autosave(label: string, at: { loc?: string; cross?: CrossResume } = {}): void {
     if (!this.saving) return;
-    writeSave({
+    this.lastSave = {
       caseId: this.data.id,
+      revision: this.data.revision,
       label,
       scene: this.sceneName,
       ...at,
@@ -322,11 +499,14 @@ export class Game {
       evidence: this.record.ownedIds,
       revealed: [...this.revealed],
       gauge: this.gauge.value,
+      status: this.gauge.statusText || undefined,
       wrongs: this.wrongs,
+      chances: this.data.chances ? this.chances : undefined,
       elapsed: performance.now() - this.startedAt,
       log: this.backlog.recent(LOG_KEEP),
-    });
-    if (label !== this.lastSaveLabel) replay(this.saveFlash, 'on');
+    };
+    this.lastSaveOk = writeSave(this.lastSave);
+    if (this.lastSaveOk && label !== this.lastSaveLabel) replay(this.saveFlash, 'on');
     this.lastSaveLabel = label;
   }
 
@@ -403,7 +583,7 @@ export class Game {
         return;
       case 'tape':
         this.box.hide();
-        this.cinema.setTape(cmd.title);
+        this.cinema.setTape(cmd.title, cmd.art);
         if (cmd.title) await sleep(this.fast ? 0 : 900);
         return;
       case 'intro': {
@@ -466,6 +646,15 @@ export class Game {
       case 'gaugeSet':
         await this.gauge.add(cmd.value - this.gauge.value);
         return;
+      case 'predict':
+        if (cmd.status) this.gauge.setStatus(cmd.status);
+        this.gauge.explain(cmd.reason);
+        if (cmd.value !== this.gauge.value) await this.gauge.add(cmd.value - this.gauge.value);
+        return;
+      case 'showRecord':
+        this.box.hide();
+        await this.record.open('view', '', true, undefined, cmd.id);
+        return;
       case 'evidence':
         this.scene.showEvidence(this.record.item(cmd.id));
         return;
@@ -488,8 +677,12 @@ export class Game {
       case 'addEvidenceSet':
         return this.addEvidenceSet(cmd.label, cmd.ids);
       case 'revise':
+        for (const f of [...this.flags]) if (f.startsWith(`rev:${cmd.id}|`)) this.flags.delete(f);
+        this.flags.add(`rev:${cmd.id}|${cmd.summary}`);
         this.record.revise(cmd.id, cmd.summary);
         return;
+      case 'annotate':
+        return this.annotate(cmd.id, cmd.text);
       case 'addProfile':
         return this.addProfile(cmd.id);
       case 'field':
@@ -522,7 +715,21 @@ export class Game {
   }
 
   private has(id: string): boolean {
+    if (id.startsWith('presented:')) return this.presented === id.slice('presented:'.length);
     return this.flags.has(id) || this.record.has(id);
+  }
+
+  private async annotate(id: string, text: string): Promise<void> {
+    const key = `ann:${id}|${text}`;
+    const ev = this.record.get(id);
+    if (!ev || this.flags.has(key)) return;
+    this.flags.add(key);
+    this.record.annotate(id, text);
+    this.scene.showEvidence(this.record.item(id));
+    sfx('evidence');
+    await this.line({ name: null, text: `「${ev.name}」에 새로 확인된 내용을 덧붙였다.`, style: 'notice', voice: null });
+    await this.waitAdvance();
+    this.scene.showEvidence(null);
   }
 
   private async addEvidence(id: string): Promise<void> {
@@ -577,7 +784,7 @@ export class Game {
   private async waitAdvance(): Promise<void> {
     this.box.showArrow(true);
     for (;;) {
-      const a = await waitFor(['advance', 'right', 'record']);
+      const a = await waitFor(['advance', 'record']);
       if (a !== 'record') break;
       await this.record.open('view');
     }
@@ -639,90 +846,138 @@ export class Game {
     const revealedAtStart = new Set(resume?.revealedStart ?? this.revealed);
     let i = resume?.index ?? 0;
     let instant = false;
-    for (;;) {
-      const list = this.visible(tm);
-      if (i >= list.length) i = 0;
-      const st = list[i];
-      this.autosave(`반대신문: ${tm.title}`, {
-        cross: { id: tm.id, index: i, gaugeStart: gaugeAtStart, revealedStart: [...revealedAtStart] },
-      });
-      this.cross.show('반대신문', tm.title, i, list.length, true, list.map((s) => this.pressed.has(s.id)));
-      await this.sayStatement(st, instant);
-      instant = false;
-      const a = await waitFor(['advance', 'right', 'left', 'press', 'present', 'record', 'hint']);
-      this.cross.hide();
+    this.inCross = tm.id;
+    const manual = this.data.hintMode === 'manual' && !!tm.hintText?.length;
+    const restart = () => {
+      this.revealed = new Set(revealedAtStart);
+      if (!this.data.chances) this.gauge.set(gaugeAtStart);
+      i = 0;
+    };
+    try {
+      for (;;) {
+        const list = this.visible(tm);
+        if (i >= list.length) i = 0;
+        const st = list[i];
+        this.autosave(`반대신문: ${tm.title}`, {
+          cross: { id: tm.id, index: i, gaugeStart: gaugeAtStart, revealedStart: [...revealedAtStart] },
+        });
+        this.hintCtx = manual ? { key: `cross:${tm.id}`, title: `반대신문 · ${tm.title}`, lines: tm.hintText! } : null;
+        this.cross.show('반대신문', tm.title, i, list.length, true, list.map((s) => this.pressed.has(s.id)));
+        await this.sayStatement(st, instant);
+        instant = false;
+        const a = await waitFor(['advance', 'right', 'left', 'press', 'present', 'record', 'hint', 'restart']);
+        this.cross.hide();
 
-      if (a === 'hint') {
-        if ((await this.hint(tm, true)) === STOP) return STOP;
-        instant = true;
-        continue;
-      }
-      if (a === 'advance' || a === 'right') {
-        if (i < list.length - 1) i++;
-        else {
-          if ((await this.loopBack(tm)) === STOP) return STOP;
-          i = 0;
+        if (a === 'restart') {
+          restart();
+          this.chances = this.data.chances ?? 0;
+          this.paintChances();
+          await this.fx.banner('반대신문 다시', tm.title);
+          continue;
         }
-        continue;
-      }
-      if (a === 'left') {
-        i = Math.max(0, i - 1);
-        continue;
-      }
-      if (a === 'press') {
-        this.pressed.add(st.id);
-        await this.exec({ t: 'shout', who: 'dan', kind: 'holdit' });
-        const before = new Set(this.revealed);
-        if ((await this.run(st.press ?? this.data.defaultPress)) === STOP) return STOP;
-        const after = this.visible(tm);
-        const rep = after.findIndex((s) => s.replaces === st.id && !before.has(s.id));
-        if (rep >= 0) i = rep;
-        else {
-          i = after.indexOf(st) + 1;
-          if (i >= after.length) {
+        if (a === 'hint') {
+          if (manual) {
+            await this.openHintWindow();
+            instant = true;
+            continue;
+          }
+          if ((await this.hint(tm, true)) === STOP) return STOP;
+          instant = true;
+          continue;
+        }
+        if (a === 'advance' || a === 'right') {
+          if (i < list.length - 1) i++;
+          else {
             if ((await this.loopBack(tm)) === STOP) return STOP;
             i = 0;
           }
+          continue;
         }
-        continue;
-      }
+        if (a === 'left') {
+          i = Math.max(0, i - 1);
+          continue;
+        }
+        if (a === 'press') {
+          this.pressed.add(st.id);
+          await this.exec({ t: 'shout', who: 'dan', kind: 'holdit' });
+          const before = new Set(this.revealed);
+          if ((await this.run(st.press ?? this.data.defaultPress)) === STOP) return STOP;
+          const after = this.visible(tm);
+          const rep = after.findIndex((s) => s.replaces === st.id && !before.has(s.id));
+          if (rep >= 0) i = rep;
+          else {
+            i = after.indexOf(st) + 1;
+            if (i >= after.length) {
+              if ((await this.loopBack(tm)) === STOP) return STOP;
+              i = 0;
+            }
+          }
+          continue;
+        }
 
-      // present / record: open the case file and pick evidence
-      const id = await this.record.open('present', '', true, {
-        label: `반박할 증언 · ${tm.title} ${i + 1}/${list.length}`, text: st.text,
-      });
-      if (!id) {
-        instant = true;
-        continue;
-      }
-      const hit = !!st.accept?.includes(id);
-      if (hit && this.data.cutMusicOnObjection) this.music(null);
-      await this.exec({ t: 'shout', who: 'dan', kind: 'objection' });
-      this.scene.showEvidence(this.record.item(id));
-      if (hit) return this.run(tm.contradiction);
-      const hint = st.nearMiss?.[id];
-      if (hint) {
-        const r = await this.run(hint);
+        // present / record: open the case file and pick evidence
+        this.record.onHint = manual ? () => void this.openHintWindow() : null;
+        const id = await this.record.open('present', '', true, {
+          label: `반박할 증언 · ${tm.title} ${i + 1}/${list.length}`, text: st.text,
+        });
+        this.record.onHint = null;
+        if (!id) {
+          instant = true;
+          continue;
+        }
+        const hit = !!st.accept?.includes(id);
+        this.presented = id;
+        if (hit && this.data.cutMusicOnObjection) this.music(null);
+        await this.exec({ t: 'shout', who: 'dan', kind: 'objection' });
+        this.scene.showEvidence(this.record.item(id));
+        if (hit) {
+          this.hintCtx = null;
+          this.inCross = null;
+          return this.run(tm.contradiction);
+        }
+        const near = st.nearMiss?.[id];
+        if (near) {
+          const r = await this.run(near);
+          this.scene.showEvidence(null);
+          if (r === STOP) return STOP;
+          continue;
+        }
+        const r = await this.run(tm.wrong ?? this.data.defaultWrong);
         this.scene.showEvidence(null);
         if (r === STOP) return STOP;
-        continue;
+        if (await this.penalty(tm.penalty, tm.free)) {
+          if (this.data.chances) {
+            if ((await this.outOfChances(true)) === 'restart') restart();
+          } else {
+            await this.gameOver();
+            restart();
+          }
+        }
       }
-      const r = await this.run(tm.wrong ?? this.data.defaultWrong);
-      this.scene.showEvidence(null);
-      if (r === STOP) return STOP;
-      if (await this.penalty(tm.penalty)) {
-        await this.gameOver();
-        this.gauge.set(gaugeAtStart);
-        this.revealed = new Set(revealedAtStart);
-        i = 0;
-      }
+    } finally {
+      if (this.inCross === tm.id) this.inCross = null;
+      this.hintCtx = null;
     }
   }
 
   /** Past the last statement: the case's loop-back line, then the testimony's next hint. */
   private async loopBack(tm: Testimony): Promise<Result> {
+    if (this.data.hintMode === 'manual') {
+      // No hint plays by itself; the first time round, a quiet note says where hints are.
+      const key = `looped:${tm.id}`;
+      if (!this.flags.has(key)) {
+        this.flags.add(key);
+        this.showToast('필요하면 H로 힌트를 볼 수 있어요.');
+      }
+      return;
+    }
     if ((await this.run(this.data.loopBack)) === STOP) return STOP;
     return this.hint(tm, false);
+  }
+
+  private showToast(text: string): void {
+    this.toast.textContent = text;
+    replay(this.toast, 'on');
   }
 
   /** Plays the testimony's next hint; they go from vague to concrete and the last one repeats. */
@@ -737,56 +992,137 @@ export class Game {
     return this.run(hints[k]);
   }
 
+  /** H anywhere: opens the hint window when the current question has hints (manual mode). */
+  private openHint(): boolean {
+    if (this.hintPanel.isOpen) {
+      this.hintPanel.next();
+      return true;
+    }
+    if (!this.hintCtx || this.data?.hintMode !== 'manual') return false;
+    if (this.settingsPanel.isOpen || this.backlog.isOpen) return true;
+    void this.openHintWindow();
+    return true;
+  }
+
+  private async openHintWindow(): Promise<void> {
+    const ctx = this.hintCtx;
+    if (!ctx || this.hintPanel.isOpen) return;
+    await this.hintPanel.open(this.stage, ctx.title, ctx.lines, this.hintStage(ctx.key), (n) => {
+      for (const f of [...this.flags]) if (f.startsWith(`hint:${ctx.key}|`)) this.flags.delete(f);
+      this.flags.add(`hint:${ctx.key}|${n}`);
+    });
+  }
+
+  private hintStage(key: string): number {
+    for (const f of this.flags) {
+      if (f.startsWith(`hint:${key}|`)) return Number(f.slice(`hint:${key}|`.length)) || 0;
+    }
+    return 0;
+  }
+
+  /** Total hint stages read, for the ending card. */
+  private hintsUsed(): number {
+    let n = 0;
+    for (const f of this.flags) {
+      const m = /^hint:.*\|(\d+)$/.exec(f);
+      if (m) n += Number(m[1]);
+    }
+    return n;
+  }
+
+  private stepHints(opts: StepOpts | undefined, fallbackKey: string, title: string): void {
+    this.hintCtx = this.data.hintMode === 'manual' && opts?.hints?.length
+      ? { key: opts.hintKey ?? fallbackKey, title, lines: opts.hints }
+      : null;
+  }
+
   /** "Point at it" on a map. A wrong spot costs like wrong evidence. */
   private async runPinpoint(cmd: Extract<Cmd, { t: 'pinpoint' }>): Promise<Result> {
     const start = this.gauge.value;
-    for (;;) {
-      this.box.hide();
-      const id = await new MapView().open(this.stage, cmd.map, 'pick', cmd.prompt, () => this.record.open('view'));
-      if (id === cmd.answer) {
-        sfx('realize');
-        return this.run(cmd.then);
+    this.stepHints(cmd.opts, cmd.prompt, '평면도에서 찍기');
+    try {
+      for (;;) {
+        this.box.hide();
+        const id = await new MapView().open(this.stage, cmd.map, 'pick', cmd.prompt, () => this.record.open('view'));
+        if (id === cmd.answer) {
+          sfx('realize');
+          this.hintCtx = null;
+          return this.run(cmd.then);
+        }
+        const r = await this.run(cmd.wrong ?? this.data.presentWrong);
+        if (r === STOP) return STOP;
+        if (await this.penalty(undefined, cmd.opts?.free)) {
+          if (this.data.chances) await this.outOfChances(false);
+          else {
+            await this.gameOver();
+            this.gauge.set(start);
+          }
+        }
       }
-      const r = await this.run(cmd.wrong ?? this.data.presentWrong);
-      if (r === STOP) return STOP;
-      if (await this.penalty()) {
-        await this.gameOver();
-        this.gauge.set(start);
-      }
+    } finally {
+      this.hintCtx = null;
     }
   }
 
   private async runPresent(cmd: Extract<Cmd, { t: 'present' }>): Promise<Result> {
     const start = this.gauge.value;
-    for (;;) {
-      this.box.hide();
-      const id = await this.record.open('present', cmd.prompt, false);
-      const hit = ([] as string[]).concat(cmd.answer).includes(id!);
-      if (hit && this.data.cutMusicOnObjection) this.music(null);
-      await this.exec({ t: 'shout', who: 'dan', kind: 'takethat' });
-      this.scene.showEvidence(this.record.item(id));
-      if (hit) return this.run(cmd.then);
-      const r = await this.run(cmd.wrong ?? this.data.presentWrong);
-      this.scene.showEvidence(null);
-      if (r === STOP) return STOP;
-      if (await this.penalty()) {
-        await this.gameOver();
-        this.gauge.set(start);
+    this.stepHints(cmd.opts, cmd.prompt, cmd.prompt);
+    try {
+      for (;;) {
+        this.box.hide();
+        this.record.onHint = this.hintCtx ? () => void this.openHintWindow() : null;
+        const id = await this.record.open('present', cmd.prompt, false);
+        this.record.onHint = null;
+        const hit = ([] as string[]).concat(cmd.answer).includes(id!);
+        this.presented = id;
+        if (hit && this.data.cutMusicOnObjection) this.music(null);
+        await this.exec({ t: 'shout', who: 'dan', kind: 'takethat' });
+        this.scene.showEvidence(this.record.item(id));
+        if (hit) {
+          this.hintCtx = null;
+          return this.run(cmd.then);
+        }
+        const near = cmd.nearMiss?.[id!];
+        if (near) {
+          const r = await this.run(near);
+          this.scene.showEvidence(null);
+          if (r === STOP) return STOP;
+          continue;
+        }
+        const r = await this.run(cmd.wrong ?? this.data.presentWrong);
+        this.scene.showEvidence(null);
+        if (r === STOP) return STOP;
+        if (await this.penalty(undefined, cmd.opts?.free)) {
+          if (this.data.chances) await this.outOfChances(false);
+          else {
+            await this.gameOver();
+            this.gauge.set(start);
+          }
+        }
       }
+    } finally {
+      this.hintCtx = null;
     }
   }
 
   private async runAsk(cmd: Extract<Cmd, { t: 'ask' }>): Promise<Result> {
     const used = new Set<number>();
     const hasCorrect = cmd.options.some((o) => o.correct);
-    for (;;) {
-      this.scene.show(cmd.who);
-      this.box.hide();
-      const idx = await this.ask.open(cmd.note, cmd.options.map((o) => o.label), used, cmd.title);
-      used.add(idx);
-      const opt = cmd.options[idx];
-      if ((await this.run(opt.then)) === STOP) return STOP;
-      if (opt.correct || !hasCorrect) return;
+    this.stepHints(cmd.opts, cmd.note, cmd.title ?? '선택');
+    try {
+      for (;;) {
+        this.scene.show(cmd.who);
+        this.box.hide();
+        this.ask.onHint = this.hintCtx ? () => void this.openHintWindow() : null;
+        const idx = await this.ask.open(cmd.note, cmd.options.map((o) => o.label), used, cmd.title);
+        this.ask.onHint = null;
+        used.add(idx);
+        const opt = cmd.options[idx];
+        if ((await this.run(opt.then)) === STOP) return STOP;
+        if (opt.correct || !hasCorrect) return;
+      }
+    } finally {
+      this.hintCtx = null;
     }
   }
 
@@ -884,9 +1220,40 @@ export class Game {
     }
   }
 
-  private penalty(amount = this.data.wrongPenalty): Promise<boolean> {
+  /**
+   * A wrong answer. With review chances it spends one (unless `free`) and leaves the prediction
+   * alone; otherwise it raises the prediction. Resolves true when the player has run out.
+   */
+  private async penalty(amount = this.data.wrongPenalty, free = false): Promise<boolean> {
     this.wrongs++;
+    if (this.data.chances) {
+      if (free) return false;
+      this.chances = Math.max(0, this.chances - 1);
+      this.paintChances();
+      replay(this.chanceUi, 'lose');
+      sfx('damage');
+      return this.chances === 0;
+    }
     return this.gauge.add(amount);
+  }
+
+  /** Out of review chances: never a guilty verdict, just a pause to look at the record again. */
+  private async outOfChances(inCross: boolean): Promise<'continue' | 'restart'> {
+    const resume = this.bgm;
+    playBgm(null);
+    const buttons = inCross
+      ? [{ label: '기록 보고 이어하기', primary: true }, { label: '이 심문 처음부터' }]
+      : [{ label: '기록 보고 이어하기', primary: true }];
+    const c = await this.fx.card((body) => {
+      el('h2', 'card-title', body, '재검토 기회를 다 썼어요');
+      el('p', '', body, '기록을 정리하고 다시 시도할 수 있어요. 판관 예측과 지금까지 확인한 사실은 그대로예요.');
+    }, buttons, 'gameover');
+    this.chances = this.data.chances ?? 0;
+    this.paintChances();
+    this.bgm = resume;
+    playBgm(resume);
+    if (c === 0) await this.record.open('view');
+    return c === 1 ? 'restart' : 'continue';
   }
 
   private async gameOver(): Promise<void> {
@@ -916,11 +1283,13 @@ export class Game {
       el('p', 'card-kicker', body, this.data.episode);
       el('h2', 'card-title', body, this.data.endingTitle);
       const stats = el('dl', 'stats', body);
-      for (const [k, v] of [
+      const rows = [
         ['플레이 시간', `${Math.floor(secs / 60)}분 ${secs % 60}초`],
         ['잘못 제시한 증거', `${this.wrongs}번`],
-        ['최종 유죄 예측률', `${this.gauge.value.toFixed(1)}%`],
-      ]) {
+      ];
+      if (this.data.hintMode === 'manual') rows.push(['열어 본 힌트', `${this.hintsUsed()}단계`]);
+      rows.push(['최종 유죄 예측률', `${this.gauge.value.toFixed(1)}%`]);
+      for (const [k, v] of rows) {
         el('dt', '', stats, k);
         el('dd', '', stats, v);
       }

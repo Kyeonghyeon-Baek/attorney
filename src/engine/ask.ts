@@ -1,15 +1,25 @@
 import { sfx } from './audio';
-import { el } from './dom';
+import { el, replay } from './dom';
 import { push, type Action } from './input';
 
 const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3 };
 
-/** "질문 재구성": the AI only answers what it is asked, so the player picks the wording. */
+/**
+ * "질문 재구성" (4화) and plain choices (1화). The panel opens with nothing chosen: arrows, number
+ * keys or a click choose an option, and only Enter, the confirm button or a second click on the
+ * same option submits it.
+ */
 export class AskPanel {
   private root: HTMLElement;
   private title: HTMLElement;
   private note: HTMLElement;
   private list: HTMLElement;
+  private bar: HTMLElement;
+  private readout: HTMLElement;
+  private confirm: HTMLButtonElement;
+  private hintBtn: HTMLButtonElement;
+  /** Opens the hint window for the current question, when it has hints. */
+  onHint: (() => void) | null = null;
 
   constructor(parent: HTMLElement) {
     this.root = el('div', 'ask', parent);
@@ -17,14 +27,19 @@ export class AskPanel {
     this.title = el('div', 'ask-title', this.root);
     this.note = el('div', 'ask-note', this.root);
     this.list = el('div', 'ask-list', this.root);
+    this.bar = el('div', 'ask-bar', this.root);
+    this.readout = el('span', 'ask-readout', this.bar);
+    this.hintBtn = el('button', 'btn btn-small ask-hint', this.bar, '힌트  H');
+    this.confirm = el('button', 'btn btn-primary ask-confirm', this.bar, '이걸로 정한다  Enter');
+    this.hintBtn.addEventListener('click', () => this.onHint?.());
   }
 
   open(note: string, labels: string[], used: Set<number>, title = '질문 재구성'): Promise<number> {
     this.title.textContent = title;
     this.note.textContent = note;
     this.root.hidden = false;
-    let sel = labels.findIndex((_, i) => !used.has(i));
-    if (sel < 0) sel = 0;
+    this.hintBtn.hidden = !this.onHint;
+    let sel = -1;
     const buttons = labels.map((label, i) => {
       const b = el('button', 'ask-option', this.list);
       el('span', 'ask-key', b, String(i + 1));
@@ -32,25 +47,46 @@ export class AskPanel {
       b.classList.toggle('used', used.has(i));
       return b;
     });
-    const paint = () => buttons.forEach((b, i) => b.classList.toggle('on', i === sel));
+    const paint = () => {
+      buttons.forEach((b, i) => b.classList.toggle('on', i === sel));
+      this.confirm.disabled = sel < 0;
+      this.readout.textContent = sel < 0 ? '↑ ↓ 또는 숫자로 고른 뒤 Enter' : '고른 답: ' + (sel + 1) + '번';
+      this.readout.classList.remove('nudge');
+    };
     paint();
     sfx('open');
     return new Promise((resolve) => {
-      const choose = (i: number) => {
+      const choose = () => {
+        if (sel < 0) {
+          // Enter with nothing chosen does not answer; it only points at how to choose.
+          replay(this.readout, 'nudge');
+          return;
+        }
         pop();
         sfx('select');
         this.root.hidden = true;
         this.list.replaceChildren();
-        resolve(i);
+        resolve(sel);
       };
-      buttons.forEach((b, i) => b.addEventListener('click', () => choose(i)));
+      const pick = (i: number) => {
+        sel = i;
+        sfx('select');
+        paint();
+      };
+      buttons.forEach((b, i) =>
+        b.addEventListener('click', () => {
+          if (sel === i) choose();
+          else pick(i);
+        }),
+      );
+      this.confirm.onclick = () => choose();
       const pop = push((a) => {
         const n = NUM[a];
-        if (n !== undefined && n < labels.length) choose(n);
-        else if (a === 'up' && sel > 0) { sel--; sfx('select'); paint(); }
-        else if (a === 'down' && sel < labels.length - 1) { sel++; sfx('select'); paint(); }
-        else if (a === 'advance') choose(sel);
-      });
+        if (n !== undefined && n < labels.length) pick(n);
+        else if (a === 'up') pick(sel <= 0 ? 0 : sel - 1);
+        else if (a === 'down') pick(sel < 0 ? 0 : Math.min(labels.length - 1, sel + 1));
+        else if (a === 'advance') choose();
+      }, { strict: true });
     });
   }
 }

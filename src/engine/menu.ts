@@ -44,12 +44,12 @@ export function chooseEpisode(stage: HTMLElement, entries: EpisodeEntry[]): Prom
   }
   const foot = el('footer', 'episodes-foot', root);
   const back = el('button', 'btn', foot, '← 타이틀  Esc');
+  const hint = el('p', 'episodes-hint', foot, '← → 로 사건을 고르고 Enter, 또는 클릭');
 
   const open = cards.filter((c) => c.entry.caseId);
-  // Start on the first unsolved episode.
-  let sel = Math.max(0, open.findIndex((c) => !c.entry.solved));
+  // Nothing is chosen at first, so Enter carried over from an ending cannot start an episode.
+  let sel = -1;
   const focus = () => open[sel]?.node.focus();
-  focus();
 
   return new Promise((resolve) => {
     const done = (id: string | null) => {
@@ -69,16 +69,17 @@ export function chooseEpisode(stage: HTMLElement, entries: EpisodeEntry[]): Prom
         const i = open.findIndex((c) => c.node === document.activeElement);
         if (i >= 0) pick(i);
         else if (document.activeElement === back) done(null);
+        else hint.classList.add('nudge');
       } else if (a === 'right' || a === 'down') {
         sel = (sel + 1) % open.length;
         sfx('select');
         focus();
       } else if (a === 'left' || a === 'up') {
-        sel = (sel - 1 + open.length) % open.length;
+        sel = sel < 0 ? open.length - 1 : (sel - 1 + open.length) % open.length;
         sfx('select');
         focus();
       }
-    });
+    }, { strict: true });
     open.forEach((c, i) => c.node.addEventListener('click', () => pick(i)));
     back.addEventListener('click', () => done(null));
   });
@@ -99,7 +100,8 @@ export class SettingsPanel {
     return !!this.root;
   }
 
-  open(stage: HTMLElement): Promise<void> {
+  /** `actions` adds buttons (e.g. back to the case list); one closes the panel, then runs. */
+  open(stage: HTMLElement, actions: { label: string; run: () => void }[] = []): Promise<void> {
     if (this.root) return Promise.resolve();
     const root = el('div', 'settings', stage);
     this.root = root;
@@ -142,6 +144,18 @@ export class SettingsPanel {
     const paintSfx = volumeRow('효과음 · 목소리', 'sfx');
 
     el('p', 'settings-note', panel, '↑ ↓ 항목 고르기   ← → 바꾸기');
+    let after: (() => void) | null = null;
+    if (actions.length) {
+      const box = el('div', 'settings-actions', panel);
+      for (const act of actions) {
+        const b = el('button', 'btn', box, act.label);
+        b.addEventListener('click', () => {
+          after = act.run;
+          finishRef?.();
+        });
+      }
+    }
+    let finishRef: (() => void) | null = null;
     const close = el('button', 'btn btn-primary settings-close', panel, '닫기  Esc');
 
     let row = 0;
@@ -182,7 +196,9 @@ export class SettingsPanel {
         this.root = null;
         sfx('close');
         resolve();
+        after?.();
       };
+      finishRef = finish;
       const pop = pushModal((a) => {
         if (a === 'back' || a === 'advance') finish();
         else if (a === 'up') {
