@@ -27,14 +27,15 @@ npm run dev
 |---|---|
 | `?ep=1` · `?ep=4` | 사건 기록부를 건너뛰고 그 화를 바로 열기 (저장은 평소처럼) |
 | `?ep=1&scene=trial` | 1화 개정부터 (증거는 전부 가진 상태, 저장 안 함). 1화 장면: `prologue` `lobby` `trial` `cross0`~`cross4` `silence` `recess` `grandma` `tape` `finale` `breakdown` `verdict` `epilogue` `office` |
-| `?scene=intro` | 4화: 조사를 건너뛰고 법정부터 시작 (`?scene=`만 쓰면 그 장면이 있는 화를 찾아요) |
-| `?scene=cross1` | 첫 번째 반대신문부터 시작 |
-| `?scene=cross2` | 두 번째 반대신문부터 시작 |
+| `?scene=intro` | 4화: 조사를 건너뛰고 법정부터 시작 (`?scene=`만 쓰면 그 장면이 있는 화를 찾아요. 1화에도 있는 장면 이름은 1화가 열리니 `?ep=4&`를 붙여요) |
+| `?ep=4&scene=cross1` | 첫 번째 반대신문부터 시작 |
+| `?ep=4&scene=cross2` | 두 번째 반대신문부터 시작 |
 | `?scene=climax` | 다온 반대신문 뒤 마지막 증거 제시부터 시작 |
-| `?scene=recess` | 2일째 후반(휴정)부터 시작 |
-| `?scene=cross3` · `cross4` | 박하은의 첫 번째 · 두 번째 반대신문부터 시작 |
+| `?ep=4&scene=recess` | 2일째 후반(휴정)부터 시작 |
+| `?ep=4&scene=cross3` · `cross4` | 박하은의 첫 번째 · 두 번째 반대신문부터 시작 |
 | `?scene=day3lounge` | 3일째(대기실)부터 시작 |
-| `?scene=cross5` · `cross6` · `finale` | 서지훈 반대신문 1 · 2, 마지막 추궁부터 시작 |
+| `?scene=cross5` · `cross6` | 서지훈 반대신문 1 · 2부터 시작 |
+| `?ep=4&scene=finale` | 마지막 추궁부터 시작 |
 | `?fast` | 대사를 즉시 출력 (테스트용) |
 | `?spots` | 조사 포인트 위치를 빨간 테두리로 표시 (배경을 바꿨을 때 위치 맞추기용) |
 
