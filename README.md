@@ -14,7 +14,13 @@
 
 **제4화 「대체된 증인」** (약 40분, 조사 + 법정 3일): 누리랩 조사 → AI 증인 다온 → 박하은 → 서지훈 신문, 진범 붕괴, 무죄, 에필로그.
 
-제2화, 제3화는 사건 기록부에 "준비 중"으로 나와요.
+공개 빌드에서는 제1화만 플레이할 수 있고 제2~4화는 "준비 중"으로 나와요. 제4화 대본은 공개 빌드에서 제외되며 `?ep=4`로도 열리지 않아요. `npm run dev`로 실행하는 로컬 개발 환경에서는 제4화도 플레이할 수 있어요.
+
+## 공개 배포
+
+GitHub Pages: https://kyeonghyeon-baek.github.io/attorney/
+
+`main`에 push하면 GitHub Actions가 빌드하고 배포해요. 배포 빌드 명령은 `npm run build -- --base=/attorney/`, 출력 폴더는 `dist/`예요. 저장소 Settings → Pages의 Source는 **GitHub Actions**로 설정해요. 진행 상황은 저장소 Actions의 **Deploy game to GitHub Pages**에서 확인할 수 있어요.
 
 ## 실행
 
