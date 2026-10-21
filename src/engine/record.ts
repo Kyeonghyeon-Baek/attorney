@@ -1,6 +1,7 @@
 import { sfx } from './audio';
-import { el, replay, scrollWithin } from './dom';
+import { el, replay, scrollWithin, setLabel } from './dom';
 import { fromSpace, push } from './input';
+import { touchLayout } from './viewport';
 import { FIGURES, paintFigure } from './figures';
 import { paintCompare } from './photos';
 import { paintFace, paintItem } from './portrait';
@@ -262,7 +263,7 @@ export class CourtRecord {
     // Nothing chosen: say how to choose instead of presenting.
     this.prompt.hidden = false;
     if (!this.prompt.querySelector('.pin-label')) this.prompt.textContent = this.promptText || '';
-    const n = el('span', 'record-nudge', this.prompt, '  ← → 나 클릭으로 증거를 먼저 고르세요');
+    const n = el('span', 'record-nudge', this.prompt, touchLayout() ? '  증거를 먼저 고르세요' : '  ← → 나 클릭으로 증거를 먼저 고르세요');
     replay(n, 'on');
     setTimeout(() => n.remove(), 1600);
   }
@@ -341,7 +342,7 @@ export class CourtRecord {
     const items = this.tab === 'evidence' ? this.held : this.people;
     if (this.sel >= items.length) this.sel = items.length - 1;
     this.presentBtn.disabled = this.sel < 0;
-    this.presentBtn.textContent = this.tab === 'evidence' ? '이 증거를 제시한다  Enter' : '이 인물을 제시한다  Enter';
+    setLabel(this.presentBtn, this.tab === 'evidence' ? '이 증거를 제시한다  Enter' : '이 인물을 제시한다  Enter');
     this.grid.replaceChildren();
     let shelf: string | undefined;
     items.forEach((item, i) => {
@@ -394,7 +395,7 @@ export class CourtRecord {
       const ev = this.held[this.sel];
       if (!ev) {
         el('p', 'sheet-empty', this.sheet, this.held.length
-          ? '왼쪽에서 증거를 고르면 내용이 보여요. (← → 또는 클릭)'
+          ? '왼쪽에서 증거를 고르면 내용이 보여요.' + (touchLayout() ? '' : ' (← → 또는 클릭)')
           : '아직 모은 증거가 없어요.');
         return;
       }

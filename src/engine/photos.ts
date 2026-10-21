@@ -1,7 +1,8 @@
 import { photoImage } from './assets';
 import { sfx } from './audio';
-import { el, replay } from './dom';
+import { el, replay, setLabel } from './dom';
 import { fromSpace, push } from './input';
+import { touchLayout } from './viewport';
 
 /** A rectangle in the photo's own pixel coordinates. */
 export interface PhotoRect {
@@ -362,9 +363,9 @@ export class PhotoView {
       // Same rule as the other puzzles: a click only marks the spot; Enter (or the button) checks it.
       hint.textContent = focus < 0
         ? '클릭 또는 ← → 로 한 곳 고르기 · 고른 뒤 Enter'
-        : `고른 곳 — ${t.region.spots[focus].label}  → Enter로 확인`;
+        : `고른 곳 — ${t.region.spots[focus].label}${touchLayout() ? '' : '  → Enter로 확인'}`;
       hint.classList.toggle('picked', focus >= 0);
-      go.textContent = '여기다  Enter';
+      setLabel(go, '여기다  Enter');
       go.disabled = focus < 0;
       big.replaceChildren();
       const f = set.frames[t.region.frame];
@@ -415,7 +416,7 @@ export class PhotoView {
       prompt.textContent = t.frames.prompt;
       hint.textContent = '클릭 또는 ← → 와 Space로 두 장을 고른 뒤 Enter';
       hint.classList.remove('picked');
-      go.textContent = '이 두 장  Enter';
+      setLabel(go, '이 두 장  Enter');
       go.disabled = picked.length !== 2;
       big.replaceChildren();
       const slots = [...picked].sort((a, b) => a - b);
@@ -467,7 +468,7 @@ export class PhotoView {
         el('p', 'photoview-closing', extra, t.closing);
         stepTag.textContent = '정리';
         hint.textContent = '';
-        go.textContent = '계속  Enter';
+        setLabel(go, '계속  Enter');
         go.disabled = false;
         return;
       }

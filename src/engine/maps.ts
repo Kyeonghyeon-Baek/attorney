@@ -1,6 +1,7 @@
 import { sfx } from './audio';
 import { el } from './dom';
 import { push } from './input';
+import { touchLayout } from './viewport';
 
 /** A clickable area on a map, in the map's own coordinates. */
 export interface MapRegion {
@@ -202,7 +203,7 @@ export class MapView {
     if (mode === 'pick') {
       // Picking is two steps, so the bar says what is chosen and what confirms it.
       const bar = el('div', 'mapview-pickbar', panel);
-      readout = el('div', 'mapview-readout', bar, '클릭하거나 ← → 로 자리를 고르세요');
+      readout = el('div', 'mapview-readout', bar, touchLayout() ? '자리를 눌러 고르세요' : '클릭하거나 ← → 로 자리를 고르세요');
       el('span', 'mapview-hint', bar, '한 번 더 클릭하거나 Enter로 지목');
       confirm = el('button', 'btn btn-primary', bar, '이 자리를 지목한다  Enter');
       confirm.disabled = true;

@@ -33,6 +33,14 @@ html, body {
   background: var(--night);
 }
 
+html {
+  /* iOS enlarges text in landscape unless told not to, which would overflow the fixed stage. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* No grey-blue flash on every tap. */
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   font-family: var(--pixel);
   color: var(--paper);
@@ -55,6 +63,9 @@ button { font: inherit; }
   background: #000;
   user-select: none;
   -webkit-user-select: none;
+  /* Quick taps through dialogue must not zoom the page or open the image menu. */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 .stage.shake { animation: shake 0.3s linear; }
@@ -358,7 +369,8 @@ button { font: inherit; }
   cursor: pointer;
   white-space: pre;
 }
-.btn:hover { background: #3a4c8f; }
+/* Hover looks only where there is a pointer to hover with; on touch screens it would stick after a tap. */
+@media (hover: hover) { .btn:hover { background: #3a4c8f; } }
 .btn:focus-visible,
 .tile:focus-visible,
 .ask-option:focus-visible,
@@ -366,7 +378,7 @@ button { font: inherit; }
 .arrow:focus-visible { outline: 3px solid var(--ochre); outline-offset: 2px; }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn-primary { background: var(--red); border-color: var(--paper); }
-.btn-primary:hover { background: #dc4a3f; }
+@media (hover: hover) { .btn-primary:hover { background: #dc4a3f; } }
 .btn-small { font-size: 13px; padding: 5px 10px; }
 .btn.muted { opacity: 0.6; }
 
@@ -463,10 +475,11 @@ button { font: inherit; }
 }
 .arrow-prev { left: 6px; }
 .arrow-next { right: 6px; }
+.cross-actions { position: absolute; right: 28px; bottom: 196px; display: flex; gap: 23px; pointer-events: none; }
+.cross-actions > * { pointer-events: auto; }
 .btn-press,
-.btn-present { position: absolute; bottom: 196px; font-size: 18px; padding: 10px 18px; }
-.btn-press { right: 196px; }
-.btn-present { right: 28px; background: var(--red); border-color: var(--paper); }
+.btn-present { font-size: 18px; padding: 10px 18px; }
+.btn-present { background: var(--red); border-color: var(--paper); }
 
 /* ---------------------------------------------------------------- 질문 재구성 */
 
@@ -499,7 +512,7 @@ button { font: inherit; }
   border-radius: 4px;
   cursor: pointer;
 }
-.ask-option:hover { background: rgba(111, 242, 232, 0.06); }
+@media (hover: hover) { .ask-option:hover { background: rgba(111, 242, 232, 0.06); } }
 .ask-option.on { background: rgba(111, 242, 232, 0.16); border-color: var(--daon); box-shadow: inset 4px 0 0 var(--daon); }
 .ask-option.used { opacity: 0.45; }
 .ask-option.used.on { opacity: 0.8; }
@@ -1035,8 +1048,8 @@ button { font: inherit; }
   border-radius: 5px;
   cursor: pointer;
 }
-.inv-item.on,
-.inv-item:hover { border-color: var(--ochre); background: rgba(43, 58, 115, 0.95); }
+.inv-item.on { border-color: var(--ochre); background: rgba(43, 58, 115, 0.95); }
+@media (hover: hover) { .inv-item:hover { border-color: var(--ochre); background: rgba(43, 58, 115, 0.95); } }
 .inv-item.done { color: rgba(244, 240, 230, 0.6); }
 .inv-item-label { flex: 1; }
 .inv-check { color: var(--daon); }
@@ -1366,8 +1379,8 @@ button { font: inherit; }
   cursor: pointer;
   transition: translate 0.12s, box-shadow 0.12s, border-color 0.12s;
 }
-.ep-card:hover,
 .ep-card:focus-visible { outline: none; border-color: var(--ochre); translate: 0 -3px; box-shadow: 0 9px 0 rgba(0, 0, 0, 0.35); }
+@media (hover: hover) { .ep-card:hover { border-color: var(--ochre); translate: 0 -3px; box-shadow: 0 9px 0 rgba(0, 0, 0, 0.35); } }
 .ep-card.locked { cursor: default; opacity: 0.55; background: var(--cover-dark); border-color: rgba(244, 240, 230, 0.5); translate: none; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35); }
 .ep-thumb {
   position: relative;
@@ -2003,7 +2016,7 @@ button { font: inherit; }
   border-radius: 4px;
   cursor: pointer;
 }
-.match-card:hover { border-color: #2b3a73; }
+@media (hover: hover) { .match-card:hover { border-color: #2b3a73; } }
 .match-card { position: relative; }
 .match-card.focus { outline: 3px dashed var(--ochre); outline-offset: 2px; }
 .match-check { position: absolute; top: 6px; right: 8px; padding: 1px 6px; font-size: 11px; color: #16204a; background: var(--ochre); border-radius: 3px; }
@@ -2273,24 +2286,98 @@ button { touch-action: manipulation; }
 
 .touch-layout .touch-help { display: block; font-size: 26px; }
 .touch-layout .mobile-play-guide { margin: 16px 0; color: var(--ochre); white-space: pre-line; }
-.touch-layout .keys, .touch-layout .episodes-hint,
-.touch-layout .settings-note, .touch-layout .matchview-hint,
-.touch-layout .photoview-hint:not(.picked) { display: none; }
+/* No keyboard on a phone: key names in labels and keyboard-only hints go. */
+.touch-layout .key, .touch-layout .keys, .touch-layout .episodes-hint,
+.touch-layout .settings-note, .touch-layout .matchview-hint, .touch-layout .backlog-hint,
+.touch-layout .mapview-hint, .touch-layout .photoview-hint:not(.picked) { display: none; }
 .touch-layout .mobile-fullscreen { display: inline-block; margin-top: 12px; }
-/* Buttons keep the desktop geometry; the stage scales both axes uniformly. */
+
+/* A phone shows the 1280×720 stage at about half size. Every control and the HUD around the
+   scene grow by the same 1.5× (font, padding and border alike, so each keeps its desktop shape);
+   spoken lines and choices grow 1.25×. Positions follow the taller text box below. */
+.touch-layout .btn { font-size: 24px; padding: 12px 21px; border-width: 3px; border-radius: 6px; }
+.touch-layout .btn-small { font-size: 19.5px; padding: 7.5px 15px; }
+.touch-layout .card-actions .btn,
+.touch-layout .card-body .btn-primary { font-size: 25px; padding: 15px 37.5px; }
+.touch-layout .card-actions .btn-warn { font-size: 20px; }
+.touch-layout .btn-press,
+.touch-layout .btn-present { font-size: 27px; padding: 15px 27px; }
+
+/* HUD: tools, prediction, chances. */
+.touch-layout .hud { gap: 12px; }
+.touch-layout .hud-tools { gap: 9px; }
 .touch-layout .hud-tools .btn { opacity: 1; }
-.touch-layout .btn-press, .touch-layout .btn-present { bottom: 252px; }
-.touch-layout .textbox { height: 224px; padding: 34px 34px 22px; }
-.touch-layout .line { font-size: 30px; line-height: 1.5; max-height: 164px; overflow-y: auto; }
-.touch-layout .plate { font-size: 25px; top: -28px; }
-.touch-layout .arrow { bottom: 68px; }
-.touch-layout:has(.cross-controls:not([hidden])) .textbox { padding-left: 100px; padding-right: 100px; }
-.touch-layout .cross-head { max-width: 540px; }
-.touch-layout .cross-title { font-size: 30px; }
-.touch-layout .cross-kind, .touch-layout .cross-count { font-size: 20px; }
-.touch-layout .ask { bottom: 24px; max-height: 660px; overflow-y: auto; }
-.touch-layout .ask-note, .touch-layout .ask-readout { font-size: 23px; }
-.touch-layout .folder { width: 1220px; height: 640px; padding: 14px 20px 16px 48px; }
+.touch-layout .gauge { width: 450px; padding: 12px 18px 15px; border-width: 3px; border-radius: 9px; }
+.touch-layout .gauge-label { font-size: 18px; }
+.touch-layout .gauge-value { font-size: 27px; }
+.touch-layout .gauge-track { height: 15px; margin-top: 9px; }
+.touch-layout .gauge-status { margin-top: 9px; padding: 1.5px 12px; font-size: 18px; }
+.touch-layout .gauge-reason { max-width: 450px; padding: 9px 15px; font-size: 19.5px; border-left-width: 4.5px; }
+.touch-layout .chances { gap: 9px; padding: 6px 15px; }
+.touch-layout .chances-label { font-size: 18px; margin-right: 3px; }
+.touch-layout .chances i { width: 18px; height: 18px; border-width: 3px; }
+.touch-layout .save-flash { padding: 6px 15px; font-size: 18px; }
+.touch-layout .memo-flash { padding: 9px 18px; font-size: 21px; border-left-width: 6px; }
+.touch-layout .toast { bottom: 226px; padding: 12px 24px; font-size: 22.5px; }
+
+/* Text box: three lines of 30px text, same as the desktop's three lines of 24px. */
+.touch-layout .textbox { height: 196px; padding: 32px 34px 16px; }
+.touch-layout .line { font-size: 30px; line-height: 1.5; max-height: 135px; overflow-y: auto; }
+.touch-layout .plate { top: -26px; left: 37px; padding: 6px 22px 7.5px; font-size: 25px; }
+.touch-layout .next { right: 30px; bottom: 15px; font-size: 20px; }
+.touch-layout .cctv-corner.bl,
+.touch-layout .cctv-corner.br { bottom: 224px; }
+
+/* Cross-examination: arrows centred on the text box, the text clear of them, buttons above it. */
+.touch-layout .arrow { bottom: 73px; width: 63px; height: 78px; font-size: 27px; border-width: 3px; border-radius: 6px; }
+.touch-layout:has(.cross-controls:not([hidden])) .textbox { padding-left: 64px; padding-right: 64px; }
+.touch-layout .cross-actions { bottom: 228px; gap: 34px; }
+.touch-layout .cross-head { min-width: 405px; max-width: 600px; padding: 12px 24px 15px; border-left-width: 9px; }
+.touch-layout .cross-kind { font-size: 19.5px; }
+.touch-layout .cross-title { margin-top: 3px; font-size: 39px; }
+.touch-layout .cross-row { gap: 15px; margin-top: 12px; }
+.touch-layout .pips { gap: 9px; }
+.touch-layout .pips i { width: 33px; height: 9px; }
+.touch-layout .pips i.pressed::after { left: 12px; top: 13.5px; width: 9px; height: 9px; }
+.touch-layout .cross-count { font-size: 21px; }
+.touch-layout .cross-mark { padding: 1.5px 10.5px; font-size: 18px; border-radius: 4.5px; }
+
+/* Investigation (4화): the location chip matches the testimony header; lists read like choices. */
+.touch-layout .loc-chip { min-width: 360px; padding: 12px 24px 15px; border-left-width: 9px; }
+.touch-layout .loc-kind { font-size: 19.5px; }
+.touch-layout .loc-name { margin-top: 3px; font-size: 39px; }
+.touch-layout .examine-bar { font-size: 25px; }
+.touch-layout .spot-label { font-size: 19px; }
+.touch-layout .inv-list { width: 800px; max-height: 560px; }
+.touch-layout .inv-list-title { font-size: 32px; }
+.touch-layout .inv-item { font-size: 25px; }
+
+/* Boards, the floor plan and the wall screen stay left of the HUD and above the text box. */
+.touch-layout .board { width: 750px; max-height: 474px; padding: 14px 24px 14px; }
+.touch-layout .board-row { padding-top: 5px; padding-bottom: 5px; }
+.touch-layout .plan { width: 680px; }
+.touch-layout .panel { width: 750px; }
+.touch-layout .panel-kind { font-size: 16px; }
+.touch-layout .panel-title { font-size: 30px; }
+.touch-layout .panel-pic { width: 88px; height: 88px; }
+.touch-layout .panel-tag { font-size: 16px; }
+.touch-layout .panel-name { font-size: 27.5px; }
+.touch-layout .panel-role { font-size: 17.5px; }
+.touch-layout .panel-text { font-size: 19px; }
+
+/* Choices. */
+.touch-layout .ask { bottom: 24px; width: 975px; max-height: 660px; overflow-y: auto; padding: 20px 22.5px 22.5px; }
+.touch-layout .ask-title { font-size: 30px; }
+.touch-layout .ask-note { margin: 5px 0 7.5px; font-size: 19px; }
+.touch-layout .ask-option { gap: 17.5px; margin-top: 10px; padding: 12.5px 17.5px; font-size: 25px; }
+.touch-layout .ask-bar { gap: 12.5px; margin-top: 15px; }
+.touch-layout .ask-readout { font-size: 17.5px; }
+
+/* Court record. The taller tabs need room above the folder. */
+.touch-layout .record { padding-top: 60px; }
+.touch-layout .folder { width: 1220px; height: 620px; padding: 14px 20px 16px 48px; }
+.touch-layout .folder-tabs { top: -58px; gap: 9px; }
+.touch-layout .folder-tab { padding: 12px 36px 18px; font-size: 24px; }
 .touch-layout .folder-body, .touch-layout .folder:has(.record-prompt.pin) .folder-body { grid-template-columns: 300px 1fr; gap: 16px; }
 .touch-layout .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .touch-layout .tile-name, .touch-layout .grid-shelf { font-size: 22px; }
@@ -2303,23 +2390,88 @@ button { touch-action: manipulation; }
 .touch-layout .sheet-table tr.quiet td, .touch-layout .pin-text { font-size: 22px; }
 .touch-layout .sheet-icon { width: 100px; height: 100px; }
 .touch-layout .folder-foot { flex-wrap: wrap; margin-top: 10px; }
+
+/* Settings. */
 .touch-layout .settings-panel { width: 1000px; max-height: 680px; overflow-y: auto; padding: 24px 32px; }
-.touch-layout .set-label { width: 240px; font-size: 26px; }
-.touch-layout .vol-value { font-size: 26px; }
+.touch-layout .settings-title { font-size: 45px; }
+.touch-layout .set-label { width: 225px; font-size: 27px; }
+.touch-layout .set-seg { gap: 9px; }
+.touch-layout .seg,
+.touch-layout .vol-step { font-size: 24px; border-width: 3px; border-radius: 6px; }
+.touch-layout .seg { padding: 10.5px 21px; }
+.touch-layout .vol-step { width: 51px; height: 51px; font-size: 30px; }
+.touch-layout .vol-meter { gap: 6px; }
+.touch-layout .vol-meter i { width: 27px; height: 39px; border-radius: 3px; }
+.touch-layout .vol-value { width: 45px; font-size: 24px; }
+
+/* 사건 기록부: the card layout stays; only its small print grows. */
+.touch-layout .episodes-sub { font-size: 20px; }
+.touch-layout .ep-meta { font-size: 18px; }
+.touch-layout .ep-tagline { font-size: 18px; line-height: 1.5; }
+.touch-layout .ep-status { font-size: 17px; white-space: normal; }
+
+/* The save slot on the continue card. */
+.touch-layout .save-slot { max-width: 630px; padding: 18px 27px; border-left-width: 6px; }
+.touch-layout .save-slot:has(.save-recap) { max-width: 900px; }
+.touch-layout .save-slot-label { font-size: 27px; }
+.touch-layout .save-slot-meta, .touch-layout .save-recap-label { font-size: 19.5px; }
+.touch-layout .save-recap p { font-size: 22.5px; }
+
+/* Cards, guides, hints and the dialogue log. */
 .touch-layout .card-body { max-width: 1080px; max-height: 680px; overflow-y: auto; padding: 20px; }
 .touch-layout .card-body p { font-size: 27px; }
 .touch-layout .card-screen.guide { padding-left: 36px; }
-.touch-layout .card-screen.guide .card-body { width: 1050px; }
-.touch-layout .guide-list { font-size: 27px; }
+/* As wide as it can be while the HUD part a guide points at stays in view on the right. */
+.touch-layout .card-screen.guide .card-body { width: 740px; max-width: 740px; max-height: 704px; padding: 18px 30px 16px; }
+.touch-layout .card-screen.guide .card-kicker { font-size: 19px; }
+.touch-layout .card-screen.guide .card-title { font-size: 40px; }
+.touch-layout .guide-list { margin-bottom: 12px; font-size: 27px; }
+.touch-layout .guide-list kbd { min-width: 39px; padding: 0 10px; font-size: 22px; }
 .touch-layout .hintview-panel, .touch-layout .backlog-panel { width: 1160px; max-height: 680px; overflow-y: auto; }
+.touch-layout .backlog-panel { height: 660px; }
 .touch-layout .hintview-list li, .touch-layout .memo-list { font-size: 27px; }
 .touch-layout .hintview-foot { flex-wrap: wrap; }
 .touch-layout .hintview-note { flex-basis: 100%; font-size: 22px; }
-.touch-layout .hintview-step, .touch-layout .backlog-text { font-size: 24px; }
-.touch-layout .photoview-panel, .touch-layout .matchview-panel { max-height: 680px; overflow-y: auto; }
-.touch-layout .photoview-prompt, .touch-layout .matchview-prompt,
-.touch-layout .matchview-say { font-size: 25px; }
+.touch-layout .hintview-step { font-size: 24px; }
+.touch-layout .backlog-title { font-size: 40px; }
+/* The keyboard hint that pushed it right is hidden here. */
+.touch-layout .backlog-close { margin-left: auto; }
+.touch-layout .bl-row { grid-template-columns: 190px 1fr; gap: 18px; font-size: 22px; }
+
+/* The large floor plan. A narrower drawing (spots are placed in percent) leaves room for the
+   larger buttons inside the stage's height. */
+.touch-layout .mapview-plan { width: 800px; }
+.touch-layout .mapview-pick .mapview-plan { width: 690px; }
+.touch-layout .mapview-title { font-size: 30px; }
+.touch-layout .mapview-prompt { font-size: 21px; }
+.touch-layout .mapview-legend { font-size: 16px; }
+.touch-layout .mapview-readout { font-size: 21px; }
+.touch-layout .mapview-readout strong { font-size: 24px; }
+.touch-layout .mapview-readout-label { font-size: 17px; }
+.touch-layout .mapview-tip { font-size: 18px; }
+
+/* Photo and pairing puzzles. */
+.touch-layout .photoview-panel, .touch-layout .matchview-panel { max-height: 700px; overflow-y: auto; }
+/* Room for the larger prompt and button without scrolling the panel. */
+.touch-layout .photoview-big .photo-fig.solo { width: 700px; }
+.touch-layout .photoview-prompt, .touch-layout .matchview-prompt { font-size: 22px; }
+.touch-layout .photoview-say, .touch-layout .matchview-say { font-size: 21px; }
+.touch-layout .photoview-title { font-size: 27.5px; }
+.touch-layout .photoview-step { padding: 4.5px 15px; font-size: 19.5px; border-radius: 4.5px; }
+.touch-layout .photoview-hint.picked { font-size: 21px; }
+.touch-layout .photoview-closing { font-size: 22px; }
+.touch-layout .photo-fig figcaption { font-size: 18px; }
+.touch-layout .photo-fig figcaption strong { font-size: 20px; }
+.touch-layout .photo-spot-check { padding: 1.5px 9px; font-size: 18px; }
+.touch-layout .matchview-title { font-size: 30px; }
+.touch-layout .match-label { font-size: 19px; }
+.touch-layout .match-card { padding: 10px 12.5px; border-width: 3px; }
+.touch-layout .match-time { font-size: 21px; }
+.touch-layout .match-who { font-size: 15px; }
+.touch-layout .match-text { font-size: 19px; }
+.touch-layout .match-check { font-size: 15px; }
+.touch-layout .matchview-picks { font-size: 19px; }
+/* Thumbnails are 1.4×, the most that keeps a set's seven frames on one row. */
+.touch-layout .photoview-strip { gap: 8px; }
+.touch-layout .photo-thumb { width: 146px; padding: 4px; font-size: 17px; border-width: 3px; border-radius: 6px; }
 .touch-layout .photoview-foot, .touch-layout .matchview-foot { flex-wrap: wrap; }
-.touch-layout .gauge { width: 360px; }
-.touch-layout .gauge-label, .touch-layout .chances-label { font-size: 20px; }
-.touch-layout .gauge-value { font-size: 26px; }

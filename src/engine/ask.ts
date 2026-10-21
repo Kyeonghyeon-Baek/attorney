@@ -1,6 +1,7 @@
 import { sfx } from './audio';
 import { el, replay } from './dom';
 import { push, type Action } from './input';
+import { touchLayout } from './viewport';
 
 const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3 };
 
@@ -55,9 +56,11 @@ export class AskPanel {
     const paint = () => {
       buttons.forEach((b, i) => b.classList.toggle('on', i === sel));
       this.confirm.disabled = sel < 0;
+      const touch = touchLayout();
       this.readout.textContent = quick
-        ? '클릭하거나 숫자를 누르면 바로 정해져요'
-        : sel < 0 ? '↑ ↓ 또는 숫자로 고른 뒤 Enter' : '고른 답: ' + (sel + 1) + '번';
+        ? (touch ? '누르면 바로 정해져요' : '클릭하거나 숫자를 누르면 바로 정해져요')
+        : sel >= 0 ? '고른 답: ' + (sel + 1) + '번'
+          : touch ? '답을 고르고 「이걸로 정한다」를 눌러요' : '↑ ↓ 또는 숫자로 고른 뒤 Enter';
       this.readout.classList.remove('nudge');
     };
     paint();

@@ -6,7 +6,7 @@ import { PhotoView } from './photos';
 import { allImageUrls, bgImage } from './assets';
 import { initAudio, isMuted, playAmbience, playBgm, setMuted, sfx } from './audio';
 import { Cinema } from './cinema';
-import { el, flash, josa, replay, sleep } from './dom';
+import { el, flash, josa, replay, setLabel, sleep } from './dom';
 import { Effects } from './effects';
 import { Gauge } from './gauge';
 import { bindKeyboard, emit, waitFor } from './input';
@@ -18,8 +18,8 @@ import { CourtRecord } from './record';
 import { clearSave, hasSave, isCleared, loadSave, markCleared, writeSave, type CrossResume, type SaveData } from './save';
 import { Stage } from './stage';
 import { TextBox, type LineOptions } from './textbox';
-import { bindViewport } from './viewport';
-import type { BgmName, Cmd, Evidence, Location, Profile, Script, Statement, StepOpts, Testimony } from './types';
+import { bindViewport, touchLayout } from './viewport';
+import type { BgmName, Cmd, Evidence, GuideLine, Location, Profile, Script, Statement, StepOpts, Testimony } from './types';
 import { CHARACTERS } from '../content/characters';
 
 const STOP = Symbol('stop');
@@ -307,7 +307,7 @@ export class Game {
             el('div', 'save-recap-label', recap, '최근 수첩 메모');
             for (const m of memos) el('p', '', recap, m);
           }
-          if (s.log?.length) el('div', 'save-slot-meta', slot, '지난 대사는 대사 기록(L)에서 다시 볼 수 있어요.');
+          if (s.log?.length) el('div', 'save-slot-meta', slot, `지난 대사는 대사 기록${touchLayout() ? '' : '(L)'}에서 다시 볼 수 있어요.`);
         }, [
           { label: '이어하기', primary: true },
           { label: '처음부터 하기', confirm: '저장된 진행이 지워져요. 한 번 더 누르면 처음부터' },
@@ -1229,7 +1229,7 @@ export class Game {
   }
 
   /** A how-to card; `focus` raises that part of the HUD above the dimmed screen while it is up. */
-  private async guide(title: string, lines: string[], focus?: string): Promise<void> {
+  private async guide(title: string, lines: GuideLine[], focus?: string): Promise<void> {
     this.box.hide();
     const cls = focus ? ['guide-focus', `guide-${focus}`] : [];
     this.stage.classList.add(...cls);
@@ -1238,10 +1238,12 @@ export class Game {
         el('p', 'card-kicker', body, '안내');
         el('h2', 'card-title', body, title);
         const list = el('ul', 'guide-list', body);
+        const touch = touchLayout();
         for (const line of lines) {
           const li = el('li', '', list);
+          const text = typeof line === 'string' ? line : touch ? line.touch : line.keyboard;
           // [Q] in a line is drawn as a key cap.
-          for (const part of line.split(/(\[[^\]]+\])/)) {
+          for (const part of text.split(/(\[[^\]]+\])/)) {
             if (/^\[[^\]]+\]$/.test(part)) el('kbd', '', li, part.slice(1, -1));
             else if (part) li.append(part);
           }
@@ -1455,7 +1457,7 @@ export class Game {
   }
 
   private paintMute(): void {
-    this.muteBtn.textContent = isMuted() ? '소리 꺼짐  M' : '소리 켜짐  M';
+    setLabel(this.muteBtn, isMuted() ? '소리 꺼짐  M' : '소리 켜짐  M');
     this.muteBtn.classList.toggle('muted', isMuted());
   }
 }
@@ -1481,8 +1483,10 @@ class CrossUi {
     this.controls = el('div', 'cross-controls', stage);
     const prev = el('button', 'arrow arrow-prev', this.controls, '◀');
     const next = el('button', 'arrow arrow-next', this.controls, '▶');
-    const press = el('button', 'btn btn-press', this.controls, '흔들기  Q');
-    const present = el('button', 'btn btn-present', this.controls, '증거 제시  E');
+    // One row, so the pair stays together whatever size the buttons are drawn at.
+    const actions = el('div', 'cross-actions', this.controls);
+    const press = el('button', 'btn btn-press', actions, '흔들기  Q');
+    const present = el('button', 'btn btn-present', actions, '증거 제시  E');
     prev.setAttribute('aria-label', '이전 증언');
     next.setAttribute('aria-label', '다음 증언');
     prev.addEventListener('click', () => emit('left'));

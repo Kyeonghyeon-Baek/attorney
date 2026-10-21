@@ -1,5 +1,5 @@
 import { sfx } from './audio';
-import { el } from './dom';
+import { el, setLabel } from './dom';
 import { pushModal } from './input';
 
 /**
@@ -42,7 +42,7 @@ export class HintPanel {
         el('span', '', li, line);
       });
       nextBtn.disabled = n >= lines.length;
-      nextBtn.textContent = n >= lines.length ? '마지막 힌트예요' : '다음 힌트 보기  H';
+      setLabel(nextBtn, n >= lines.length ? '마지막 힌트예요' : '다음 힌트 보기  H');
     };
     paint();
     onShow(n);

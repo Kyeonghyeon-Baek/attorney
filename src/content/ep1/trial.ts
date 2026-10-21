@@ -1,7 +1,7 @@
 import type { Script, Testimony } from '../../engine/types';
 import {
   addProfile, ambience, bgm, bigshake, board, boardOff, cg, choose, cross, evidence, fadeIn, fadeOut, field, flag, goto,
-  guide, ifPresented, introduce, issue, memo, note, option, pinpoint, place, plan, planOff, predict, revise, row, say,
+  guide, ifPresented, introduce, issue, keys, memo, note, option, pinpoint, place, plan, planOff, predict, revise, row, say,
   sfx, shake, think,
 } from '../script';
 
@@ -71,10 +71,14 @@ const OUTLINE: Testimony = {
     say('dan', '(속닥) 아뇨. 증언은 다시 들을 수 있고, 기록도 언제든 다시 볼 수 있어요.'),
     say('judge', '변호인, 반대신문을 시작해 주십시오.'),
     guide('반대신문', [
-      '증언을 한 줄씩 다시 들으며 캐물어요. [←] [→] 로 증언을 오가요.',
-      '걸리는 말에는 [Q] 흔들기. 증인이 더 자세히 말해 줘요. 흔들기는 언제나 공짜예요.',
-      '증언이 기록과 어긋나면 그 증언에서 [E] 증거 제시. 법원기록이 열리면 증거를 골라 [Enter], 그만두려면 [Esc].',
-      '막히면 [H] 힌트. 지금의 쟁점 → 살펴볼 자료 → 구체적으로, 한 단계씩 열려요.',
+      keys('증언을 한 줄씩 다시 들으며 캐물어요. [←] [→] 로 증언을 오가요.',
+        '증언을 한 줄씩 다시 들으며 캐물어요. 대사창 양옆의 ◀ ▶ 버튼으로 증언을 오가요.'),
+      keys('걸리는 말에는 [Q] 흔들기. 증인이 더 자세히 말해 줘요. 흔들기는 언제나 공짜예요.',
+        '걸리는 말에는 「흔들기」. 증인이 더 자세히 말해 줘요. 흔들기는 언제나 공짜예요.'),
+      keys('증언이 기록과 어긋나면 그 증언에서 [E] 증거 제시. 법원기록이 열리면 증거를 골라 [Enter], 그만두려면 [Esc].',
+        '증언이 기록과 어긋나면 그 증언에서 「증거 제시」. 법원기록이 열리면 증거를 골라 「이 증거를 제시한다」, 그만두려면 「닫기」.'),
+      keys('막히면 [H] 힌트. 지금의 쟁점 → 살펴볼 자료 → 구체적으로, 한 단계씩 열려요.',
+        '막히면 「증거 제시」로 법원기록을 열고 「힌트」. 지금의 쟁점 → 살펴볼 자료 → 구체적으로, 한 단계씩 열려요.'),
       '처음 두 심문은 연습이라, 증거를 잘못 내도 아무것도 잃지 않아요.',
     ]),
     think('(처음부터 정답을 찾으려 하지 말자. 걸리는 말을 흔들어서, 뭘 근거로 한 말인지부터 듣자.)'),
@@ -124,7 +128,8 @@ const OUTLINE: Testimony = {
       say('narae', '내려갔다! 변호사님, 숫자 내려갔어요!', 'happy'),
       think('(…됐다. 아주 조금이지만, 판이 흔들렸어.)'),
       guide('강단비의 수첩', [
-        '새로 확인된 사실은 강단비의 수첩에 적혀요. [R] 법원기록 → 「메모」 탭에서 다시 볼 수 있어요.',
+        keys('새로 확인된 사실은 강단비의 수첩에 적혀요. [R] 법원기록 → 「메모」 탭에서 다시 볼 수 있어요.',
+          '새로 확인된 사실은 강단비의 수첩에 적혀요. 「법원기록」 → 「메모」 탭에서 다시 볼 수 있어요.'),
         '수첩의 [확인] 은 기록으로 확인한 사실, [남은 질문] 은 아직 모르는 것이에요.',
       ], 'tools'),
       say('eom', '다음은 그날 밤 다툼을 알아채고 112에 신고한 사람입니다. 쓰러진 피해자를 처음 돌본 사람이기도 합니다.'),

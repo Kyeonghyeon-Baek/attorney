@@ -1,5 +1,10 @@
 import { el } from './dom';
 
+const mobile = matchMedia('(pointer: coarse) and (max-width: 1100px)');
+
+/** Phones and small tablets: no keyboard, so prompts name the buttons instead of keys. */
+export const touchLayout = (): boolean => mobile.matches;
+
 /** Fit the authored stage inside the visible, safe area, including browser chrome changes. */
 export function bindViewport(root: HTMLElement, viewport: HTMLElement, stage: HTMLElement): void {
   const rotate = el('section', 'rotate-screen', root);
@@ -10,7 +15,6 @@ export function bindViewport(root: HTMLElement, viewport: HTMLElement, stage: HT
   el('h1', '', rotate, '휴대폰을 가로로 돌려 주세요');
   el('p', '', rotate, '법정과 대사를 더 크게 볼 수 있어요.');
   el('p', 'rotate-tip', rotate, '화면이 돌아가지 않으면 휴대폰의 화면 회전 잠금을 해제해 주세요.');
-  const mobile = matchMedia('(pointer: coarse) and (max-width: 1100px)');
   const fit = () => {
     const { width, height } = viewport.getBoundingClientRect();
     if (!width || !height) return;

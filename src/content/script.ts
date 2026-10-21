@@ -1,7 +1,7 @@
 import type { FigureMark } from '../engine/figures';
 import type {
-  AmbienceName, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, Hotspot, PanelCard, PlanRoute,
-  Script, SfxName, ShoutKind, StepOpts,
+  AmbienceName, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, GuideLine, Hotspot, PanelCard,
+  PlanRoute, Script, SfxName, ShoutKind, StepOpts,
 } from '../engine/types';
 import type { MatchTask } from '../engine/match';
 import type { PhotoTask } from '../engine/photos';
@@ -132,7 +132,9 @@ export const figure = (id: string, marks?: FigureMark[]): Cmd => ({ t: 'figure',
 export const figureOff: Cmd = { t: 'figure', id: null };
 export const mark = (id: string, note: string, tone?: FigureMark['tone']): FigureMark => ({ id, note, tone });
 /** A how-to card the first time a system matters. `[Q]` in a line is drawn as a key cap. */
-export const guide = (title: string, lines: string[], focus?: GuideFocus): Cmd => ({ t: 'guide', title, lines, focus });
+export const guide = (title: string, lines: GuideLine[], focus?: GuideFocus): Cmd => ({ t: 'guide', title, lines, focus });
+/** A guide line that names keys, and what phones (no keyboard) show instead: the buttons to press. */
+export const keys = (keyboard: string, touch: string): GuideLine => ({ keyboard, touch });
 /** A title card for one stretch of the trial ("제1 공방") and the question it settles. */
 export const chapter = (no: string, title: string): Cmd => ({ t: 'chapter', no, title });
 /** One screen to look over until `until` (a flag or evidence id) is held. Spots are in stage pixels. */

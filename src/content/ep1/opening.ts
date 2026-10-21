@@ -3,7 +3,7 @@ import {
   addEvidence, addEvidenceSet, ambience, bgm, bigshake, board, boardOff, box, card, cctv, cctvOff, cg, chapter, choose,
   cross, detect, episode, evidence, fadeIn, fadeOut, field, figure, figureOff, flag, goto, guide, hud, introduce, issue,
   memo, note, option, panel, panelOff, place, plan, planOff, pulse, rec, redflash, route, row, say, sfx, shake, show,
-  tape, think, tint, wait,
+  keys, tape, think, tint, wait,
 } from '../script';
 
 // 프롤로그(그날 밤, 범인 시점) → 국선 사무실(강단비 소개) → 피고인 접견실(비공개 면담) → 개정, 법정 화면의 역할 안내, 모두진술.
@@ -203,7 +203,8 @@ export const OPENING_SCENES: Record<string, Script> = {
     say('dan', '직접 가 봤군요. …나래 씨, 이게 우리 쪽 첫 번째 증거예요.', 'normal'),
     say('narae', '헉. 제가 증거를 낸 거예요? 할머니한테 자랑해야지.', 'happy'),
     guide('법원기록', [
-      '받은 증거와 사건 관계인은 [R] 또는 오른쪽 위 「법원기록」 버튼으로 언제든 볼 수 있어요.',
+      keys('받은 증거와 사건 관계인은 [R] 또는 오른쪽 위 「법원기록」 버튼으로 언제든 볼 수 있어요.',
+        '받은 증거와 사건 관계인은 오른쪽 위 「법원기록」 버튼으로 언제든 볼 수 있어요.'),
       '증거마다 「확인되는 것」과 「이것만으로는 알 수 없는 것」이 따로 적혀 있어요.',
       '대사를 읽는 중에도 열 수 있고, 몇 번을 열어 봐도 불이익은 없어요.',
     ], 'tools'),

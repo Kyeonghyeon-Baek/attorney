@@ -168,7 +168,7 @@ export type Cmd =
   /** A drawn diagram over the scene (see engine/figures.ts) with labelled spots; null hides it. */
   | { t: 'figure'; id: string | null; marks?: FigureMark[] }
   /** A how-to card the first time a system matters. `focus` lights up that part of the HUD. */
-  | { t: 'guide'; title: string; lines: string[]; focus?: GuideFocus }
+  | { t: 'guide'; title: string; lines: GuideLine[]; focus?: GuideFocus }
   /** A title card for one stretch of the trial and the question it settles. */
   | { t: 'chapter'; no: string; title: string }
   /**
@@ -199,6 +199,9 @@ export interface StepOpts {
 
 /** What a guide card points at in the HUD. */
 export type GuideFocus = 'gauge' | 'chances' | 'tools';
+
+/** A guide line, or one that names keyboard keys with its wording for touch screens beside it. */
+export type GuideLine = string | { keyboard: string; touch: string };
 
 /**
  * One card on the courtroom's wall screen. `img` is 'profile:<id>', 'char:<CharId>', 'item:<evidenceId>',

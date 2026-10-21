@@ -3,9 +3,26 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 ): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
+  if (text !== undefined) {
+    if (tag === 'button') setLabel(node, text);
+    else node.textContent = text;
+  }
   parent?.appendChild(node);
   return node;
+}
+
+/**
+ * Button labels end in their keyboard key after two spaces ('흔들기  Q'). The key goes in its own
+ * span so touch screens, which have no keyboard, can hide it.
+ */
+export function setLabel(button: HTMLElement, text: string): void {
+  const m = /^(.*\S)(  \S+)$/.exec(text);
+  if (!m) {
+    button.textContent = text;
+    return;
+  }
+  button.textContent = m[1];
+  el('span', 'key', button, m[2]);
 }
 
 export const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));

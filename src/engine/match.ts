@@ -1,6 +1,7 @@
 import { sfx } from './audio';
-import { el, replay } from './dom';
+import { el, replay, setLabel } from './dom';
 import { fromSpace, push } from './input';
+import { touchLayout } from './viewport';
 
 export interface MatchCard {
   id: string;
@@ -81,8 +82,8 @@ export class MatchView {
       });
       go.disabled = !done && (chosen[0] < 0 || chosen[1] < 0);
       const name = (ri: number) => (chosen[ri] < 0 ? '아직 안 고름' : `${t.rows[ri].cards[chosen[ri]].time} ${t.rows[ri].cards[chosen[ri]].who}`);
-      picks.textContent = done ? '' : `고른 카드 — 위: ${name(0)} · 아래: ${name(1)}${go.disabled ? '' : '  → Enter로 확인'}`;
-      go.textContent = done ? '계속  Enter' : label;
+      picks.textContent = done ? '' : `고른 카드 — 위: ${name(0)} · 아래: ${name(1)}${go.disabled || touchLayout() ? '' : '  → Enter로 확인'}`;
+      setLabel(go, done ? '계속  Enter' : label);
       hint.hidden = done;
     };
 
