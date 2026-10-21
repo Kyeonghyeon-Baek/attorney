@@ -2,6 +2,7 @@ import { sfx } from './audio';
 import { el } from './dom';
 import { push, pushModal } from './input';
 import { settings, updateSettings, type TextSpeed } from './settings';
+import { addFullscreenButton } from './viewport';
 
 /** One row of the episode list. Without `caseId` the episode is shown as not yet available. */
 export interface EpisodeEntry {
@@ -144,6 +145,7 @@ export class SettingsPanel {
     const paintSfx = volumeRow('효과음 · 목소리', 'sfx');
 
     el('p', 'settings-note', panel, '↑ ↓ 항목 고르기   ← → 바꾸기');
+    addFullscreenButton(panel);
     let after: (() => void) | null = null;
     if (actions.length) {
       const box = el('div', 'settings-actions', panel);

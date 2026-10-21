@@ -18,6 +18,7 @@ import { CourtRecord } from './record';
 import { clearSave, hasSave, isCleared, loadSave, markCleared, writeSave, type CrossResume, type SaveData } from './save';
 import { Stage } from './stage';
 import { TextBox, type LineOptions } from './textbox';
+import { bindViewport } from './viewport';
 import type { BgmName, Cmd, Evidence, Location, Profile, Script, Statement, StepOpts, Testimony } from './types';
 import { CHARACTERS } from '../content/characters';
 
@@ -227,12 +228,7 @@ export class Game {
     // Warm the cache while the title screen is up, so sprites and photos appear instantly.
     for (const url of allImageUrls()) new Image().src = url;
 
-    const fit = () => {
-      const s = Math.min(innerWidth / 1280, innerHeight / 720);
-      this.stage.style.setProperty('--scale', String(s));
-    };
-    fit();
-    addEventListener('resize', fit);
+    bindViewport(root, viewport, this.stage);
   }
 
   private cases(): CaseData[] {
@@ -399,6 +395,7 @@ export class Game {
         el('span', '', logo, ' 뒤집기');
         el('div', 'saekdong', body);
         el('p', 'logo-sub', body, '2031년 서울. 숫자에 맞서는 국선변호인의 법정.');
+        el('p', 'touch-help', body, '화면을 터치하면 다음 대사 · 버튼을 눌러 흔들기와 증거 제시');
         const keys = el('dl', 'keys', body);
         for (const [k, v] of [
           ['클릭 · Enter', '다음 대사'], ['Q', '흔들기'], ['E', '증거 제시'],
