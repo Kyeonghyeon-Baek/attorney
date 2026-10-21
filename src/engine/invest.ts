@@ -93,15 +93,19 @@ export class InvestigateUi {
     });
   }
 
-  /** Lets the player pick a spot on the background. Resolves null on 돌아가기. */
-  examine(spots: Hotspot[], seen: (s: Hotspot) => boolean): Promise<Hotspot | null> {
+  /**
+   * Lets the player pick a spot on the background. Resolves null on 돌아가기. With a `prompt`
+   * (a single screen to look over, not a location), the bar asks that instead and there is no way back.
+   */
+  examine(spots: Hotspot[], seen: (s: Hotspot) => boolean, prompt?: string): Promise<Hotspot | null> {
     this.examineEl.replaceChildren();
     this.examineEl.hidden = false;
     this.stage.classList.add('examining');
     const area = el('div', 'spots', this.examineEl);
     const bar = el('div', 'examine-bar', this.examineEl);
-    const hint = el('span', '', bar, '살펴볼 곳을 고르세요');
+    const hint = el('span', '', bar, prompt ?? '살펴볼 곳을 고르세요');
     const back = el('button', 'btn', bar, '← 메뉴로  Esc');
+    back.hidden = !!prompt;
     const buttons = spots.map((s) => {
       const b = el('button', 'spot', area);
       Object.assign(b.style, { left: `${s.x}px`, top: `${s.y}px`, width: `${s.w}px`, height: `${s.h}px` });
@@ -139,7 +143,7 @@ export class InvestigateUi {
         sfx('select');
       };
       const pop = push((a) => {
-        if (a === 'back') done(null);
+        if (a === 'back' && !prompt) done(null);
         else if (a === 'right' || a === 'down' || a === 'tab') move(1);
         else if (a === 'left' || a === 'up') move(-1);
         else if (a === 'advance' && focus >= 0) done(spots[focus]);

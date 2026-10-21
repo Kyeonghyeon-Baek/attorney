@@ -329,7 +329,7 @@ export class PhotoView {
    * belong to, then pick the last frame that still shows it and the first that does not. Wrong
    * picks only get a line of feedback; nothing is spent.
    */
-  task(stage: HTMLElement, setId: string, t: PhotoTask): Promise<void> {
+  task(stage: HTMLElement, setId: string, t: PhotoTask, openRecord?: () => Promise<unknown>): Promise<void> {
     const set = PHOTO_SETS[setId];
     const root = el('div', 'photoview task', stage);
     const panel = el('div', 'photoview-panel', root);
@@ -359,7 +359,11 @@ export class PhotoView {
     const paintRegion = () => {
       stepTag.textContent = '1 / 2 · 부분 지목';
       prompt.textContent = t.region.prompt;
-      hint.textContent = '클릭하거나 ← → 로 고른 뒤 Enter';
+      // Same rule as the other puzzles: a click only marks the spot; Enter (or the button) checks it.
+      hint.textContent = focus < 0
+        ? '클릭 또는 ← → 로 한 곳 고르기 · 고른 뒤 Enter'
+        : `고른 곳 — ${t.region.spots[focus].label}  → Enter로 확인`;
+      hint.classList.toggle('picked', focus >= 0);
       go.textContent = '여기다  Enter';
       go.disabled = focus < 0;
       big.replaceChildren();
@@ -377,9 +381,11 @@ export class PhotoView {
         b.style.width = `${(s.rect.w / v.w) * 100}%`;
         b.style.height = `${(s.rect.h / v.h) * 100}%`;
         b.classList.toggle('on', i === focus);
+        if (i === focus) el('span', 'photo-spot-check', b, '✓ 고름');
         b.addEventListener('click', () => {
           focus = i;
-          submitRegion();
+          sfx('select');
+          paintRegion();
         });
       });
       el('figcaption', '', fig, `촬영 ${f.time} · 확대`);
@@ -408,6 +414,7 @@ export class PhotoView {
       stepTag.textContent = '2 / 2 · 시간 구간';
       prompt.textContent = t.frames.prompt;
       hint.textContent = '클릭 또는 ← → 와 Space로 두 장을 고른 뒤 Enter';
+      hint.classList.remove('picked');
       go.textContent = '이 두 장  Enter';
       go.disabled = picked.length !== 2;
       big.replaceChildren();
@@ -486,6 +493,10 @@ export class PhotoView {
       };
       go.addEventListener('click', submit);
       const pop = push((a) => {
+        if (a === 'record' && openRecord) {
+          void openRecord();
+          return;
+        }
         if (finished) {
           if (a === 'advance' || a === 'back') finish();
           return;
@@ -494,6 +505,7 @@ export class PhotoView {
           const n = t.region.spots.length;
           if (a === 'right' || a === 'down') focus = (focus + 1) % n;
           else if (a === 'left' || a === 'up') focus = (focus - 1 + n) % n;
+          else if (a === 'advance' && (fromSpace() || focus < 0)) focus = Math.max(focus, 0);
           else if (a === 'advance') {
             submitRegion();
             return;

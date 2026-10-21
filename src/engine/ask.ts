@@ -21,6 +21,8 @@ export class AskPanel {
   private hintBtn: HTMLButtonElement;
   /** Opens the hint window for the current question, when it has hints. */
   onHint: (() => void) | null = null;
+  /** Opens the court record over the question (R or the HUD button); the question waits underneath. */
+  onRecord: (() => Promise<unknown>) | null = null;
 
   constructor(parent: HTMLElement) {
     this.root = el('div', 'ask', parent);
@@ -96,6 +98,7 @@ export class AskPanel {
         else if (a === 'up') pick(sel <= 0 ? 0 : sel - 1);
         else if (a === 'down') pick(sel < 0 ? 0 : Math.min(labels.length - 1, sel + 1));
         else if (a === 'advance') choose();
+        else if (a === 'record' && this.onRecord) void this.onRecord();
       }, { strict: true });
     });
   }

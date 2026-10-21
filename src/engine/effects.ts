@@ -122,6 +122,19 @@ export class Effects {
     node.remove();
   }
 
+  /** One stretch of the trial: its number, then the question it has to settle. */
+  async chapter(no: string, title: string): Promise<void> {
+    const node = el('div', 'chapter', this.layer);
+    el('div', 'chapter-no', node, no);
+    el('div', 'saekdong chapter-rule', node);
+    el('div', 'chapter-title', node, title);
+    sfx('reveal');
+    await sleep(this.ms(3200));
+    node.classList.add('out');
+    await sleep(this.ms(450));
+    node.remove();
+  }
+
   async place(lines: string[]): Promise<void> {
     const node = el('div', 'place', this.layer);
     for (const line of lines) {

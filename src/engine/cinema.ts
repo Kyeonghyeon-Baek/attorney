@@ -1,8 +1,9 @@
 import { cgImage, itemImage } from './assets';
 import { sfx } from './audio';
 import { el, replay, sleep } from './dom';
+import { FIGURES, figureSvg, paintFigure, type FigureMark } from './figures';
 import { MAPS } from './maps';
-import type { BoardRow, DetectBox } from './types';
+import type { BoardRow, DetectBox, PanelCard, PlanRoute } from './types';
 
 const BARS = 56;
 
@@ -34,6 +35,10 @@ export class Cinema {
   private boardRows: HTMLElement;
   private shownRows = new Set<string>();
   private plan: HTMLElement;
+  private panel: HTMLElement;
+  private figure: HTMLElement;
+  /** Draws a card's picture ('profile:…', 'item:…'); set by the game, which knows the case's people and records. */
+  paintCard: ((box: HTMLElement, img: string) => void) | null = null;
 
   constructor(private stage: HTMLElement, private fast = false) {
     this.cg = el('div', 'cg', stage);
@@ -79,6 +84,12 @@ export class Cinema {
 
     this.plan = el('div', 'plan', stage);
     this.plan.hidden = true;
+
+    this.panel = el('div', 'panel', stage);
+    this.panel.hidden = true;
+
+    this.figure = el('div', 'figure', stage);
+    this.figure.hidden = true;
 
     this.black = el('div', 'blackout', stage);
     this.black.hidden = true;
@@ -134,8 +145,8 @@ export class Cinema {
     if (added) sfx('paper');
   }
 
-  /** The floor plan, not clickable, with some regions ringed. */
-  setPlan(mapId: string | null, marks: string[] = []): void {
+  /** The floor plan, not clickable, with some regions ringed and movements drawn on it. */
+  setPlan(mapId: string | null, marks: string[] = [], routes: PlanRoute[] = []): void {
     if (!mapId) {
       this.plan.hidden = true;
       this.plan.replaceChildren();
@@ -147,11 +158,13 @@ export class Cinema {
     el('div', 'plan-title', this.plan, map.title);
     const box = el('div', 'plan-box', this.plan);
     box.style.aspectRatio = `${map.width} / ${map.height}`;
-    box.innerHTML = `<svg viewBox="0 0 ${map.width} ${map.height}" aria-hidden="true">${map.svg}</svg>`;
+    box.innerHTML = `<svg viewBox="0 0 ${map.width} ${map.height}" aria-hidden="true">${map.svg}${routesSvg(routes)}</svg>`;
     for (const id of marks) {
       const r = map.regions.find((x) => x.id === id);
       if (!r) continue;
       const m = el('div', 'plan-mark', box);
+      // Near the top edge the label would sit on the map's own street names: put it under the ring.
+      if (r.y < 100) m.classList.add('below');
       m.style.left = `${(r.x / map.width) * 100}%`;
       m.style.top = `${(r.y / map.height) * 100}%`;
       m.style.width = `${(r.w / map.width) * 100}%`;
@@ -161,6 +174,66 @@ export class Cinema {
     this.plan.hidden = false;
     if (wasHidden) {
       replay(this.plan, 'in');
+      sfx('paper');
+    }
+  }
+
+  /**
+   * The courtroom's wall screen: a row of cards. Calling it again with the same title keeps the
+   * cards already up and slides in only the new ones, so a speech can build the screen card by card.
+   */
+  setPanel(title: string, cards: PanelCard[] | null): void {
+    if (!cards) {
+      this.panel.hidden = true;
+      this.panel.replaceChildren();
+      return;
+    }
+    const same = !this.panel.hidden && this.panel.dataset.title === title;
+    const before = same ? Number(this.panel.dataset.count ?? 0) : 0;
+    this.panel.replaceChildren();
+    this.panel.dataset.title = title;
+    this.panel.dataset.count = String(cards.length);
+    const head = el('div', 'panel-head', this.panel);
+    el('span', 'panel-kind', head, '법정 화면');
+    el('span', 'panel-title', head, title);
+    const row = el('div', 'panel-cards', this.panel);
+    row.style.setProperty('--n', String(cards.length));
+    cards.forEach((c, i) => {
+      const card = el('div', `panel-card ${c.tone ?? ''}`, row);
+      if (i >= before) card.classList.add('new');
+      if (c.img) {
+        const pic = el('div', 'panel-pic', card);
+        if (c.img.startsWith('figure:')) pic.innerHTML = figureSvg(c.img.slice(7));
+        else if (c.img.startsWith('icon:')) pic.innerHTML = PANEL_ICONS[c.img.slice(5)] ?? '';
+        else this.paintCard?.(pic, c.img);
+      }
+      const words = el('div', 'panel-words', card);
+      if (c.tag) el('em', 'panel-tag', words, c.tag);
+      el('div', 'panel-name', words, c.name);
+      if (c.role) el('div', 'panel-role', words, c.role);
+      if (c.text) el('div', 'panel-text', words, c.text);
+    });
+    if (this.panel.hidden) replay(this.panel, 'in');
+    this.panel.hidden = false;
+    if (cards.length > before) sfx('paper');
+  }
+
+  /** A drawn diagram (engine/figures.ts) beside the speaker, with the given spots labelled. */
+  setFigure(id: string | null, marks?: FigureMark[]): void {
+    if (!id || !FIGURES[id]) {
+      this.figure.hidden = true;
+      this.figure.replaceChildren();
+      return;
+    }
+    const f = FIGURES[id];
+    const wasHidden = this.figure.hidden;
+    this.figure.replaceChildren();
+    el('div', 'figure-title', this.figure, f.title);
+    paintFigure(el('div', 'figure-box', this.figure), id, marks);
+    if (f.caption && !marks) el('div', 'figure-caption', this.figure, f.caption);
+    this.figure.hidden = false;
+    if (wasHidden) {
+      replay(this.figure, 'in');
       sfx('paper');
     }
   }
@@ -291,8 +364,49 @@ export class Cinema {
     this.setTape(null);
     this.setBoard('', null);
     this.setPlan(null);
+    this.setPanel('', null);
+    this.setFigure(null);
     this.black.hidden = true;
     this.cg.hidden = true;
     this.sync();
   }
+}
+
+// Small emblems for the wall screen's role cards: the store's camera AI and the court's 판관.
+const PANEL_ICONS: Record<string, string> = {
+  iguard: `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <rect x="18" y="20" width="64" height="12" rx="4" class="pi-dark"/>
+    <path d="M24 32 h52 v10 a26 26 0 0 1 -52 0 Z" class="pi-dark"/>
+    <circle cx="50" cy="48" r="14" class="pi-lens"/>
+    <circle cx="50" cy="48" r="6" class="pi-red"/>
+    <path d="M14 82 h72" class="pi-line"/>
+    <rect x="30" y="74" width="40" height="16" rx="3" class="pi-red"/>
+  </svg>`,
+  pangwan: `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="40" class="pi-ring"/>
+    <path d="M50 22 V78 M30 78 H70 M24 36 H76" class="pi-line"/>
+    <path d="M24 36 L14 58 H34 Z M76 36 L66 58 H86 Z" class="pi-pan"/>
+    <circle cx="50" cy="22" r="5" class="pi-lens"/>
+  </svg>`,
+};
+
+/** A map's routes as SVG: solid for what a record shows, dashes for gaps and claims, each with its label. */
+function routesSvg(routes: PlanRoute[]): string {
+  if (!routes.length) return '';
+  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const defs = `<defs>
+    <marker id="rt-fact" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#6ff2e8"/></marker>
+    <marker id="rt-unseen" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#c9cfe6"/></marker>
+    <marker id="rt-claim" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#ff6a5c"/></marker>
+  </defs>`;
+  const body = routes.map((r) => {
+    const d = r.points.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ');
+    const [px, py] = r.points[r.points.length - 1];
+    const [lx, ly] = r.at ?? [px + 10, py];
+    const label = r.label
+      ? `<g class="mp-route-label ${r.kind}"><rect x="${lx}" y="${ly - 14}" width="${r.label.length * 15 + 16}" height="26" rx="4"/><text x="${lx + 8}" y="${ly + 5}">${esc(r.label)}</text></g>`
+      : '';
+    return `<path class="mp-route ${r.kind}" d="${d}" marker-end="url(#rt-${r.kind})"/>${label}`;
+  });
+  return defs + body.join('');
 }

@@ -1,13 +1,24 @@
+import { CHARACTERS } from '../content/characters';
 import { charImage, itemImage, portraitImage } from './assets';
 import { el } from './dom';
 import { icon } from './icons';
 import { PHOTO_SETS, frameSvg } from './photos';
 import type { Evidence, Profile } from './types';
 
-// How many tile-widths wide the sprite is drawn when cropped to a face.
+// How many tile-widths wide the sprite is drawn when cropped to a face, unless the character says.
 const ZOOM = 2.6;
-// Sprites are 1024×1536.
+// Sprites are 1024×1536; portraits are square.
 const ASPECT = 1.5;
+
+/** Zooms `url` into the square `box` so that point (fx, fy) of the picture sits in the middle. */
+function crop(box: HTMLElement, url: string, fx: number, fy: number, zoom: number, aspect: number): void {
+  const x = ((zoom * fx - 0.5) / (zoom - 1)) * 100;
+  const y = ((zoom * aspect * fy - 0.5) / (zoom * aspect - 1)) * 100;
+  box.classList.add('photo');
+  box.style.backgroundImage = `url("${url}")`;
+  box.style.backgroundSize = `${zoom * 100}% auto`;
+  box.style.backgroundPosition = `${x.toFixed(1)}% ${y.toFixed(1)}%`;
+}
 
 /**
  * Fills `box` with a person's photo: a dedicated portrait if one exists,
@@ -20,22 +31,20 @@ export function paintFace(box: HTMLElement, p: Profile): void {
   box.style.setProperty('--face', p.color);
   const own = portraitImage(p.id);
   if (own) {
-    box.classList.add('photo');
-    box.style.backgroundImage = `url("${own}")`;
-    box.style.backgroundSize = 'cover';
-    box.style.backgroundPosition = 'center';
+    const [fx, fy, zoom] = p.face ?? [0.5, 0.5, 1];
+    if (zoom > 1) crop(box, own, fx, fy, zoom, 1);
+    else {
+      box.classList.add('photo');
+      box.style.backgroundImage = `url("${own}")`;
+      box.style.backgroundSize = 'cover';
+      box.style.backgroundPosition = 'center';
+    }
     return;
   }
   const sprite = p.sprite ? charImage(p.sprite, 'normal') : undefined;
   if (sprite) {
-    const [fx, fy] = p.face ?? [0.5, 0.2];
-    // Put the face centre in the middle of the box.
-    const x = ((ZOOM * fx - 0.5) / (ZOOM - 1)) * 100;
-    const y = ((ZOOM * ASPECT * fy - 0.5) / (ZOOM * ASPECT - 1)) * 100;
-    box.classList.add('photo');
-    box.style.backgroundImage = `url("${sprite}")`;
-    box.style.backgroundSize = `${ZOOM * 100}% auto`;
-    box.style.backgroundPosition = `${x.toFixed(1)}% ${y.toFixed(1)}%`;
+    const [fx, fy, zoom] = (p.sprite && CHARACTERS[p.sprite].face) || [0.5, 0.2, ZOOM];
+    crop(box, sprite, fx, fy, zoom, ASPECT);
     return;
   }
   if (p.orb) {

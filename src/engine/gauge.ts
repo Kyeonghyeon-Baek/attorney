@@ -15,7 +15,8 @@ export class Gauge {
     this._value = initial;
     this.root = el('div', 'gauge', parent);
     const head = el('div', 'gauge-head', this.root);
-    el('span', 'gauge-label', head, 'AI 판결 예측');
+    // Named after the court's AI, so it is never mistaken for the store camera's confidence.
+    el('span', 'gauge-label', head, '판관 · AI 판결 예측');
     const right = el('span', 'gauge-value', head);
     el('span', 'gauge-verdict', right, '유죄 ');
     this.num = el('span', 'gauge-num', right);

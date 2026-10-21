@@ -1,3 +1,4 @@
+import type { FigureMark } from './figures';
 import type { MatchTask } from './match';
 import type { PhotoTask } from './photos';
 /**
@@ -36,6 +37,11 @@ export interface Character {
   color: string;
   /** Heard but never drawn: speaking leaves whoever is on screen in place. */
   offscreen?: boolean;
+  /**
+   * Where the face sits in the sprite (fractions of its width and height) and how far to zoom
+   * for a face photo (sprite widths per photo width). Used by every face crop of this character.
+   */
+  face?: [number, number, number];
 }
 
 export interface Evidence {
@@ -59,6 +65,8 @@ export interface Evidence {
   photos?: string;
   /** Shelf in the court record ("카메라·현장", "녹음·통화"…). Groups keep the order they first appear in. */
   group?: string;
+  /** A diagram drawn under the summary (see src/engine/figures.ts), e.g. the autopsy's injury chart. */
+  figure?: string;
 }
 
 export interface Profile {
@@ -71,8 +79,11 @@ export interface Profile {
   later?: boolean;
   /** Character whose sprite supplies the photo, cropped around `face`. */
   sprite?: CharId;
-  /** Face centre in the sprite as fractions of its width and height. */
-  face?: [number, number];
+  /**
+   * Face centre as fractions of the picture's width and height, and the zoom. Only for a
+   * dedicated portrait: sprite crops take the character's own `face` (characters.ts).
+   */
+  face?: [number, number, number];
   /** Drawn as Daon's glowing orb instead of a photo. */
   orb?: boolean;
 }
@@ -150,8 +161,21 @@ export type Cmd =
   | { t: 'fade'; black: boolean }
   /** A briefing board over the scene (a timeline or a list); null rows hide it. */
   | { t: 'board'; title: string; rows: BoardRow[] | null }
-  /** Shows a map (floor plan) over the scene with some regions highlighted; null hides it. */
-  | { t: 'plan'; map: string | null; marks?: string[] }
+  /** Shows a map (floor plan) over the scene with some regions highlighted and routes drawn; null hides it. */
+  | { t: 'plan'; map: string | null; marks?: string[]; routes?: PlanRoute[] }
+  /** The courtroom's wall screen: a row of cards (people, records, roles); null cards hide it. */
+  | { t: 'panel'; title: string; cards: PanelCard[] | null }
+  /** A drawn diagram over the scene (see engine/figures.ts) with labelled spots; null hides it. */
+  | { t: 'figure'; id: string | null; marks?: FigureMark[] }
+  /** A how-to card the first time a system matters. `focus` lights up that part of the HUD. */
+  | { t: 'guide'; title: string; lines: string[]; focus?: GuideFocus }
+  /** A title card for one stretch of the trial and the question it settles. */
+  | { t: 'chapter'; no: string; title: string }
+  /**
+   * One screen to look over (a bag on the evidence table): the player picks spots until `until`
+   * (a flag or evidence id) is held. No menu and no way out until then.
+   */
+  | { t: 'examine'; bg: string; prompt: string; spots: Hotspot[]; until: string }
   /** Adds a line to 강단비's notebook tab in the court record. */
   | { t: 'memo'; text: string }
   /** Hides or restores the courtroom HUD (verdict gauge and buttons). */
@@ -171,6 +195,35 @@ export interface StepOpts {
   hints?: string[];
   /** Keeps hint progress apart from other questions; defaults to the prompt. */
   hintKey?: string;
+}
+
+/** What a guide card points at in the HUD. */
+export type GuideFocus = 'gauge' | 'issue' | 'chances' | 'tools';
+
+/**
+ * One card on the courtroom's wall screen. `img` is 'profile:<id>', 'char:<CharId>', 'item:<evidenceId>',
+ * 'icon:<name>' (see cinema.ts) or 'figure:<id>'. `tag` names what the card is ("기록", "AI 분류",
+ * "검찰 주장") so the tone colour is never the only cue.
+ */
+export interface PanelCard {
+  img?: string;
+  name: string;
+  role?: string;
+  text?: string;
+  tag?: string;
+  tone?: 'fact' | 'claim' | 'ai' | 'person' | 'pending';
+}
+
+/**
+ * A line over a map, in the map's coordinates: a movement a record shows ('fact', solid), the
+ * stretch nothing recorded ('unseen', faint dashes), or someone's account ('claim', red dashes).
+ */
+export interface PlanRoute {
+  points: [number, number][];
+  kind: 'fact' | 'unseen' | 'claim';
+  label?: string;
+  /** Where the label's left edge sits (default: beside the last point). */
+  at?: [number, number];
 }
 
 /** One line on a briefing board. */
@@ -231,6 +284,11 @@ export interface Testimony {
    * statement, or right away on the hint button (H). The last one repeats.
    */
   hints?: Script[];
+  /**
+   * With manual hints (1화): what 강단비 or 나래 says each time the testimony comes round to its
+   * first statement again, from general to more pointed. The last one repeats.
+   */
+  loop?: Script[];
   /** Plays when accepted evidence is presented. */
   contradiction: Script;
   wrong?: Script;

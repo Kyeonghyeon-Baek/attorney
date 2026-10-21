@@ -12,6 +12,7 @@ import { Gauge } from './gauge';
 import { bindKeyboard, emit, waitFor } from './input';
 import { InvestigateUi } from './invest';
 import { MapView } from './maps';
+import { paintFace, paintItem } from './portrait';
 import { chooseEpisode, SettingsPanel, type EpisodeEntry } from './menu';
 import { CourtRecord } from './record';
 import { clearSave, hasSave, isCleared, loadSave, markCleared, writeSave, type CrossResume, type SaveData } from './save';
@@ -149,22 +150,34 @@ export class Game {
   private hintCtx: { key: string; title: string; lines: string[] } | null = null;
   /** The cross-examination in progress, for "현재 심문 처음부터". */
   private inCross: string | null = null;
+  /** How many times each testimony has come round to its first statement again (this session). */
+  private loops = new Map<string, number>();
 
   constructor(root: HTMLElement, private slots: EpisodeSlot[], private fast: boolean) {
     const viewport = el('div', 'viewport', root);
     this.stage = el('div', 'stage', viewport);
     this.scene = new Stage(this.stage);
     this.cinema = new Cinema(this.stage, fast);
+    // Pictures on the courtroom's wall screen: a person's face or a record's art.
+    this.cinema.paintCard = (box, img) => {
+      const [kind, id] = img.split(':');
+      if (kind === 'profile') {
+        const p = this.record?.getProfile(id);
+        if (p) paintFace(box, p);
+      } else if (kind === 'char' && id in CHARACTERS) {
+        const ch = CHARACTERS[id as keyof typeof CHARACTERS];
+        paintFace(box, { id, name: ch.name, meta: '', summary: '', color: ch.color, sprite: ch.id });
+      } else if (kind === 'item') {
+        const ev = this.record?.get(id);
+        if (ev) paintItem(box, ev);
+      }
+    };
     this.box = new TextBox(this.stage, fast);
     this.cross = new CrossUi(this.stage);
     this.inv = new InvestigateUi(this.stage);
 
     const hud = el('div', 'hud', this.stage);
-    this.gauge = new Gauge(hud, 0, fast);
-    this.chanceUi = el('div', 'chances', hud);
-    this.issueUi = el('div', 'issue', hud);
-    this.issueUi.hidden = true;
-    this.chanceUi.hidden = true;
+    // The menu row tops the HUD column; the prediction, the chances and the issue line hang under it.
     const tools = el('div', 'hud-tools', hud);
     // Hidden while a card screen is up (game over, ending): the record cannot open there.
     const recordBtn = el('button', 'btn btn-small hud-record', tools, '법원기록  R');
@@ -176,9 +189,22 @@ export class Game {
     this.muteBtn = el('button', 'btn btn-small', tools);
     this.muteBtn.addEventListener('click', () => this.toggleMute());
     this.paintMute();
+    this.gauge = new Gauge(hud, 0, fast);
+    this.chanceUi = el('div', 'chances', hud);
+    this.issueUi = el('div', 'issue', hud);
+    this.issueUi.hidden = true;
+    this.chanceUi.hidden = true;
+    // The evidence card on screen hangs just under the HUD column, however tall it is right now
+    // (the save and memo flashes that pass under it don't count, so the card doesn't jump).
+    const fixed = [tools, this.chanceUi, this.issueUi, hud.querySelector<HTMLElement>('.gauge')];
+    new ResizeObserver(() => {
+      let bottom = 0;
+      for (const e of fixed) if (e?.offsetParent) bottom = Math.max(bottom, e.offsetTop + e.offsetHeight);
+      this.stage.style.setProperty('--hud-bottom', `${hud.offsetTop + bottom}px`);
+    }).observe(hud);
     this.saveFlash = el('div', 'save-flash', hud, '자동 저장됨');
     this.saveFlash.hidden = true;
-    // In the HUD column, so it always sits under the prediction, the chances and the buttons.
+    // In the HUD column, so it always sits under the prediction and the chances.
     this.memoFlash = el('div', 'memo-flash', hud);
     this.memoFlash.hidden = true;
     this.toast = el('div', 'toast', this.stage);
@@ -594,8 +620,22 @@ export class Game {
         this.cinema.setBoard(cmd.title, cmd.rows);
         return;
       case 'plan':
-        this.cinema.setPlan(cmd.map, cmd.marks);
+        this.cinema.setPlan(cmd.map, cmd.marks, cmd.routes);
         return;
+      case 'panel':
+        this.cinema.setPanel(cmd.title, cmd.cards);
+        return;
+      case 'figure':
+        this.cinema.setFigure(cmd.id, cmd.marks);
+        return;
+      case 'guide':
+        return this.guide(cmd.title, cmd.lines, cmd.focus);
+      case 'chapter':
+        this.box.hide();
+        await this.fx.chapter(cmd.no, cmd.title);
+        return;
+      case 'examine':
+        return this.runExamine(cmd);
       case 'memo':
         if (!this.flags.has(`memo:${cmd.text}`)) {
           this.flags.add(`memo:${cmd.text}`);
@@ -653,6 +693,8 @@ export class Game {
         return;
       case 'verdict':
         this.box.hide();
+        // The trial is over: review chances mean nothing from here on.
+        this.chanceUi.hidden = true;
         await this.fx.verdict(cmd.word, cmd.acquit);
         return;
       case 'sfx':
@@ -692,7 +734,7 @@ export class Game {
         try {
           await new MatchView().open(this.stage, cmd.task, () => {
             if (cmd.task.cutMusic) this.music(null);
-          });
+          }, () => this.record.open('view'));
         } finally {
           this.hintCtx = null;
         }
@@ -701,7 +743,7 @@ export class Game {
         this.box.hide();
         this.stepHints(cmd.opts, cmd.task.region.prompt, '사진 비교');
         try {
-          await new PhotoView().task(this.stage, cmd.set, cmd.task);
+          await new PhotoView().task(this.stage, cmd.set, cmd.task, () => this.record.open('view'));
         } finally {
           this.hintCtx = null;
         }
@@ -787,11 +829,15 @@ export class Game {
     const ev = this.record.get(id);
     if (!ev || this.record.has(id)) return;
     this.record.add(id);
-    this.scene.showEvidence(this.record.item(id));
-    sfx('evidence');
-    await this.line({ name: null, text: `「${ev.name}」${josa(ev.name, '을', '를')} 법원기록에 넣었다.`, style: 'notice', voice: null });
-    await this.waitAdvance();
     this.scene.showEvidence(null);
+    this.scene.showReceived(this.record.item(id));
+    sfx('evidence');
+    // One line on what the record is for, so a new piece of evidence never arrives as just a name.
+    const what = ev.proves?.[0];
+    const text = `「${ev.name}」${josa(ev.name, '을', '를')} 법원기록에 넣었다.${what ? `\n확인되는 것 · ${what}` : ''}`;
+    await this.line({ name: null, text, style: 'notice', voice: null });
+    await this.waitAdvance();
+    this.scene.showReceived(null);
   }
 
   private async addEvidenceSet(label: string, ids: string[]): Promise<void> {
@@ -801,27 +847,28 @@ export class Game {
     sfx('evidence');
     // Flip through the new items on the evidence card while the notice is up.
     let k = 0;
-    this.scene.showEvidence(this.record.item(fresh[0]));
+    this.scene.showEvidence(null);
+    this.scene.showReceived(this.record.item(fresh[0]));
     const timer = setInterval(() => {
       k = (k + 1) % fresh.length;
-      this.scene.showEvidence(this.record.item(fresh[k]));
-    }, 900);
+      this.scene.showReceived(this.record.item(fresh[k]));
+    }, 1400);
     const names = fresh.map((id) => `「${this.record.get(id)!.name}」`).join(' ');
     await this.line({ name: null, text: `${label} ${fresh.length}건을 법원기록에 넣었다.\n${names}`, style: 'notice', voice: null });
     await this.waitAdvance();
     clearInterval(timer);
-    this.scene.showEvidence(null);
+    this.scene.showReceived(null);
   }
 
   private async addProfile(id: string): Promise<void> {
     const p = this.record.getProfile(id);
     if (!p || this.record.has(id)) return;
     this.record.add(id);
-    this.scene.showEvidence(this.record.item(id));
+    this.scene.showReceived(this.record.item(id));
     sfx('evidence');
     await this.line({ name: null, text: `「${p.name}」의 프로필을 법원기록에 넣었다.`, style: 'notice', voice: null });
     await this.waitAdvance();
-    this.scene.showEvidence(null);
+    this.scene.showReceived(null);
   }
 
   private async line(o: LineOptions): Promise<void> {
@@ -1014,7 +1061,15 @@ export class Game {
   /** Past the last statement: the case's loop-back line, then the testimony's next hint. */
   private async loopBack(tm: Testimony): Promise<Result> {
     if (this.data.hintMode === 'manual') {
-      // No hint plays by itself; the first time round, a quiet note says where hints are.
+      // A beat between rounds so the first statement doesn't read as the testimony going on:
+      // 강단비 (or 나래) takes stock, a little more pointed each round. The last line repeats.
+      const n = this.loops.get(tm.id) ?? 0;
+      this.loops.set(tm.id, n + 1);
+      const lines: Script[] = tm.loop?.length ? tm.loop
+        : this.data.loopBack.length ? [this.data.loopBack]
+        : [[{ t: 'think', text: '(…증언을 한 바퀴 다 들었어. 처음부터 다시 들어 보자.)' }]];
+      if ((await this.run(lines[Math.min(n, lines.length - 1)])) === STOP) return STOP;
+      // The first time round, a quiet note says where hints are.
       const key = `looped:${tm.id}`;
       if (!this.flags.has(key)) {
         this.flags.add(key);
@@ -1174,6 +1229,7 @@ export class Game {
         this.scene.show(cmd.who);
         this.box.hide();
         this.ask.onHint = this.hintCtx ? () => void this.openHintWindow() : null;
+        this.ask.onRecord = () => this.record.open('view');
         // Without a right answer it is only a "where next" menu: one click is enough.
         const idx = await this.ask.open(cmd.note, cmd.options.map((o) => o.label), used, cmd.title, !hasCorrect);
         this.ask.onHint = null;
@@ -1184,6 +1240,53 @@ export class Game {
       }
     } finally {
       this.hintCtx = null;
+    }
+  }
+
+  /** A how-to card; `focus` raises that part of the HUD above the dimmed screen while it is up. */
+  private async guide(title: string, lines: string[], focus?: string): Promise<void> {
+    this.box.hide();
+    const cls = focus ? ['guide-focus', `guide-${focus}`] : [];
+    this.stage.classList.add(...cls);
+    try {
+      await this.fx.card((body) => {
+        el('p', 'card-kicker', body, '안내');
+        el('h2', 'card-title', body, title);
+        const list = el('ul', 'guide-list', body);
+        for (const line of lines) {
+          const li = el('li', '', list);
+          // [Q] in a line is drawn as a key cap.
+          for (const part of line.split(/(\[[^\]]+\])/)) {
+            if (/^\[[^\]]+\]$/.test(part)) el('kbd', '', li, part.slice(1, -1));
+            else if (part) li.append(part);
+          }
+        }
+      }, '알겠어요', 'guide');
+    } finally {
+      this.stage.classList.remove(...cls);
+    }
+  }
+
+  /** One screen to look over until the thing that matters is found (no menu, no way out). */
+  private async runExamine(cmd: Extract<Cmd, { t: 'examine' }>): Promise<Result> {
+    this.box.hide();
+    this.scene.setField(cmd.bg);
+    this.scene.showPlace();
+    this.stage.classList.add('examine-one');
+    try {
+      while (!this.has(cmd.until)) {
+        const spot = await this.inv.examine(cmd.spots, (s) => this.flags.has(`seen:${cmd.bg}:${s.id}`), cmd.prompt);
+        if (!spot) continue;
+        const key = `seen:${cmd.bg}:${spot.id}`;
+        const again = this.flags.has(key) && spot.again;
+        this.flags.add(key);
+        if ((await this.run(again ? spot.again! : spot.script)) === STOP) return STOP;
+        this.box.hide();
+      }
+    } finally {
+      this.stage.classList.remove('examine-one');
+      this.scene.setField(null);
+      this.scene.clear();
     }
   }
 

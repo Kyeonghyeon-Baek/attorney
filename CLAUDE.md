@@ -58,7 +58,7 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 **Saves** use one localStorage slot per case, `pan-dwijibgi:save:<caseId>`.
 - Checkpoints are written at each scene start, at each investigation menu and at each cross-examination statement.
 - `end` clears the save and marks the case as solved.
-- When a rewrite makes old saves meaningless, change `CaseData.id`. 1화 also stores `CaseData.revision` (`EP1-R3`) in the save and rejects a mismatch; `legacyIds` lists the old ids so an unsolved player gets a one-time "내용이 개정되었어요" card.
+- When a rewrite makes old saves meaningless, change `CaseData.id`. 1화 also stores `CaseData.revision` (`EP1-R4`) in the save and rejects a mismatch; `legacyIds` lists the old ids so an unsolved player gets a one-time "내용이 개정되었어요" card.
 - `CaseData.checkpoints` (1화 CP1–CP8) say what evidence, flags and prediction a scene starts with. They drive "장면 선택" on a solved case and `?scene=` jumps; a jump to a scene without one uses the nearest earlier checkpoint plus all evidence.
 
 **Art is matched by file path only** (`engine/assets.ts`, eager `import.meta.glob`):
@@ -72,12 +72,14 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 | Event CG | `cg/<id>.png` | |
 | Photo-set plates | `photos/<image>.png` | One background under every frame of a photo set; `engine/photos.ts` draws what changes on top |
 
-Missing art falls back to a placeholder. Every image is preloaded on the title screen; `src/assets` is about 125 MB of PNG today.
+Diagrams that must line up with the logic (the autopsy's injury chart) are drawn in code in `engine/figures.ts`, not painted. Missing art falls back to a placeholder. Every image is preloaded on the title screen; `src/assets` is about 125 MB of PNG today.
 
 ## Writing content
 
 - `docs/series-bible.md` is the source of truth for world, characters, episode plots and tone (§9). If a story fact changes, edit the bible first. `docs/art-guide.md` has the art specs and prompts.
 - 1화's ground-truth timeline is the comment at the top of `content/ep1/records.ts`, and its proof structure (which evidence establishes what, and what it does not, plus the spec-ID mapping E01–E12 / C01–C06 / Q04–Q13) is `docs/ep1-rewrite.md`. Testimony, evidence times, memos, the floor plan in `engine/maps.ts` and the 112 photo set in `engine/photos.ts` must agree with both. Every 1화 evidence card states `source`, `proves` and `limits`; dialogue must not claim more than `proves` allows.
+- 1화 R4 teaches each system with a `guide()` card the first time it matters, splits the trial into three `chapter()` 공방, and has the prosecutor hand over the records during the opening statement on the wall screen (`panel()`). Don't hand records over in the lobby again, and don't have 나래 or 단비 name the evidence to present; jokes go in presses and stop at the victim, 조말순 and 태오's fear.
+- The creator expects players to follow the dialogue, not the court record: whenever a record or board matters, someone says in plain words what it is and what it shows. Write natural spoken Korean, not translationese ("가능성을 닫다" was his example). Evidence cards stay short.
 - Text markup: `{r}…{/}` is red emphasis and `{p}` is a beat of silence. For a Korean particle after a name that changes at runtime, use `josa()` from `engine/dom.ts`.
 - When evidence is right but presented too early, acknowledge it in `nearMiss`, record it with `memo()`, then point at what is still missing; don't penalize. Give hints in order from vague to concrete.
 

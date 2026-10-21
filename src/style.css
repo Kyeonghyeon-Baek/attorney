@@ -270,7 +270,7 @@ button { font: inherit; }
 
 .ev-card {
   position: absolute;
-  top: 150px;
+  top: calc(var(--hud-bottom, 138px) + 12px);
   right: 40px;
   z-index: 5;
   width: 190px;
@@ -384,6 +384,9 @@ button { font: inherit; }
 }
 .stage.title-mode .hud { display: none; }
 .hud-tools { display: flex; gap: 6px; }
+/* Outside the courtroom (and after the verdict) there is nothing to review or predict. */
+.stage.offstage .chances,
+.stage.offstage .issue { display: none; }
 
 .gauge {
   width: 300px;
@@ -615,7 +618,8 @@ button { font: inherit; }
 .tile-name { font-size: 12px; line-height: 1.35; color: var(--paper); text-align: center; word-break: keep-all; }
 .face,
 .sheet-face,
-.ev-card-face {
+.ev-card-face,
+.got-face {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -630,13 +634,16 @@ button { font: inherit; }
 /* sprite crops sit on a light photo-booth backdrop */
 .face.photo,
 .sheet-face.photo,
-.ev-card-face.photo { background-color: #d8d2c4; }
+.ev-card-face.photo,
+.got-face.photo { background-color: #d8d2c4; }
 .face.orb,
 .sheet-face.orb,
-.ev-card-face.orb { background: radial-gradient(circle at 50% 45%, #0f2c3c, #061018 75%); }
+.ev-card-face.orb,
+.got-face.orb { background: radial-gradient(circle at 50% 45%, #0f2c3c, #061018 75%); }
 .face.orb i,
 .sheet-face.orb i,
-.ev-card-face.orb i {
+.ev-card-face.orb i,
+.got-face.orb i {
   width: 46%;
   height: 46%;
   border-radius: 50%;
@@ -644,7 +651,7 @@ button { font: inherit; }
   box-shadow: 0 0 14px var(--daon);
 }
 .face { width: 68px; height: 68px; font-size: 30px; }
-.sheet-face { width: 96px; height: 96px; font-size: 44px; }
+.sheet-face { width: 130px; height: 130px; font-size: 56px; }
 .tile-pic { display: flex; align-items: center; justify-content: center; width: 68px; height: 68px; }
 .tile-pic svg { width: 52px; height: 52px; }
 .tile-pic img,
@@ -662,8 +669,8 @@ button { font: inherit; }
 }
 .sheet-top { display: flex; gap: 16px; align-items: center; }
 .sheet-icon {
-  width: 96px;
-  height: 96px;
+  width: 150px;
+  height: 150px;
   flex: none;
   display: flex;
   align-items: center;
@@ -1707,6 +1714,7 @@ button { font: inherit; }
   color: var(--ink);
   background: var(--ochre);
 }
+.plan-mark.below span { bottom: auto; top: 100%; }
 @keyframes mark-pulse { 50% { box-shadow: 0 0 0 6px rgba(232, 169, 59, 0.25); } }
 
 .memo-flash {
@@ -1894,6 +1902,7 @@ button { font: inherit; }
 .photoview-notes { margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: #4a4231; }
 .photoview-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .photoview-hint { flex: 1; font-size: 12px; color: #6b5f4a; }
+.photoview-hint.picked { font-family: var(--doc); font-size: 14px; color: #2b3a73; }
 
 .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
 .episodes-hint { margin: 0 0 0 auto; font-size: 13px; color: rgba(244, 240, 230, 0.7); }
@@ -1965,6 +1974,7 @@ button { font: inherit; }
 }
 .photo-spot:hover,
 .photo-spot.on { background: rgba(232, 169, 59, 0.22); border: 3px solid var(--ochre); }
+.photo-spot-check { position: absolute; bottom: calc(100% + 4px); left: -3px; white-space: nowrap; padding: 1px 6px; font-size: 12px; color: #16204a; background: var(--ochre); border-radius: 3px; pointer-events: none; }
 .photo-pic.empty { display: grid; place-items: center; aspect-ratio: 16 / 9; font-family: var(--doc); font-size: 15px; color: rgba(244, 240, 230, 0.7); }
 .photoview-say { min-height: 1.5em; margin: 8px 0 0; font-family: var(--doc); font-size: 16px; line-height: 1.5; color: #8a3a2a; word-break: keep-all; }
 .photoview-say.good { color: #2b5a2b; }
@@ -2002,14 +2012,14 @@ button { font: inherit; }
 .matchview-picks { margin: 8px 0 0; font-family: var(--doc); font-size: 14px; color: #2b3a73; min-height: 1.4em; }
 .match-card.on { background: #2b3a73; border-color: #2b3a73; color: var(--paper); }
 .match-card.dim { opacity: 0.35; }
-.match-time { font-family: var(--doc); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px; }
-.match-who { font-size: 12px; opacity: 0.8; }
-.match-text { font-family: var(--doc); font-size: 14px; line-height: 1.4; word-break: keep-all; }
+.match-time { font-family: var(--doc); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 17px; }
+.match-who { font-size: 12px; opacity: 0.6; }
+.match-text { font-family: var(--doc); font-size: 16px; line-height: 1.45; word-break: keep-all; }
 .matchview-say { min-height: 1.5em; margin: 10px 0 0; font-family: var(--doc); font-size: 16px; line-height: 1.5; color: #8a3a2a; word-break: keep-all; }
 .matchview-say.good { color: #2b5a2b; }
 .matchview-say.on { animation: row-in 0.3s ease-out both; }
 .matchview-foot { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-.matchview-hint { flex: 1; font-size: 12px; color: #6b5f4a; }
+.matchview-hint { flex: 1; font-size: 12px; color: #6b5f4a; opacity: 0.75; }
 
 /* 1화 R4: the question on the table, and a quieter HUD at the climax. */
 .issue { max-width: 300px; padding: 4px 10px; font-family: var(--doc); font-size: 13px; line-height: 1.4; color: var(--paper); background: rgba(18, 26, 51, 0.86); border-left: 3px solid var(--ochre); border-radius: 3px; word-break: keep-all; }
@@ -2018,3 +2028,222 @@ button { font: inherit; }
 .stage.hud-dim .hud { opacity: 0.22; }
 .stage.hud-dim .hud:hover { opacity: 1; }
 .sheet-detail .addendum { white-space: pre-line; }
+
+/* ---------------------------------------------------------------- 1화 R4: 법정 화면, 상처 도식, 안내, 공방 */
+
+/* The courtroom's wall screen (hologram panel): cards for people, records and roles. */
+.panel {
+  position: absolute;
+  top: 22px;
+  left: 30px;
+  z-index: 4;
+  width: 900px;
+  padding: 12px 16px 16px;
+  color: var(--paper);
+  background:
+    repeating-linear-gradient(0deg, rgba(111, 242, 232, 0.035) 0 2px, transparent 2px 5px),
+    linear-gradient(160deg, rgba(14, 44, 62, 0.95), rgba(14, 22, 48, 0.95));
+  border: 2px solid rgba(111, 242, 232, 0.7);
+  border-radius: 8px;
+  box-shadow: 0 0 28px rgba(111, 242, 232, 0.22), 0 10px 0 rgba(0, 0, 0, 0.3);
+}
+.panel.in { animation: board-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.panel-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.panel-kind { font-size: 13px; letter-spacing: 0.2em; color: var(--daon); }
+.panel-title { font-family: var(--display); font-size: 24px; }
+.panel-cards { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 12px; }
+.panel-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 10px 12px;
+  background: rgba(244, 240, 230, 0.06);
+  border: 1.5px solid rgba(244, 240, 230, 0.28);
+  border-top: 4px solid rgba(244, 240, 230, 0.5);
+  border-radius: 5px;
+  text-align: center;
+}
+.panel-card.new { animation: row-in 0.4s ease-out both; }
+.panel-card.fact { border-top-color: var(--ochre); }
+.panel-card.claim { border-top-color: var(--red-soft); background: rgba(200, 55, 45, 0.12); }
+.panel-card.ai { border-top-color: var(--daon); }
+.panel-card.person { border-top-color: #b9c4ec; }
+.panel-card.pending { border-top-color: rgba(244, 240, 230, 0.35); border-top-style: dashed; opacity: 0.85; }
+.panel-pic {
+  flex: none;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgba(244, 240, 230, 0.9);
+  border-radius: 50%;
+  font-family: var(--display);
+  font-size: 44px;
+  color: var(--cover);
+}
+.panel-pic.pic { border-radius: 8px; background: rgba(244, 240, 230, 0.92); }
+.panel-pic img { width: 92%; height: 92%; object-fit: contain; }
+.panel-pic svg { width: 100%; height: 100%; }
+.panel-pic .pi-dark { fill: #2c3d66; }
+.panel-pic .pi-lens { fill: #1e2433; stroke: #6ff2e8; stroke-width: 3; }
+.panel-pic .pi-red { fill: #c8372d; }
+.panel-pic .pi-line { fill: none; stroke: #2c3d66; stroke-width: 5; stroke-linecap: round; }
+.panel-pic .pi-ring { fill: rgba(111, 242, 232, 0.16); stroke: #2c3d66; stroke-width: 4; }
+.panel-pic .pi-pan { fill: #e8a93b; stroke: #2c3d66; stroke-width: 3; stroke-linejoin: round; }
+.panel-words { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.panel-tag {
+  padding: 0 7px;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.55;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  color: rgba(244, 240, 230, 0.8);
+}
+.panel-card.fact .panel-tag { color: var(--ochre); }
+.panel-card.claim .panel-tag { color: var(--red-soft); }
+.panel-card.ai .panel-tag { color: var(--daon); }
+.panel-name { font-family: var(--display); font-size: 22px; line-height: 1.2; word-break: keep-all; }
+.panel-role { font-size: 14px; color: var(--ochre); word-break: keep-all; }
+.panel-text { font-family: var(--doc); font-size: 15px; line-height: 1.45; color: rgba(244, 240, 230, 0.88); word-break: keep-all; }
+
+/* Diagrams drawn in code (engine/figures.ts): the autopsy's injury chart. */
+.figure {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  z-index: 4;
+  width: 560px;
+  padding: 12px 16px 12px;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: 6px;
+  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 3px rgba(30, 43, 76, 0.85);
+}
+.figure.in { animation: board-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.figure-title { margin-bottom: 6px; font-family: var(--display); font-size: 22px; color: var(--cover); }
+.fig-row { display: flex; align-items: center; gap: 18px; }
+.fig-draw { flex: none; width: 190px; }
+.figure .fig-draw { width: 228px; }
+.fig-draw svg { display: block; width: 100%; height: auto; font-family: var(--doc); }
+.fig-legend { flex: 1; margin: 0; padding-left: 28px; font-family: var(--doc); font-size: 17px; line-height: 1.45; }
+.fig-legend li { padding: 7px 8px; margin-bottom: 6px; border-radius: 3px; word-break: keep-all; }
+.fig-legend li::marker { font-weight: 700; color: #6b5f4a; }
+.fig-legend li.fact { background: rgba(232, 169, 59, 0.22); box-shadow: inset 4px 0 0 var(--ochre); }
+.fig-legend li.claim { background: rgba(200, 55, 45, 0.12); box-shadow: inset 4px 0 0 var(--red); color: #a12a21; }
+.fig-legend li.pending { border: 2px dashed rgba(107, 95, 74, 0.6); color: #5b5240; }
+.figure-caption,
+.sheet-figure figcaption { margin-top: 8px; font-family: var(--doc); font-size: 14px; color: #5b5240; word-break: keep-all; }
+.sheet-figure { margin: 4px 0 14px; }
+.sheet-figure .fig-legend { font-size: 15px; }
+.fg-side { fill: #8a7d63; font-size: 40px; }
+.fg-mark circle { fill: #fffaf0; stroke: #6b5f4a; stroke-width: 8; }
+.fg-mark text { fill: #2c2a24; font-size: 50px; font-weight: 700; text-anchor: middle; }
+.fg-mark.fact circle { fill: #ffe2a3; stroke: #c47f12; }
+.fg-mark.claim circle { fill: #fde0db; stroke: var(--red); }
+.fg-mark.pending circle { stroke-dasharray: 14 10; }
+
+/* Movements drawn over the floor plan: solid = recorded, faint dashes = unrecorded, red dashes = a claim. */
+.plan-box .mp-route { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.plan-box .mp-route.fact { stroke: #6ff2e8; }
+.plan-box .mp-route.unseen { stroke: #c9cfe6; stroke-width: 4; stroke-dasharray: 4 10; opacity: 0.8; }
+.plan-box .mp-route.claim { stroke: #ff6a5c; stroke-dasharray: 14 9; animation: route-march 1.2s linear infinite; }
+@keyframes route-march { to { stroke-dashoffset: -46; } }
+.plan-box .mp-route-label rect { fill: #0e1630; stroke-width: 2; }
+.plan-box .mp-route-label text { font-size: 15px; }
+.plan-box .mp-route-label.fact rect { stroke: #6ff2e8; }
+.plan-box .mp-route-label.fact text { fill: #b8fff9; }
+.plan-box .mp-route-label.unseen rect { stroke: #c9cfe6; }
+.plan-box .mp-route-label.unseen text { fill: #e2e6f5; }
+.plan-box .mp-route-label.claim rect { stroke: #ff6a5c; }
+.plan-box .mp-route-label.claim text { fill: #ffb3aa; }
+
+/* How-to cards: lighter than other cards so the part of the HUD they explain stays in view. */
+.card-screen.guide { justify-content: flex-start; padding-left: 120px; background: rgba(12, 17, 36, 0.62); }
+.card-screen.guide .card-body {
+  max-width: 640px;
+  padding: 26px 34px 24px;
+  text-align: left;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: 6px;
+  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 3px rgba(30, 43, 76, 0.85);
+  animation: pop 0.2s ease-out;
+}
+.card-screen.guide .card-kicker { color: #b06f0a; font-size: 15px; }
+.card-screen.guide .card-title { font-size: 32px; color: var(--cover); }
+.guide-list { margin: 0 0 18px; padding-left: 22px; font-family: var(--doc); font-size: 18px; line-height: 1.6; }
+.guide-list li { padding: 3px 0; word-break: keep-all; }
+.guide-list li::marker { color: var(--red); }
+.guide-list kbd {
+  display: inline-block;
+  min-width: 26px;
+  margin: 0 3px;
+  padding: 0 7px;
+  font-family: var(--pixel);
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--paper);
+  background: var(--cover);
+  border-radius: 4px;
+  box-shadow: 0 3px 0 #0e1630;
+}
+.card-screen.guide .card-actions { text-align: right; }
+.stage.guide-focus .hud { z-index: 13; }
+.stage.guide-focus .hud > * { opacity: 0.25; }
+.stage.guide-gauge .hud > .gauge,
+.stage.guide-issue .hud > .issue,
+.stage.guide-chances .hud > .chances,
+.stage.guide-tools .hud > .hud-tools { opacity: 1; outline: 3px solid var(--ochre); outline-offset: 4px; animation: mark-pulse 1.2s ease-in-out infinite; }
+.stage.guide-tools .hud > .hud-tools .btn { opacity: 1; }
+/* Card screens hide the record button (the record cannot open over them), but this card is about it. */
+.stage.card-open.guide-tools .hud-record { display: inline-block; }
+
+/* "제1 공방" title card. */
+.chapter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 50%, rgba(18, 26, 51, 0.9) 0%, rgba(8, 12, 26, 0.96) 70%);
+  animation: cg-in 0.4s ease-out both;
+}
+.chapter.out { animation: cg-out 0.45s ease-in forwards; }
+.chapter-no { font-family: var(--display); font-size: 34px; letter-spacing: 0.3em; color: var(--ochre); animation: text-in 0.5s 0.15s ease-out both; }
+.chapter-rule { width: 0; margin: 18px auto 22px; animation: rule-grow 0.7s 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.chapter-title { max-width: 980px; font-family: var(--display); font-size: 50px; line-height: 1.3; text-align: center; word-break: keep-all; animation: text-in 0.6s 0.6s ease-out both; }
+
+/* A single screen to look over (the bag on the evidence table): voices only, no one in front of it. */
+.stage.examine-one .actor { opacity: 0; }
+
+/* A record being handed over: big and centred, picture first (stage.showReceived). */
+.got {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  z-index: 6;
+  width: 380px;
+  padding: 14px 18px 16px;
+  color: var(--ink);
+  text-align: center;
+  background: var(--paper);
+  border-radius: 8px;
+  box-shadow: 0 0 0 4px rgba(232, 169, 59, 0.85), 0 14px 0 rgba(0, 0, 0, 0.35);
+  translate: -50% -50%;
+  display: none;
+}
+.got.on { display: block; animation: got-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes got-in { from { scale: 0.7; opacity: 0; rotate: -3deg; } to { scale: 1; opacity: 1; rotate: 0deg; } }
+.got-label { font-size: 14px; color: var(--red); }
+.got-pic { display: flex; align-items: center; justify-content: center; height: 230px; margin: 6px 0 8px; }
+.got-pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.got-pic svg { width: 100%; height: 100%; }
+.got-pic.print svg { width: auto; }
+.got-face { width: 200px; height: 200px; font-size: 80px; border-radius: 10px; }
+.got-name { font-family: var(--display); font-size: 26px; line-height: 1.2; color: var(--cover); word-break: keep-all; }

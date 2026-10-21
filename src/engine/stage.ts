@@ -29,6 +29,7 @@ export class Stage {
   private daonOrb: HTMLElement;
   private daonStatus: HTMLElement;
   private evCard: HTMLElement;
+  private got: HTMLElement;
   private who: CharId | null = null;
   private emo = 'normal';
   private daonMode: DaonMode = 'normal';
@@ -53,6 +54,7 @@ export class Stage {
     // Only 4화's witness stand shows the monitor; render() turns it on there.
     this.daon.hidden = true;
     this.evCard = el('div', 'ev-card', this.root);
+    this.got = el('div', 'got', this.root);
   }
 
   /**
@@ -152,6 +154,24 @@ export class Stage {
   }
 
   /** Holds up a piece of evidence or a person's profile next to the speaker. */
+  /**
+   * A record being handed over, big and in the middle with its label, so it is known by its picture
+   * first. Null puts it away. The small card in the corner stays for evidence held up in court.
+   */
+  showReceived(item: HeldItem | null): void {
+    this.got.classList.remove('on');
+    if (!item) return;
+    this.got.replaceChildren();
+    const ev = item.evidence;
+    if (ev) el('div', 'got-label', this.got, ev.label);
+    else if (item.profile) el('div', 'got-label', this.got, item.profile.meta);
+    const pic = el('div', 'got-pic', this.got);
+    if (ev) paintItem(pic, ev);
+    else if (item.profile) paintFace(el('span', 'got-face', pic), item.profile);
+    el('div', 'got-name', this.got, item.name);
+    replay(this.got, 'on');
+  }
+
   showEvidence(item: HeldItem | null): void {
     if (!item) {
       this.evCard.classList.remove('on');

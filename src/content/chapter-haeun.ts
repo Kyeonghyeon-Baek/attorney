@@ -43,7 +43,7 @@ export const HAEUN_EVIDENCE: Evidence[] = [
 ];
 
 export const HAEUN_PROFILE: Profile = {
-  id: 'haeun', name: '박하은', meta: '22세 · 증인', color: '#C98A4B', later: true, sprite: 'haeun', face: [0.5, 0.22],
+  id: 'haeun', name: '박하은', meta: '22세 · 증인', color: '#C98A4B', later: true, sprite: 'haeun',
   summary: '박순자의 딸. 대학생. 외주 업체 "오픈데스크"에서 밤마다 "다온인 척" 상담을 대신 받아 왔다. 사건 당일 밤 누리랩 고객센터에 있었다.',
 };
 

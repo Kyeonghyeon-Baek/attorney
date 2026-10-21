@@ -1,5 +1,7 @@
+import type { FigureMark } from '../engine/figures';
 import type {
-  AmbienceName, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, Script, SfxName, ShoutKind, StepOpts,
+  AmbienceName, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, Hotspot, PanelCard, PlanRoute,
+  Script, SfxName, ShoutKind, StepOpts,
 } from '../engine/types';
 import type { MatchTask } from '../engine/match';
 import type { PhotoTask } from '../engine/photos';
@@ -111,9 +113,32 @@ export const fadeIn: Cmd = { t: 'fade', black: false };
 export const board = (title: string, rows: BoardRow[]): Cmd => ({ t: 'board', title, rows });
 export const boardOff: Cmd = { t: 'board', title: '', rows: null };
 export const row = (time: string, text: string, tag?: BoardRow['tag'], badge?: string): BoardRow => ({ time, text, tag, badge });
-/** The floor plan over the scene, with regions highlighted. */
-export const plan = (map: string, marks: string[] = []): Cmd => ({ t: 'plan', map, marks });
+/** The floor plan over the scene, with regions highlighted and movements drawn (see `route`). */
+export const plan = (map: string, marks: string[] = [], routes: PlanRoute[] = []): Cmd => ({ t: 'plan', map, marks, routes });
 export const planOff: Cmd = { t: 'plan', map: null };
+/** A movement on a plan: 'fact' (a record shows it), 'unseen' (no record), 'claim' (someone's account). */
+export const route = (kind: PlanRoute['kind'], points: [number, number][], label?: string, at?: [number, number]): PlanRoute =>
+  ({ kind, points, label, at });
+/**
+ * The courtroom's wall screen with a row of cards. Calling it again with the same title adds the
+ * new cards to those already up.
+ */
+export const panel = (title: string, cards: PanelCard[]): Cmd => ({ t: 'panel', title, cards });
+export const panelOff: Cmd = { t: 'panel', title: '', cards: null };
+/** One card: `img` is 'profile:<id>', 'char:<CharId>', 'item:<evidenceId>', 'icon:<name>' or 'figure:<id>'. */
+export const card = (name: string, opts: Omit<PanelCard, 'name'> = {}): PanelCard => ({ name, ...opts });
+/** A drawn diagram (engine/figures.ts) with spots labelled; no marks shows the figure's own labels. */
+export const figure = (id: string, marks?: FigureMark[]): Cmd => ({ t: 'figure', id, marks });
+export const figureOff: Cmd = { t: 'figure', id: null };
+export const mark = (id: string, note: string, tone?: FigureMark['tone']): FigureMark => ({ id, note, tone });
+/** A how-to card the first time a system matters. `[Q]` in a line is drawn as a key cap. */
+export const guide = (title: string, lines: string[], focus?: GuideFocus): Cmd => ({ t: 'guide', title, lines, focus });
+/** A title card for one stretch of the trial ("제1 공방") and the question it settles. */
+export const chapter = (no: string, title: string): Cmd => ({ t: 'chapter', no, title });
+/** One screen to look over until `until` (a flag or evidence id) is held. Spots are in stage pixels. */
+export const examine = (bg: string, prompt: string, spots: Hotspot[], until: string): Cmd => ({ t: 'examine', bg, prompt, spots, until });
+export const spot = (id: string, label: string, rect: [number, number, number, number], script: Script, again?: Script): Hotspot =>
+  ({ id, label, x: rect[0], y: rect[1], w: rect[2], h: rect[3], script, again });
 /** A line in 강단비's notebook (court record → 메모). */
 export const memo = (text: string): Cmd => ({ t: 'memo', text });
 /** Hides the HUD for cinematic stretches (a prologue); `hud(true)` brings it back. */

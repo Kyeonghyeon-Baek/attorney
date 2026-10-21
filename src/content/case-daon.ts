@@ -91,11 +91,11 @@ const EVIDENCE: Evidence[] = [
 
 const PROFILES: Profile[] = [
   {
-    id: 'soonja', name: '박순자', meta: '52세 · 피고인', color: '#9A7B5A', sprite: 'soonja', face: [0.52, 0.2],
+    id: 'soonja', name: '박순자', meta: '52세 · 피고인', color: '#9A7B5A', sprite: 'soonja',
     summary: '누리랩 고객센터의 20년 차 팀장. 다온이 도입되며 10월 10일에 해고됐다. 사건 당일 23시 20분, 건물 로비로 들어오는 모습이 CCTV에 찍혔다. 딸과 단둘이 산다.',
   },
   {
-    id: 'victim', name: '한도윤', meta: '41세 · 피해자', color: '#5C6B7A',
+    id: 'victim', name: '한도윤', meta: '41세 · 피해자', color: '#5C6B7A', face: [0.51, 0.42, 1.45],
     summary: '누리랩 대표. 투자 시연회를 하루 앞둔 밤, 서버실에서 숨진 채 발견됐다.',
   },
   {
@@ -103,19 +103,19 @@ const PROFILES: Profile[] = [
     summary: '누리랩의 AI 상담원. 고객 상담과 건물 보안 기록을 맡는다. 대한민국 법정에 선 최초의 AI 증인.',
   },
   {
-    id: 'seo', name: '서지훈', meta: '38세 · 누리랩 기술이사', color: '#6B5B8C', sprite: 'seo', face: [0.47, 0.17],
+    id: 'seo', name: '서지훈', meta: '38세 · 누리랩 기술이사', color: '#6B5B8C', sprite: 'seo',
     summary: '다온 개발 책임자. 다온을 "제 인생을 건 작품"이라고 부른다. 사건 당일 밤엔 집에 있었고, 야간 근무 같은 건 없다고 말했다.',
   },
   {
-    id: 'gu', name: '구만두', meta: '43세 · 형사', color: '#9C7A4E', sprite: 'gu', face: [0.5, 0.16],
+    id: 'gu', name: '구만두', meta: '43세 · 형사', color: '#9C7A4E', sprite: 'gu',
     summary: '이번 사건 담당 형사. 사람은 좋은데 입이 가볍다. 상사에게 "그만둬!" 소리를 자주 듣는다.',
   },
   {
-    id: 'eom', name: '엄정한', meta: '32세 · 검사', color: '#4A4F5C', sprite: 'eom', face: [0.51, 0.18],
+    id: 'eom', name: '엄정한', meta: '32세 · 검사', color: '#4A4F5C', sprite: 'eom',
     summary: '판관의 숫자를 신뢰하는 엘리트 검사. 즉결공판제 도입 뒤 진 재판은 단 세 번, 세 번 모두 상대가 강단비였다.',
   },
   {
-    id: 'narae', name: '신나래', meta: '19세 · 조수', color: '#B8473A', sprite: 'narae', face: [0.56, 0.17],
+    id: 'narae', name: '신나래', meta: '19세 · 조수', color: '#B8473A', sprite: 'narae',
     summary: '무당 집안 막내딸. 단비의 사무소에서 일을 돕는다. 기계는 영 못 믿는다.',
   },
 ];

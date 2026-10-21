@@ -31,7 +31,7 @@ export interface MatchTask {
 }
 
 export class MatchView {
-  open(stage: HTMLElement, t: MatchTask, onSolve?: () => void): Promise<void> {
+  open(stage: HTMLElement, t: MatchTask, onSolve?: () => void, openRecord?: () => Promise<unknown>): Promise<void> {
     const root = el('div', 'matchview', stage);
     const panel = el('div', 'matchview-panel', root);
     el('h2', 'matchview-title', panel, t.title);
@@ -125,6 +125,10 @@ export class MatchView {
       };
       go.addEventListener('click', () => (done ? finish() : check()));
       const pop = push((a) => {
+        if (a === 'record' && openRecord) {
+          void openRecord();
+          return;
+        }
         if (done) {
           if (a === 'advance') finish();
           return;

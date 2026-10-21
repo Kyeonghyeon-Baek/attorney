@@ -1,6 +1,7 @@
 import { sfx } from './audio';
 import { el, replay, scrollWithin } from './dom';
 import { fromSpace, push } from './input';
+import { FIGURES, paintFigure } from './figures';
 import { paintCompare } from './photos';
 import { paintFace, paintItem } from './portrait';
 import type { Evidence, Profile } from './types';
@@ -411,6 +412,11 @@ export class CourtRecord {
         pill.addEventListener('click', () => this.scrollToUnread());
       }
       el('p', 'sheet-summary', this.sheet, ev.summary);
+      if (ev.figure && FIGURES[ev.figure]) {
+        const fig = el('figure', 'sheet-figure', this.sheet);
+        paintFigure(fig, ev.figure);
+        if (FIGURES[ev.figure].caption) el('figcaption', '', fig, FIGURES[ev.figure].caption!);
+      }
       if (ev.source || ev.proves || ev.limits) {
         const scope = el('dl', 'sheet-scope', this.sheet);
         if (ev.source) {
