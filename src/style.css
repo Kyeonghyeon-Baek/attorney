@@ -2282,13 +2282,17 @@ button { touch-action: manipulation; }
 .touch-layout .photoview-hint:not(.picked) { display: none; }
 .touch-layout .btn { min-height: max(82px, calc(44px / var(--scale))); font-size: 25px; padding: 12px 22px; }
 .touch-layout .mobile-fullscreen { display: inline-block; margin-top: 12px; }
-.touch-layout .hud-tools .btn { min-height: max(72px, calc(40px / var(--scale))); font-size: 22px; padding: 8px 14px; opacity: 1; }
+/* Scale every dimension by 1.5 from the desktop button, preserving its proportions. */
+.touch-layout .hud-tools .btn { min-height: 0; font-size: 19.5px; padding: 7.5px 15px; border-width: 3px; opacity: 1; }
 .touch-layout .textbox { height: 224px; padding: 34px 34px 22px; }
 .touch-layout .line { font-size: 30px; line-height: 1.5; max-height: 164px; overflow-y: auto; }
 .touch-layout .plate { font-size: 25px; top: -28px; }
 .touch-layout .arrow { width: 88px; height: 112px; bottom: 68px; font-size: 30px; }
 .touch-layout:has(.cross-controls:not([hidden])) .textbox { padding-left: 100px; padding-right: 100px; }
-.touch-layout .btn-press, .touch-layout .btn-present, .touch-layout .btn-hint { bottom: 252px; }
+.touch-layout .btn-press, .touch-layout .btn-present {
+  min-height: 0; font-size: 27px; padding: 15px 27px; border-width: 3px; bottom: 252px;
+}
+.touch-layout .btn-hint { min-height: 0; font-size: 22.5px; padding: 12px 21px; border-width: 3px; bottom: 252px; }
 .touch-layout .btn-press { right: 270px; }
 .touch-layout .cross-head { max-width: 540px; }
 .touch-layout .cross-title { font-size: 30px; }
