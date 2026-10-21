@@ -395,6 +395,9 @@ export class Game {
         el('span', '', logo, ' 뒤집기');
         el('div', 'saekdong', body);
         el('p', 'logo-sub', body, '2031년 서울. 숫자에 맞서는 국선변호인의 법정.');
+        el('p', 'touch-help mobile-play-guide', body, document.fullscreenEnabled
+          ? '휴대폰은 가로 모드로 플레이해 주세요.\n설정 → 전체 화면을 선택하면 더 크게 볼 수 있어요.'
+          : '휴대폰은 가로 모드로 플레이해 주세요.');
         el('p', 'touch-help', body, '화면을 터치하면 다음 대사 · 버튼을 눌러 흔들기와 증거 제시');
         const keys = el('dl', 'keys', body);
         for (const [k, v] of [
