@@ -142,7 +142,6 @@ export class Game {
   private saveFlash: HTMLElement;
   private memoFlash: HTMLElement;
   private memoBurst = 0;
-  private issueUi!: HTMLElement;
   private toast: HTMLElement;
   private chances = 0;
   private chanceUi: HTMLElement;
@@ -178,7 +177,7 @@ export class Game {
     this.inv = new InvestigateUi(this.stage);
 
     const hud = el('div', 'hud', this.stage);
-    // The menu row tops the HUD column; the prediction, the chances and the issue line hang under it.
+    // The menu row tops the HUD column; the prediction and the chances hang under it.
     const tools = el('div', 'hud-tools', hud);
     // Hidden while a card screen is up (game over, ending): the record cannot open there.
     const recordBtn = el('button', 'btn btn-small hud-record', tools, '법원기록  R');
@@ -192,12 +191,10 @@ export class Game {
     this.paintMute();
     this.gauge = new Gauge(hud, 0, fast);
     this.chanceUi = el('div', 'chances', hud);
-    this.issueUi = el('div', 'issue', hud);
-    this.issueUi.hidden = true;
     this.chanceUi.hidden = true;
     // The evidence card on screen hangs just under the HUD column, however tall it is right now
     // (the save and memo flashes that pass under it don't count, so the card doesn't jump).
-    const fixed = [tools, this.chanceUi, this.issueUi, hud.querySelector<HTMLElement>('.gauge')];
+    const fixed = [tools, this.chanceUi, hud.querySelector<HTMLElement>('.gauge')];
     new ResizeObserver(() => {
       let bottom = 0;
       for (const e of fixed) if (e?.offsetParent) bottom = Math.max(bottom, e.offsetTop + e.offsetHeight);
@@ -376,14 +373,6 @@ export class Game {
     this.applyRecordEdits();
     this.gauge.set(cp.gauge);
     if (cp.status) this.gauge.setStatus(cp.status);
-    this.paintIssue();
-  }
-
-  /** Shows the question kept in the flags (after a resume or a checkpoint start). */
-  private paintIssue(): void {
-    const f = [...this.flags].find((x) => x.startsWith('issue|'));
-    this.issueUi.textContent = f ? `지금의 쟁점 · ${f.slice(6)}` : '';
-    this.issueUi.hidden = !f;
   }
 
   /** The logo screen. The first press also starts the audio (browsers need a click first). */
@@ -514,7 +503,6 @@ export class Game {
       const m = /^seen:([^|]+)\|(\d+)$/.exec(f);
       if (m) this.record.restoreSeen(m[1], Number(m[2]));
     }
-    this.paintIssue();
     this.wrongs = save.wrongs;
     this.startedAt = performance.now() - save.elapsed;
     this.resumeLoc = save.loc ?? null;
@@ -602,12 +590,9 @@ export class Game {
         this.stage.classList.toggle('no-hud', !cmd.on);
         return;
       case 'issue':
-        // Kept as a flag so a resumed save shows the same question.
+        // Retain legacy script/save state without rendering another HUD element.
         for (const f of [...this.flags]) if (f.startsWith('issue|')) this.flags.delete(f);
         if (cmd.text) this.flags.add(`issue|${cmd.text}`);
-        this.issueUi.textContent = cmd.text ? `지금의 쟁점 · ${cmd.text}` : '';
-        this.issueUi.hidden = !cmd.text;
-        if (cmd.text) replay(this.issueUi, 'on');
         return;
       case 'dimHud':
         this.stage.classList.toggle('hud-dim', cmd.on);
@@ -1498,8 +1483,6 @@ class CrossUi {
     const next = el('button', 'arrow arrow-next', this.controls, '▶');
     const press = el('button', 'btn btn-press', this.controls, '흔들기  Q');
     const present = el('button', 'btn btn-present', this.controls, '증거 제시  E');
-    const hint = el('button', 'btn btn-hint', this.controls, '힌트  H');
-    hint.addEventListener('click', () => emit('hint'));
     prev.setAttribute('aria-label', '이전 증언');
     next.setAttribute('aria-label', '다음 증언');
     prev.addEventListener('click', () => emit('left'));

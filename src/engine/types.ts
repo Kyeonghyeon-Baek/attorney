@@ -198,7 +198,7 @@ export interface StepOpts {
 }
 
 /** What a guide card points at in the HUD. */
-export type GuideFocus = 'gauge' | 'issue' | 'chances' | 'tools';
+export type GuideFocus = 'gauge' | 'chances' | 'tools';
 
 /**
  * One card on the courtroom's wall screen. `img` is 'profile:<id>', 'char:<CharId>', 'item:<evidenceId>',
