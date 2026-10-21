@@ -1739,8 +1739,10 @@ button { font: inherit; }
   pointer-events: none;
 }
 .memo-flash.on { animation: save-flash 2.4s ease-out; }
-.folder-body.memo-mode { grid-template-columns: 1fr; }
+/* The notebook has no list beside it: it spans every column, whatever widths the record's
+   other layouts (presenting, phones) give them. */
 .folder-body.memo-mode .grid { display: none; }
+.folder-body.memo-mode .sheet { grid-column: 1 / -1; }
 .memo-list { margin: 14px 0 0; padding-left: 26px; font-size: 18px; line-height: 1.6; }
 .memo-list li { padding: 6px 0; border-bottom: 1px dashed rgba(107, 95, 74, 0.3); word-break: keep-all; }
 .memo-list li::marker { color: var(--red); font-weight: 700; }
@@ -2382,6 +2384,8 @@ button { touch-action: manipulation; }
 .touch-layout .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .touch-layout .tile-name, .touch-layout .grid-shelf { font-size: 22px; }
 .touch-layout .sheet { padding: 16px 20px; }
+.touch-layout .sheet-label { font-size: 19.5px; }
+.touch-layout .sheet-title { font-size: 37.5px; }
 .touch-layout .sheet-summary, .touch-layout .sheet-detail .row,
 .touch-layout .row-text, .touch-layout .sheet-table,
 .touch-layout .sheet-detail .addendum, .touch-layout .sheet-scope { font-size: 25px; }

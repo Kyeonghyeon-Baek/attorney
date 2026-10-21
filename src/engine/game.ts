@@ -1054,11 +1054,11 @@ export class Game {
         : this.data.loopBack.length ? [this.data.loopBack]
         : [[{ t: 'think', text: '(…증언을 한 바퀴 다 들었어. 처음부터 다시 들어 보자.)' }]];
       if ((await this.run(lines[Math.min(n, lines.length - 1)])) === STOP) return STOP;
-      // The first time round, a quiet note says where hints are.
+      // The first time round, a quiet note says where hints are. Phones have no H key, so none there.
       const key = `looped:${tm.id}`;
       if (!this.flags.has(key)) {
         this.flags.add(key);
-        this.showToast('필요하면 H로 힌트를 볼 수 있어요.');
+        if (!touchLayout()) this.showToast('필요하면 H로 힌트를 볼 수 있어요.');
       }
       return;
     }
