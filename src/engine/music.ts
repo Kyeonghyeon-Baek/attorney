@@ -24,6 +24,22 @@ export interface Track {
   parts: Part[];
 }
 
+/**
+ * A recorded track overrides the synth one: drop `assets/music/<BgmName>.m4a` (or .mp3/.ogg)
+ * in and it plays instead. The file plays from the start once, then repeats loopStart..loopEnd
+ * (seconds; without them the whole file loops). `gain` levels it against the synth tracks.
+ */
+export interface Recording {
+  loopStart?: number;
+  loopEnd?: number;
+  gain?: number;
+}
+
+export const RECORDINGS: Partial<Record<BgmName, Recording>> = {
+  // Suno v6 cover of the synth track (orchestral, moderato). Plays the intro once, then loops the rest.
+  cross: { loopStart: 16.1665, gain: 1.1 },
+};
+
 const bars = (...b: string[]) => b.join(' ');
 const rep = (s: string, n: number) => Array(n).fill(s).join(' ');
 const hold = (chord: string, steps: number) => [chord, ...Array(steps - 1).fill('-')].join(' ');

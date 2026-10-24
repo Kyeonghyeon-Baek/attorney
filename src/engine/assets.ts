@@ -25,6 +25,16 @@ const photos = import.meta.glob('../assets/photos/*.png', {
   eager: true, query: '?url', import: 'default',
 }) as Record<string, string>;
 
+// Recorded music is fetched when a track first plays, not preloaded with the images.
+const music = import.meta.glob('../assets/music/*.{m4a,mp3,ogg}', {
+  eager: true, query: '?url', import: 'default',
+}) as Record<string, string>;
+
+export function musicFile(name: string): string | undefined {
+  const prefix = `../assets/music/${name}.`;
+  return Object.entries(music).find(([path]) => path.startsWith(prefix))?.[1];
+}
+
 /** The background plate of a still-photo set (see engine/photos.ts). */
 export function photoImage(id: string): string | undefined {
   return photos[`../assets/photos/${id}.png`];

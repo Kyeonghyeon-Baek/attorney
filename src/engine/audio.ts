@@ -1,8 +1,10 @@
-import { TRACKS, type Inst, type Part } from './music';
+import { musicFile } from './assets';
+import { RECORDINGS, TRACKS, type Inst, type Part } from './music';
 import { onSettings, settings } from './settings';
 import type { AmbienceName, BgmName, SfxName, Voice } from './types';
 
-// Everything is synthesized with WebAudio, so the game ships no sound files.
+// Everything is synthesized with WebAudio, except BGM tracks that have a recording
+// in assets/music (see RECORDINGS in music.ts).
 // Signal flow: instruments → music / sfx / ambience buses → master → limiter → speakers,
 // with a shared convolution reverb that any voice can send into.
 
@@ -44,16 +46,21 @@ export function initAudio(): void {
   applyVolumes();
   onSettings(applyVolumes);
 
-  reverb = ctx.createConvolver();
-  reverb.buffer = impulse(2.6, 2.2);
-  const wet = ctx.createGain();
-  wet.gain.value = 0.45;
-  reverb.connect(wet).connect(master);
+  shared(master);
+  setInterval(tick, 50);
+}
 
-  noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+/** The reverb and noise every voice draws on, built for the current `ctx`. */
+function shared(dest: AudioNode): void {
+  reverb = ctx!.createConvolver();
+  reverb.buffer = impulse(2.6, 2.2);
+  const wet = ctx!.createGain();
+  wet.gain.value = 0.45;
+  reverb.connect(wet).connect(dest);
+
+  noiseBuf = ctx!.createBuffer(1, ctx!.sampleRate * 2, ctx!.sampleRate);
   const data = noiseBuf.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-  setInterval(tick, 50);
 }
 
 /**
@@ -613,14 +620,20 @@ function knock(t: number): void {
 
 // ---------------------------------------------------------------- music
 
-interface Playing {
-  name: BgmName;
-  bus: GainNode;
+interface Synth {
   nextLoop: number;
   loopDur: number;
   stepDur: number;
   steps: number;
   parts: { part: Part; notes: { step: number; len: number; token: string }[]; steps: number }[];
+}
+
+interface Playing {
+  name: BgmName;
+  bus: GainNode;
+  /** Set once the synth starts; a recording leaves it unset and plays from `source`. */
+  synth?: Synth;
+  source?: AudioBufferSourceNode;
 }
 
 let playing: Playing | null = null;
@@ -639,33 +652,102 @@ function parse(seq: string) {
   return { notes, steps: tokens.length };
 }
 
+// Encoded files stay cached; decoded ones are large (about 40 MB for two stereo minutes),
+// so only the last few are kept.
+const encoded = new Map<BgmName, Promise<ArrayBuffer | null>>();
+const decoded = new Map<BgmName, AudioBuffer>();
+const DECODED_KEEP = 3;
+
+/** The decoded recording of a track, null when it has none or it fails to load. */
+async function recording(name: BgmName, url: string): Promise<AudioBuffer | null> {
+  const hit = decoded.get(name);
+  if (hit) {
+    decoded.delete(name);
+    decoded.set(name, hit);
+    return hit;
+  }
+  let bytes = encoded.get(name);
+  if (!bytes) {
+    bytes = fetch(url).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
+    encoded.set(name, bytes);
+  }
+  const data = await bytes;
+  if (!data || !ctx) return null;
+  try {
+    // decodeAudioData detaches its input, so keep the cached bytes intact.
+    const buf = await ctx.decodeAudioData(data.slice(0));
+    decoded.set(name, buf);
+    if (decoded.size > DECODED_KEEP) decoded.delete(decoded.keys().next().value!);
+    return buf;
+  } catch {
+    return null;
+  }
+}
+
 export function playBgm(name: BgmName | null): void {
   if (!ctx) return;
   if (playing && playing.name === name) return;
   if (playing) {
-    const old = playing.bus;
-    old.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
-    setTimeout(() => old.disconnect(), 1500);
+    const old = playing;
+    old.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+    old.source?.stop(ctx.currentTime + 1.5);
+    setTimeout(() => old.bus.disconnect(), 1500);
     playing = null;
   }
   if (!name) return;
-  const track = TRACKS[name];
+  const b = ctx.createGain();
+  b.gain.value = 0;
+  b.connect(musicBus);
+  const p: Playing = { name, bus: b };
+  playing = p;
+  const url = musicFile(name);
+  if (!url) {
+    startSynth(p);
+    return;
+  }
+  void recording(name, url).then((buf) => {
+    if (playing !== p || !ctx) return;
+    if (!buf) {
+      startSynth(p);
+      return;
+    }
+    const rec = RECORDINGS[name] ?? {};
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    src.loopStart = rec.loopStart ?? 0;
+    src.loopEnd = rec.loopEnd ?? buf.duration;
+    const trim = ctx.createGain();
+    trim.gain.value = rec.gain ?? 1;
+    src.connect(trim).connect(b);
+    const t = ctx.currentTime + 0.05;
+    fadeIn(b, t);
+    src.start(t);
+    p.source = src;
+  });
+}
+
+function fadeIn(b: GainNode, t: number): void {
+  b.gain.setValueAtTime(0, t);
+  b.gain.linearRampToValueAtTime(1, t + 0.4);
+}
+
+function startSynth(p: Playing): void {
+  const track = TRACKS[p.name];
   const stepDur = 60 / track.bpm / track.div;
   const parts = track.parts.map((part) => ({ part, ...parse(part.seq) }));
-  const steps = Math.max(...parts.map((p) => p.steps));
-  const b = ctx.createGain();
-  b.gain.setValueAtTime(0, ctx.currentTime);
-  b.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.4);
-  b.connect(musicBus);
-  playing = { name, bus: b, stepDur, steps, loopDur: steps * stepDur, nextLoop: ctx.currentTime + 0.12, parts };
+  const steps = Math.max(...parts.map((x) => x.steps));
+  fadeIn(p.bus, ctx!.currentTime);
+  p.synth = { stepDur, steps, loopDur: steps * stepDur, nextLoop: ctx!.currentTime + 0.12, parts };
   tick();
 }
 
 function tick(): void {
   if (!ctx) return;
   scheduleAmbience();
-  const p = playing;
+  const p = playing?.synth;
   if (!p) return;
+  const bus = playing!.bus;
   while (p.nextLoop < ctx.currentTime + 0.4) {
     const t0 = p.nextLoop;
     for (const { part, notes, steps } of p.parts) {
@@ -674,12 +756,50 @@ function tick(): void {
         for (const n of notes) {
           const step = offset + n.step;
           if (step >= p.steps) continue;
-          playNote(part, n.token, t0 + step * p.stepDur, n.len * p.stepDur, p.bus);
+          playNote(part, n.token, t0 + step * p.stepDur, n.len * p.stepDur, bus);
         }
       }
     }
     p.nextLoop += p.loopDur;
   }
+}
+
+/**
+ * Renders a synth track offline, `loops` times through plus a reverb tail, at the level it
+ * plays in game. A tool for making recordings of the tracks; the game never calls it.
+ */
+export function renderBgm(name: BgmName, loops = 2, rate = 48000): Promise<AudioBuffer> {
+  const track = TRACKS[name];
+  const stepDur = 60 / track.bpm / track.div;
+  const parts = track.parts.map((part) => ({ part, ...parse(part.seq) }));
+  const steps = Math.max(...parts.map((x) => x.steps));
+  const off = new OfflineAudioContext(2, Math.ceil((steps * stepDur * loops + 3) * rate), rate);
+  // The instruments build on the module's context, so lend them this one while scheduling.
+  const live = { ctx, reverb, noiseBuf };
+  ctx = off as unknown as AudioContext;
+  try {
+    const out = off.createGain();
+    out.gain.value = MASTER_VOL;
+    out.connect(off.destination);
+    shared(out);
+    const b = off.createGain();
+    b.gain.value = MUSIC_VOL;
+    b.connect(out);
+    for (let loop = 0; loop < loops; loop++) {
+      const t0 = loop * steps * stepDur;
+      for (const { part, notes, steps: len } of parts) {
+        for (let offset = 0; offset < steps; offset += len) {
+          for (const n of notes) {
+            const step = offset + n.step;
+            if (step < steps) playNote(part, n.token, t0 + step * stepDur, n.len * stepDur, b);
+          }
+        }
+      }
+    }
+  } finally {
+    ({ ctx, reverb, noiseBuf } = live);
+  }
+  return off.startRendering();
 }
 
 // ---------------------------------------------------------------- ambience
