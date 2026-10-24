@@ -35,13 +35,7 @@ export interface Recording {
   gain?: number;
 }
 
-export const RECORDINGS: Partial<Record<BgmName, Recording>> = {
-  // Suno v6 cover of the synth track (orchestral, moderato), one steady arrangement throughout.
-  // Plays the opening once, then loops the rest.
-  cross: { loopStart: 17.506083, gain: 1.14 },
-  // The same orchestra, allegro: the late-trial variation of cross.
-  crossTense: { loopStart: 35.739167, gain: 1.5 },
-};
+export const RECORDINGS: Partial<Record<BgmName, Recording>> = {};
 
 const bars = (...b: string[]) => b.join(' ');
 const rep = (s: string, n: number) => Array(n).fill(s).join(' ');

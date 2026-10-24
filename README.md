@@ -302,7 +302,7 @@ photoTask('share112', { region: { frame, view, prompt, spots, answer, wrong, don
 
 소리는 WebAudio로 합성해요. 배경음악만 녹음 파일로 바꿀 수 있어요.
 
-- **녹음한 배경음악** (`src/assets/music/<곡 이름>.m4a`): 파일이 있으면 합성 곡 대신 그 파일을 틀고, 없으면 합성 곡으로 돌아가요. 처음부터 한 번 틀고 나서 `music.ts`의 `RECORDINGS`에 적은 `loopStart`~`loopEnd` 구간을 반복해요(`gain`은 음량 맞춤). 지금은 `cross`(반대신문, Moderato)와 `crossTense`(후반 반대신문, Allegro)가 Suno로 만든 오케스트라 곡이에요. 곡을 처음 틀 때 받아요.
+- **녹음한 배경음악** (`src/assets/music/<곡 이름>.m4a`): 파일이 있으면 합성 곡 대신 그 파일을 틀고, 없으면 합성 곡으로 돌아가요. 처음부터 한 번 틀고 나서 `music.ts`의 `RECORDINGS`에 적은 `loopStart`~`loopEnd` 구간을 반복해요(`gain`은 음량 맞춤). 곡을 처음 틀 때 받아요. 지금은 녹음 파일이 없어서 모든 곡이 합성 곡이에요(Suno 녹음을 시도했다가 합성 곡이 더 어울려서 되돌렸어요).
 
 - **배경음악** (`src/engine/music.ts`): 타이틀 테마, 법정·증언·반대신문·추궁·진범 추궁·긴장·다온 테마·조사(로비/고객센터/서버실)·슬픔·무죄·에필로그, 1화의 새벽 편의점(`night`)·오정택 테마(`oh`)·정(情) 테마(`jeong`)·엄정한 테마(`eom`)·반전(`objection`)·대기실(`waitroom`)·후반 반대신문과 증언(`crossTense`·`testimonyTense`, 같은 동기의 긴장 변주)·진상 직전(`climax`)·추궁(`pursuitTruth`, 타이틀 동기를 펼친 마지막 한 방). 증언에 `hearing`·`crossBgm`을 주면 그 반대신문만 곡이 바뀌어요. 음표를 글자로 적는 악보 형식이라 대본처럼 고칠 수 있어요.
 - **환경음**: 법정, 로비, 고객센터(시계 초침), 서버실(팬 소리), 대기실, 편의점(냉장고 소리), 밤 골목, 녹음기 잡음.
