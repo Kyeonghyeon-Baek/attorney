@@ -32,7 +32,9 @@ export interface MatchTask {
 }
 
 export class MatchView {
-  open(stage: HTMLElement, t: MatchTask, onSolve?: () => void, openRecord?: () => Promise<unknown>): Promise<void> {
+  open(
+    stage: HTMLElement, t: MatchTask, onSolve?: () => void, openRecord?: () => Promise<unknown>, onHint?: () => void,
+  ): Promise<void> {
     const root = el('div', 'matchview', stage);
     const panel = el('div', 'matchview-panel', root);
     el('h2', 'matchview-title', panel, t.title);
@@ -44,6 +46,8 @@ export class MatchView {
     const foot = el('footer', 'matchview-foot', panel);
     const hint = el('span', 'matchview-hint', foot, '클릭 또는 Space로 카드 고르기 · ↑ ↓ 줄 · ← → 카드 · 두 줄에서 한 장씩 고르면 Enter');
     const label = `${t.confirm ?? '같은 시각에 놓기'}  Enter`;
+    const hintBtn = onHint ? el('button', 'btn', foot, '힌트  H') : null;
+    hintBtn?.addEventListener('click', onHint!);
     const go = el('button', 'btn btn-primary', foot, label);
 
     const chosen: [number, number] = [-1, -1];
@@ -85,6 +89,7 @@ export class MatchView {
       picks.textContent = done ? '' : `고른 카드 — 위: ${name(0)} · 아래: ${name(1)}${go.disabled || touchLayout() ? '' : '  → Enter로 확인'}`;
       setLabel(go, done ? '계속  Enter' : label);
       hint.hidden = done;
+      if (hintBtn) hintBtn.hidden = done;
     };
 
     // Places (or lifts) the focused card as this row's pick.

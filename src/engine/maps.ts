@@ -162,6 +162,7 @@ export class MapView {
     mode: 'view' | 'pick',
     prompt = '',
     openRecord?: () => Promise<unknown>,
+    onHint?: () => void,
   ): Promise<string | null> {
     const map = MAPS[mapId];
     const root = el('div', `mapview mapview-${mode}`, stage);
@@ -196,6 +197,7 @@ export class MapView {
     const legend = el('div', 'mapview-legend', foot);
     for (const line of map.legend) el('span', '', legend, line);
     const btns = el('div', 'mapview-btns', foot);
+    if (onHint) el('button', 'btn', btns, '힌트  H').addEventListener('click', onHint);
     const recBtn = openRecord ? el('button', 'btn', btns, '법원기록  R') : null;
     const close = mode === 'view' ? el('button', 'btn btn-primary', btns, '닫기  Esc') : null;
     let readout: HTMLElement | null = null;

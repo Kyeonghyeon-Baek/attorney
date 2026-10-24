@@ -94,6 +94,14 @@ export interface AskOption {
   correct?: boolean;
 }
 
+/** A plain summary of the stretch of trial in progress (1화), opened from the court record on request. */
+export interface Recap {
+  question: string;
+  /** What the player has already settled, at most three. */
+  facts: string[];
+  pending: string;
+}
+
 export type Cmd =
   | { t: 'say'; who: CharId; text: string; emo?: string; name?: string }
   /** A line played back from a recording, stamped with the time it was recorded. No `who`: a sound, not a voice. */
@@ -121,6 +129,8 @@ export type Cmd =
   | { t: 'showRecord'; id: string }
   /** The question the trial is on right now, one line under the prediction (null clears it). */
   | { t: 'issue'; text: string | null }
+  /** The court record's 「이번 공방」 page: the question now, up to three settled facts, what is still open (null hides it). */
+  | { t: 'recap'; recap: Recap | null }
   /** Steps the HUD back during a climax so the evidence and faces hold the eye. */
   | { t: 'dimHud'; on: boolean }
   /** Two records side by side: the player pairs a card from each row (see engine/match.ts). */
@@ -155,6 +165,8 @@ export type Cmd =
   | { t: 'detect'; boxes: DetectBox[] }
   /** `art` picks the device picture (an item id); the default is the 1화 recorder. */
   | { t: 'tape'; title: string | null; art?: string }
+  /** Where the recording is being made right now, as a badge on the player (null hides it). */
+  | { t: 'tapePlace'; text: string | null }
   | { t: 'intro'; who: CharId; title: string }
   | { t: 'episode'; no: string; title: string }
   /** Fades the whole picture to black (true) or back (false). The text box stays usable. */

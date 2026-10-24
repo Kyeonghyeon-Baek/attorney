@@ -22,6 +22,7 @@ export class Cinema {
   private tape: HTMLElement;
   private tapeImg: HTMLImageElement | null = null;
   private tapeTitle: HTMLElement;
+  private tapeWhere: HTMLElement;
   private tapeClock: HTMLElement;
   private wave: HTMLElement;
   private bars: HTMLElement[] = [];
@@ -73,6 +74,8 @@ export class Cinema {
     const side = el('div', 'tape-side', deck);
     el('div', 'tape-kind', side, '▶ 재생 중');
     this.tapeTitle = el('div', 'tape-title', side);
+    this.tapeWhere = el('div', 'tape-where', side);
+    this.tapeWhere.hidden = true;
     this.tapeClock = el('div', 'tape-clock', side);
     this.wave = el('div', 'tape-wave', side);
     for (let i = 0; i < BARS; i++) this.bars.push(el('i', '', this.wave));
@@ -318,6 +321,7 @@ export class Cinema {
   setTape(title: string | null, art = 'recorder'): void {
     if (!title) {
       this.tape.hidden = true;
+      this.tapeWhere.hidden = true;
       this.talking(false);
       this.sync();
       return;
@@ -335,6 +339,13 @@ export class Cinema {
 
   get tapeOn(): boolean {
     return !this.tape.hidden;
+  }
+
+  /** Where the device was while recording from here on (1화: the storeroom, then the alley). */
+  tapePlace(text: string | null): void {
+    this.tapeWhere.hidden = !text;
+    this.tapeWhere.textContent = text ?? '';
+    if (text) replay(this.tapeWhere, 'in');
   }
 
   tapeAt(at: string): void {

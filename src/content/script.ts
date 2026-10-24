@@ -1,7 +1,7 @@
 import type { FigureMark } from '../engine/figures';
 import type {
   AmbienceName, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, GuideLine, Hotspot, PanelCard,
-  PlanRoute, Script, SfxName, ShoutKind, StepOpts,
+  PlanRoute, Recap, Script, SfxName, ShoutKind, StepOpts,
 } from '../engine/types';
 import type { MatchTask } from '../engine/match';
 import type { PhotoTask } from '../engine/photos';
@@ -100,6 +100,8 @@ export const box = (label: string, x: number, y: number, w: number, h: number, a
   ({ label, x, y, w, h, alert });
 /** Puts a recording on: a player fills the screen until `tape(null)`. `art` is the device's item picture. */
 export const tape = (title: string | null, art?: string): Cmd => ({ t: 'tape', title, art });
+/** A badge on the player saying where the recording was being made from this point on. */
+export const tapePlace = (text: string | null): Cmd => ({ t: 'tapePlace', text });
 /** One line from the recording, with the time it was recorded. */
 export const rec = (who: CharId, at: string, text: string, name?: string): Cmd => ({ t: 'rec', who, at, text, name });
 /** A sound on the recording, described in brackets. */
@@ -147,6 +149,10 @@ export const memo = (text: string): Cmd => ({ t: 'memo', text });
 export const hud = (on: boolean): Cmd => ({ t: 'hud', on });
 /** One line under the prediction: what the trial is trying to settle now. `issue(null)` clears it. */
 export const issue = (text: string | null): Cmd => ({ t: 'issue', text });
+/** Sets the court record's 「이번 공방」 page; `recap(null)` hides it. Facts are what the player already settled. */
+export const recap = (r: Recap | null): Cmd => ({ t: 'recap', recap: r });
+/** The same page as a checkpoint flag, so a scene jump starts with what normal play had. */
+export const recapFlag = (r: Recap): string => `recap|${JSON.stringify(r)}`;
 /** Fades the HUD back (true) or brings it forward again (false). */
 export const dimHud = (on: boolean): Cmd => ({ t: 'dimHud', on });
 /** Night lighting over backgrounds and people; `tint(null)` restores daylight. */

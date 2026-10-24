@@ -30,7 +30,7 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 **Type unions are the registries.** `CharId`, `SfxName`, `BgmName` and `AmbienceName` in `types.ts` list everything that exists. `CHARACTERS` (`content/characters.ts`) and `TRACKS` (`engine/music.ts`) are `Record`s over those unions, so after adding a name the compiler points at what is missing. All sound is synthesized with WebAudio in `audio.ts` and `music.ts`; there are no sound files. Music is written in a text step-sequencer format, described at the top of `music.ts`.
 
 **An episode is one `CaseData` object** (defined in `game.ts`). It holds the evidence, profiles, testimonies, investigation locations, scenes, `sceneLabels` (names shown on the continue button), gauge start and wrong-answer penalty, and fallback reactions. Its scenes and testimonies are spread together from several files (`...OPENING_SCENES, ...TRIAL_SCENES`), so **a duplicate key silently overwrites another**. Keep ids unique within an episode.
-- 1화 uses the newer layout in `content/ep1/`: `records.ts`, `opening.ts`, `trial.ts`, `tape.ts`, `finale.ts` and `case.ts`.
+- 1화 uses the newer layout in `content/ep1/`: `records.ts`, `opening.ts`, `trial.ts`, `tape.ts`, `finale.ts`, `recaps.ts` (the 「이번 공방」 pages) and `case.ts`.
 - 4화 uses the older flat files: `case-daon.ts`, `investigation.ts`, `chapter-haeun.ts` and `chapter-day3.ts`.
 - Unfinished episodes are `{ locked: true, … }` entries in `episodes.ts`.
 
@@ -41,6 +41,7 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 - Court-record edits: `revise()` and `annotate()` are stored as flags (`rev:<id>|…`, `ann:<id>|…`) and re-applied on resume. Use `annotate` for a finding made in court, so the original record text never changes.
 - `presented`, the last evidence presented, which `ifPresented()` checks when several answers are accepted.
 - The verdict gauge. In 4화 it works as the player's health. In 1화 (`chances` set on the case) it is a narrative value set only by `predict(value, reason, status)`, which overwrites rather than adds, and wrong answers spend separate review chances (`Game.chances`) instead.
+- The 1화 「이번 공방」 page in the court record (`recap|<json>`, set by `recap()`; checkpoints use `recapFlag()`).
 - Hint stages read (`hint:<key>|n`), evidence seen state (`seen:<id>|n`) and the photo-mark switch (`photomark:<set>`) are flags too.
 
 **Cross-examination** runs in `Game.runCross`.
@@ -58,7 +59,7 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 **Saves** use one localStorage slot per case, `pan-dwijibgi:save:<caseId>`.
 - Checkpoints are written at each scene start, at each investigation menu and at each cross-examination statement.
 - `end` clears the save and marks the case as solved.
-- When a rewrite makes old saves meaningless, change `CaseData.id`. 1화 also stores `CaseData.revision` (`EP1-R4`) in the save and rejects a mismatch; `legacyIds` lists the old ids so an unsolved player gets a one-time "내용이 개정되었어요" card.
+- When a rewrite makes old saves meaningless, change `CaseData.id`. 1화 also stores `CaseData.revision` (`EP1-R5`) in the save and rejects a mismatch; `legacyIds` lists the old ids so an unsolved player gets a one-time "내용이 개정되었어요" card.
 - `CaseData.checkpoints` (1화 CP1–CP8) say what evidence, flags and prediction a scene starts with. They drive "장면 선택" on a solved case and `?scene=` jumps; a jump to a scene without one uses the nearest earlier checkpoint plus all evidence.
 
 **Art is matched by file path only** (`engine/assets.ts`, eager `import.meta.glob`):

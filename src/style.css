@@ -478,7 +478,9 @@ button { font: inherit; }
 .cross-actions { position: absolute; right: 28px; bottom: 196px; display: flex; gap: 23px; pointer-events: none; }
 .cross-actions > * { pointer-events: auto; }
 .btn-press,
-.btn-present { font-size: 18px; padding: 10px 18px; }
+.btn-present,
+.btn-hint { font-size: 18px; padding: 10px 18px; }
+.btn-hint[hidden] { display: none; }
 .btn-present { background: var(--red); border-color: var(--paper); }
 
 /* ---------------------------------------------------------------- 질문 재구성 */
@@ -580,6 +582,16 @@ button { font: inherit; }
 }
 .case-no { font-family: var(--display); font-size: 28px; }
 .case-name { font-size: 16px; color: rgba(244, 240, 230, 0.75); white-space: pre; }
+.record-recap { margin-left: auto; align-self: center; }
+.record-recap.on { background: var(--paper); color: var(--ink); }
+/* 「이번 공방」: the question, what is settled, what is open. Plain gothic, like the notebook. */
+.recap { font-family: var(--doc); }
+.recap-kicker { margin-top: 18px; font-size: 15px; font-weight: 700; color: var(--red); letter-spacing: 0.04em; }
+.sheet-title.recap-question { margin-top: 4px; font-family: var(--doc); font-weight: 800; line-height: 1.4; word-break: keep-all; }
+.recap-facts { margin: 6px 0 0; padding-left: 24px; font-size: 18px; line-height: 1.6; }
+.recap-facts li { padding: 4px 0; word-break: keep-all; }
+.recap-pending { margin: 6px 0 0; font-size: 18px; line-height: 1.6; word-break: keep-all; }
+.recap-note { margin-top: 22px; font-size: 14px; color: rgba(30, 36, 51, 0.6); }
 .record-prompt {
   margin-top: 12px;
   padding: 10px 14px;
@@ -1273,6 +1285,19 @@ button { font: inherit; }
 .tape-side { width: 580px; }
 .tape-kind { font-size: 16px; color: var(--red-soft); animation: rec-blink 1.4s steps(2) infinite; }
 .tape-title { margin: 8px 0 4px; font-family: var(--display); font-size: 32px; }
+/* Where the device was while recording: a badge that changes when the bag leaves the storeroom. */
+.tape-where {
+  display: inline-block;
+  margin: 2px 0 8px;
+  padding: 4px 12px;
+  border: 2px solid var(--ochre);
+  border-radius: 4px;
+  font-family: var(--doc);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ochre);
+}
+.tape-where.in { animation: cg-in 0.5s ease-out both; }
 .tape-clock {
   font-size: 58px;
   letter-spacing: 0.04em;
@@ -2303,7 +2328,8 @@ button { touch-action: manipulation; }
 .touch-layout .card-body .btn-primary { font-size: 25px; padding: 15px 37.5px; }
 .touch-layout .card-actions .btn-warn { font-size: 20px; }
 .touch-layout .btn-press,
-.touch-layout .btn-present { font-size: 27px; padding: 15px 27px; }
+.touch-layout .btn-present,
+.touch-layout .btn-hint { font-size: 27px; padding: 15px 27px; }
 
 /* HUD: tools, prediction, chances. */
 .touch-layout .hud { gap: 12px; }
@@ -2434,6 +2460,9 @@ button { touch-action: manipulation; }
 .touch-layout .hintview-panel, .touch-layout .backlog-panel { width: 1160px; max-height: 680px; overflow-y: auto; }
 .touch-layout .backlog-panel { height: 660px; }
 .touch-layout .hintview-list li, .touch-layout .memo-list { font-size: 27px; }
+.touch-layout .recap-facts, .touch-layout .recap-pending { font-size: 27px; }
+.touch-layout .recap-kicker { font-size: 21px; }
+.touch-layout .recap-note { font-size: 20px; }
 .touch-layout .hintview-foot { flex-wrap: wrap; }
 .touch-layout .hintview-note { flex-basis: 100%; font-size: 22px; }
 .touch-layout .hintview-step { font-size: 24px; }

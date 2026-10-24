@@ -19,7 +19,7 @@ import { clearSave, hasSave, isCleared, loadSave, markCleared, writeSave, type C
 import { Stage } from './stage';
 import { TextBox, type LineOptions } from './textbox';
 import { bindViewport, touchLayout } from './viewport';
-import type { BgmName, Cmd, Evidence, GuideLine, Location, Profile, Script, Statement, StepOpts, Testimony } from './types';
+import type { BgmName, Cmd, Evidence, GuideLine, Location, Profile, Recap, Script, Statement, StepOpts, Testimony } from './types';
 import { CHARACTERS } from '../content/characters';
 
 const STOP = Symbol('stop');
@@ -444,6 +444,16 @@ export class Game {
       this.flags.add(`seen:${id}|${n}`);
     };
     this.record.memos = () => [...this.flags].filter((f) => f.startsWith('memo:')).map((f) => f.slice(5));
+    this.record.recap = () => {
+      const f = [...this.flags].find((x) => x.startsWith('recap|'));
+      if (!f) return null;
+      try {
+        const r = JSON.parse(f.slice('recap|'.length)) as Recap;
+        return r && typeof r.question === 'string' && Array.isArray(r.facts) ? r : null;
+      } catch {
+        return null;
+      }
+    };
     this.gauge.set(data.gaugeStart);
     this.gauge.setStatus(data.gaugeStatus ?? null);
     this.chances = data.chances ?? 0;
@@ -594,6 +604,11 @@ export class Game {
         for (const f of [...this.flags]) if (f.startsWith('issue|')) this.flags.delete(f);
         if (cmd.text) this.flags.add(`issue|${cmd.text}`);
         return;
+      case 'recap':
+        // One page at a time, kept as a flag so saves and checkpoints carry it.
+        for (const f of [...this.flags]) if (f.startsWith('recap|')) this.flags.delete(f);
+        if (cmd.recap) this.flags.add(`recap|${JSON.stringify(cmd.recap)}`);
+        return;
       case 'dimHud':
         this.stage.classList.toggle('hud-dim', cmd.on);
         return;
@@ -641,6 +656,9 @@ export class Game {
         this.box.hide();
         this.cinema.setTape(cmd.title, cmd.art);
         if (cmd.title) await sleep(this.fast ? 0 : 900);
+        return;
+      case 'tapePlace':
+        this.cinema.tapePlace(cmd.text);
         return;
       case 'intro': {
         const ch = CHARACTERS[cmd.who];
@@ -719,7 +737,7 @@ export class Game {
         try {
           await new MatchView().open(this.stage, cmd.task, () => {
             if (cmd.task.cutMusic) this.music(null);
-          }, () => this.record.open('view'));
+          }, () => this.record.open('view'), this.hintButton());
         } finally {
           this.hintCtx = null;
         }
@@ -728,7 +746,7 @@ export class Game {
         this.box.hide();
         this.stepHints(cmd.opts, cmd.task.region.prompt, '사진 비교');
         try {
-          await new PhotoView().task(this.stage, cmd.set, cmd.task, () => this.record.open('view'));
+          await new PhotoView().task(this.stage, cmd.set, cmd.task, () => this.record.open('view'), this.hintButton());
         } finally {
           this.hintCtx = null;
         }
@@ -945,7 +963,7 @@ export class Game {
           cross: { id: tm.id, index: i, gaugeStart: gaugeAtStart, revealedStart: [...revealedAtStart] },
         });
         this.hintCtx = manual ? { key: `cross:${tm.id}`, title: `반대신문 · ${tm.title}`, lines: tm.hintText! } : null;
-        this.cross.show('반대신문', tm.title, i, list.length, true, list.map((s) => this.pressed.has(s.id)));
+        this.cross.show('반대신문', tm.title, i, list.length, true, list.map((s) => this.pressed.has(s.id)), manual);
         await this.sayStatement(st, instant);
         instant = false;
         const a = await waitFor(['advance', 'right', 'left', 'press', 'present', 'record', 'hint', 'restart']);
@@ -1113,6 +1131,11 @@ export class Game {
     });
   }
 
+  /** What an in-screen 힌트 button should do for the question open now (none without hints). */
+  private hintButton(): (() => void) | undefined {
+    return this.hintCtx && this.data.hintMode === 'manual' ? () => void this.openHintWindow() : undefined;
+  }
+
   private hintStage(key: string): number {
     for (const f of this.flags) {
       if (f.startsWith(`hint:${key}|`)) return Number(f.slice(`hint:${key}|`.length)) || 0;
@@ -1143,7 +1166,7 @@ export class Game {
     try {
       for (;;) {
         this.box.hide();
-        const id = await new MapView().open(this.stage, cmd.map, 'pick', cmd.prompt, () => this.record.open('view'));
+        const id = await new MapView().open(this.stage, cmd.map, 'pick', cmd.prompt, () => this.record.open('view'), this.hintButton());
         if (id === cmd.answer) {
           sfx('realize');
           this.hintCtx = null;
@@ -1471,6 +1494,7 @@ class CrossUi {
   private count: HTMLElement;
   private mark: HTMLElement;
   private controls: HTMLElement;
+  private hintBtn: HTMLButtonElement;
 
   constructor(stage: HTMLElement) {
     this.head = el('div', 'cross-head', stage);
@@ -1485,6 +1509,9 @@ class CrossUi {
     const next = el('button', 'arrow arrow-next', this.controls, '▶');
     // One row, so the pair stays together whatever size the buttons are drawn at.
     const actions = el('div', 'cross-actions', this.controls);
+    // Only where the case gives hints on request (1화); 4화 keeps its scripted hints on H.
+    this.hintBtn = el('button', 'btn btn-hint', actions, '힌트  H');
+    this.hintBtn.addEventListener('click', () => emit('hint'));
     const press = el('button', 'btn btn-press', actions, '흔들기  Q');
     const present = el('button', 'btn btn-present', actions, '증거 제시  E');
     prev.setAttribute('aria-label', '이전 증언');
@@ -1496,7 +1523,7 @@ class CrossUi {
     this.hide();
   }
 
-  show(kind: string, title: string, i: number, n: number, interactive: boolean, pressed: boolean[] = []): void {
+  show(kind: string, title: string, i: number, n: number, interactive: boolean, pressed: boolean[] = [], hint = false): void {
     this.head.hidden = false;
     this.head.dataset.kind = kind;
     this.kind.textContent = kind;
@@ -1509,6 +1536,7 @@ class CrossUi {
     this.count.textContent = `${i + 1} / ${n}`;
     this.mark.hidden = !pressed[i];
     this.controls.hidden = !interactive;
+    this.hintBtn.hidden = !hint;
   }
 
   hide(): void {

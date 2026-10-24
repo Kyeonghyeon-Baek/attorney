@@ -2,8 +2,9 @@ import type { Script, Testimony } from '../../engine/types';
 import {
   addEvidence, addProfile, ambience, bgm, bigshake, board, boardOff, cg, chapter, choose, cross, evidence, examine, fadeIn,
   fadeOut, field, figure, figureOff, flag, flash, goto, guide, introduce, issue, mark, memo, note, option, place, predict, present,
-  rec, recNote, row, say, sfx, shake, show, spot, tape, think, wait, when,
+  rec, recap, recNote, row, say, sfx, shake, show, spot, tape, tapePlace, think, wait, when,
 } from '../script';
+import { RECAP_ASSAULT, RECAP_TAPE } from './recaps';
 
 // 제2 공방 「태오 씨가 들고 나간 봉지에는, 무엇이 들어 있었나?」
 // 조말순과 봉지 → 봉지 바닥을 직접 살펴 녹음기 발견 → 녹음기 → 「녹음 속 사람」 → 시계 대조와 첫 폭행 인정 →
@@ -69,6 +70,15 @@ const IDENTITY: Testimony = {
     {
       id: 'k4', who: 'oh',
       text: '저는 직원이 나온 뒤에 들어가 신고했습니다.',
+      accept: ['oh'],
+      nearMiss: {
+        recorder: [
+          say('dan', '녹음기엔 태오 씨가 들어오기 전부터 남자 목소리가 있어요!', 'point'),
+          say('oh', '그게 저라는 근거는요? 목소리 비슷한 사람은 많습니다.', 'sweat'),
+          think('(직원이 오기 전에도 누군가 있었다는 건 맞아. 그 사람이 증인인지 더 확인해야 해.)'),
+          memo('[남은 질문] 녹음 속 남자가 오정택인지 잇는 근거. 녹음에는 목소리 말고도 기계음이 있다.'),
+        ],
+      },
       press: [
         say('dan', '그 전에는 창고에 없었다는 거죠?'),
         say('oh', '없었습니다. 경찰 진술에도 그대로 있습니다.', 'smug'),
@@ -98,7 +108,7 @@ const IDENTITY: Testimony = {
   hintText: [
     '사람 목소리 말고 다른 소리도 있었지.',
     '녹음의 기계음이 증인의 어떤 물건에서 났을지 생각하자.',
-    '2·3번 증언에 녹음기, 또는 시계가 적힌 오정택 프로필을 제시해 기록 제출을 요구하자.',
+    '2·3번 증언에 녹음기를, 또는 2~4번 증언에 시계가 적힌 오정택 프로필을 제시해 기록 제출을 요구하자.',
   ],
   contradiction: [
     say('dan', '녹음에는 사람 목소리만 있는 게 아니에요. 2시 41분에 {r}시계 경고{/}가 울립니다.', 'point'),
@@ -282,6 +292,7 @@ export const TAPE_SCENES: Record<string, Script> = {
     bgm(null),
     ambience('tape'),
     tape('방대식의 녹음기 · 0315_0236'),
+    tapePlace('녹음 장소 · 창고 뒷문 옆 (봉지 속)'),
     rec('bang', '02:36:04', '…보여? 녹음기야. 반년 치, 파일도 날짜별로 다 남겨 뒀어.'),
     rec('oh', '02:36:41', '사장님. 새벽 두 시 반에 사람을 불러내서 하시는 말씀이, 고작 이겁니까.', '???'),
     recNote('02:37~02:40', '(발주 강제, 폐점 협박, 위약금…. 녹음기를 두고 말다툼이 이어진다.)'),
@@ -305,6 +316,7 @@ export const TAPE_SCENES: Record<string, Script> = {
     rec('taeo', '02:50:40', '할머니 기다리시겠다. 얼른 갖다 드려야지.', '???'),
     recNote('02:50:44', '(바로 옆에서 부스럭. 봉지에 무언가 쏟아 담는 소리.)'),
     recNote('02:52:10', '(철문이 열리고, 바깥 바람 소리.)'),
+    tapePlace('녹음 장소 · 골목 (태오 씨가 든 봉지 속)'),
     rec('malsun', '02:53:10', '아이고, 총각 왔어? 추운데.', '???'),
     rec('taeo', '02:53:14', '할머니, 오늘은 참치마요 두 개예요. 전주비빔도 하나 넣었어요.', '???'),
     tape(null),
@@ -325,11 +337,11 @@ export const TAPE_SCENES: Record<string, Script> = {
         bigshake,
         sfx('murmur'),
         say('eom', '…이 녹음대로라면, 2시 41분 충돌 때 피고인은 매장에 있었습니다. 그 점은 인정합니다.', 'normal'),
-        predict(48.0, '첫 충돌 당시 피고인 부재 · 치명상 시점 미확인', '치명상 시점 미확인'),
+        predict(48.0, '첫 충돌 당시 피고인 부재', '첫 충돌 당시 피고인 부재'),
         issue('태오 씨가 들어오기 9분 전, 창고에서 사장님과 충돌한 남자는 누구인가?'),
         memo('[확인] 02:41 충돌 때 태오는 매장에 있었다(녹음기 순서 · CAM1).'),
+        recap(RECAP_TAPE),
         say('taeo', '제가 들어가기 전부터… 사장님하고 누가 실랑이를 하고 있었던 거네요.', 'shock'),
-        say('dan', '네. 그 충돌을 태오 씨가 일으킨 건 아니에요. 다만 「쿵」 소리만으로 어떤 상처가 생겼는지까지 정할 수는 없어요.', 'normal'),
         say('judge', '그렇다면 다음은 그 자리에 있던 사람을 확인해야겠군요.', 'stern'),
       ], true),
       option('02:55 깨지는 소리를 태오 씨가 들어온 시각과 비교한다', [
@@ -390,8 +402,10 @@ export const TAPE_SCENES: Record<string, Script> = {
     wait(800),
     say('oh', '…….'),
     say('oh', '…밀친 건 접니다. 녹음기를 빼앗으려다 그랬습니다.', 'normal'),
-    say('narae', '……!!', 'angry'),
     flag('ep1:firstAssault'),
+    wait(900),
+    say('taeo', '……그럼, 저는….', 'shock'),
+    say('narae', '(속닥) 언니. 이제 오빠, 나갈 수 있는 거지?', 'sad'),
     choose('어디까지 입증했나', '오정택이 2시 41분에 밀친 것을 인정했다. 지금 말할 수 있는 것은?', [
       option('태오 씨는 첫 폭행 때 없었다. 그러니 머리 타격 혐의도 벗었다', [
         say('dan', '피고인은 첫 폭행 때 없었습니다. 머리를 때렸다는 혐의도 벗었습니다!', 'point'),
@@ -425,7 +439,7 @@ export const TAPE_SCENES: Record<string, Script> = {
     ]),
     say('dan', '손목과 옆구리는 2시 41분에 다친 걸로 보여요. 하지만 머리는, 아직 언제 다쳤는지 몰라요.', 'normal'),
     figureOff,
-    predict(48.0, '첫 폭행은 오정택이 했다고 확인 · 머리 타격 혐의는 그대로'),
+    predict(48.0, '첫 폭행은 오정택이 했다고 확인 · 머리 타격 혐의는 그대로', '머리 손상 시각 미확인'),
     memo('[확인] 02:41 폭행은 오정택(본인 인정, 시계 02:41:09). 손목·옆구리 손상과 맞는다.'),
     bgm('suspense'),
     say('oh', '하지만 그 뒤의 일은 다릅니다. 2시 45분쯤 나갔습니다. 사장님은 살아 계셨어요.', 'sweat'),
@@ -433,6 +447,7 @@ export const TAPE_SCENES: Record<string, Script> = {
     say('oh', '변호사님이 입증하신 건 2시 41분에 신태오 씨가 없었다는 것뿐이죠.'),
     memo('[주장] 오정택: 02:45쯤 뒷문으로 나갔고, 02:52 직원이 나올 때 돌아왔더니 사장님이 머리를 다쳐 있었다.'),
     issue('첫 폭행은 오정택. 그럼 머리의 치명상은 언제, 누가 입혔나?'),
+    recap(RECAP_ASSAULT),
     say('judge', '오전은 여기까지 하겠습니다. 형사가 도어락 기록을 제조사에서 받아 오는 대로 오후에 이어 가죠.'),
     say('gu', '점주님이 3월 3일에 바꿔 단 도어락임다. 오후 1시 반쯤 서버 자료가 온다고 함다!', 'normal'),
     say('dan', '오후에는 증인이 정말 창고를 떠났는지부터 확인할게요. 태오 씨가 들어오기 전에 나갔다고 주장하고 있으니까요.', 'normal'),
@@ -457,7 +472,7 @@ export const TAPE_SCENES: Record<string, Script> = {
     say('taeo', '근데 왜… 왜 저를 안 부르셨을까요.'),
     say('dan', '…그건 아직 모르는 일이에요. 지금 아는 척하지 않을게요.', 'normal'),
     when('ep1:careful', [
-      say('dan', '녹음으로 첫 충돌은 확인했어. 머리에 치명상을 입은 때는 아직 몰라.', 'normal'),
+      say('dan', '…녹음으로 확인한 건 첫 충돌까지야. 거기서 멈춘 게 맞았는지, 아직도 손이 떨려.', 'sweat'),
     ], [
       say('dan', '…아까 내가 성급했어. 녹음은 맞는데, 내가 원하는 대로 넘겨짚었어.', 'sweat'),
     ]),
@@ -476,14 +491,9 @@ export const TAPE_SCENES: Record<string, Script> = {
     ]),
     say('narae', '언니, 손 좀 펴. 아까부터 펜을 너무 꽉 쥐고 있어.', 'sad'),
     say('dan', '…응.', 'sweat'),
-    say('dan', '위에서부터 보자. 2시 41분에 오정택이 밀쳤고, 42분엔 사장님 신음이 남았어. 여기까지는 기록으로 확인했어.', 'normal'),
-    say('taeo', '45분에 나갔다는 건… 그분 말뿐인 거죠?', 'normal'),
-    say('dan', '네. 다음은 태오 씨예요. 50분에 창고에 들어가서, 52분에 봉지를 들고 나왔어요.', 'normal'),
-    say('narae', '그래서 그다음부터 녹음기는 골목에 있었고. 창고 안 소리는 더 못 듣는 거네.', 'normal'),
-    say('dan', '맞아. 같은 52분에 오정택이 다시 들어갔다는 건 그 사람 주장이야. 나갔다는 말부터 확인해야 해.', 'normal'),
-    say('dan', '55분 16초에는 머리를 다쳤다고 신고했어. 그 말이 남았다는 건 확실하지만, 다친 순간을 본 기록은 아니야.', 'normal'),
-    say('taeo', '그 뒤 통화에는 다른 목소리하고 깨지는 소리가 있고… 사진도 남아 있는 거고요.', 'normal'),
-    say('dan', '네. 그래서 맨 아래 「41분에 머리 치명상」은 지워 둔 거예요. 첫 충돌 시각은 알아도, 머리를 다친 시각은 아직 몰라요.', 'normal'),
+    say('dan', '기록으로 확인한 건 2시 41분에 오정택이 밀쳤다는 것, 그리고 52분부터 녹음기는 골목에 있었다는 것.', 'normal'),
+    say('taeo', '45분에 나갔다는 것도, 52분에 다시 들어갔다는 것도… 그분 말뿐인 거죠?', 'normal'),
+    say('dan', '네. 그리고 맨 아래 줄은 지워 뒀어요. 첫 충돌 시각은 알아도, 머리를 다친 시각은 아직 몰라요.', 'normal'),
     boardOff,
     sfx('step'),
     show('eom', 'normal'),

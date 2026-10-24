@@ -5,7 +5,7 @@ import { touchLayout } from './viewport';
 import { FIGURES, paintFigure } from './figures';
 import { paintCompare } from './photos';
 import { paintFace, paintItem } from './portrait';
-import type { Evidence, Profile } from './types';
+import type { Evidence, Profile, Recap } from './types';
 
 type Tab = 'evidence' | 'profiles' | 'memo';
 
@@ -26,6 +26,10 @@ export class CourtRecord {
   private closeBtn: HTMLButtonElement;
   private presentBtn: HTMLButtonElement;
   private hintBtn: HTMLButtonElement;
+  private recapBtn: HTMLButtonElement;
+  /** The 「이번 공방」 page is over the sheet; closing it puts back the page and scroll it covered. */
+  private recapOpen = false;
+  private recapScroll = 0;
   private tab: Tab = 'evidence';
   /** -1 = nothing chosen yet (presenting always starts that way). */
   private sel = 0;
@@ -50,6 +54,8 @@ export class CourtRecord {
   onHint: (() => void) | null = null;
   /** 강단비's notebook lines, newest last; set by the game. The tab shows up once there is one. */
   memos: () => string[] = () => [];
+  /** The summary of the stretch of trial in progress, if the case keeps one (1화); set by the game. */
+  recap: () => Recap | null = () => null;
   private body: HTMLElement;
   private promptText = '';
   /** Where the player left the record when only reading it, to come back to the same page. */
@@ -77,6 +83,8 @@ export class CourtRecord {
     const head = el('header', 'folder-head', folder);
     el('div', 'case-no', head, caseNo);
     el('div', 'case-name', head, caseName);
+    this.recapBtn = el('button', 'btn btn-small record-recap', head, '이번 공방');
+    this.recapBtn.addEventListener('click', () => this.toggleRecap());
     this.prompt = el('div', 'record-prompt', folder);
     const body = el('div', 'folder-body', folder);
     this.body = body;
@@ -189,6 +197,8 @@ export class CourtRecord {
     this.prompt.hidden = !prompt && !pin;
     this.closeBtn.hidden = !cancellable;
     this.hintBtn.hidden = !this.onHint;
+    this.recapOpen = false;
+    this.recapBtn.hidden = !this.recap();
     this.tab = 'evidence';
     // Presenting starts with nothing chosen, so a stray Enter can never present by itself.
     this.sel = mode === 'present' ? -1 : 0;
@@ -216,19 +226,28 @@ export class CourtRecord {
     sfx('paper');
     return new Promise((resolve) => {
       const pop = push((a) => {
-        if (a === 'back' && cancellable) this.close(null);
+        if (a === 'back' && this.recapOpen) this.toggleRecap();
+        else if (a === 'back' && cancellable) this.close(null);
         else if (a === 'record' && mode === 'view') this.close(null);
+        else if (a === 'tab') this.setTab(this.nextTab());
+        // The 「이번 공방」 page only reads; Enter there goes back to the record.
+        else if (this.recapOpen) {
+          if (a === 'advance') this.toggleRecap();
+        }
         // Space is for the large map or photo view, so presenting always takes Enter (or E).
         else if (a === 'advance' && fromSpace()) this.openExtra();
         else if ((a === 'advance' || a === 'present') && mode === 'present') this.presentSelected();
         else if (a === 'advance' && mode === 'view') this.openExtra();
-        else if (a === 'tab') this.setTab(this.nextTab());
         else if (a === 'left') this.move(-1);
         else if (a === 'right') this.move(1);
         else if (a === 'up') this.moveRow(-1);
         else if (a === 'down') this.moveRow(1);
       }, { strict: true });
       this.finish = (id) => {
+        if (this.recapOpen) {
+          this.recapOpen = false;
+          this.sheet.scrollTop = this.recapScroll;
+        }
         if (this.mode === 'view') {
           const cur = this.tab === 'memo' ? { id: '' } : this.tab === 'evidence' ? this.held[this.sel] : this.people[this.sel];
           this.lastView = cur ? { tab: this.tab, id: cur.id, scroll: this.sheet.scrollTop } : null;
@@ -253,8 +272,24 @@ export class CourtRecord {
     return 'evidence';
   }
 
+  /** Opens or closes the 「이번 공방」 page. It reads like the notebook and never counts as a hint. */
+  private toggleRecap(): void {
+    if (!this.recapOpen && !this.recap()) return;
+    sfx('select');
+    if (!this.recapOpen) {
+      this.recapScroll = this.sheet.scrollTop;
+      this.recapOpen = true;
+      this.render();
+      this.sheet.scrollTop = 0;
+      return;
+    }
+    this.recapOpen = false;
+    this.render();
+    this.sheet.scrollTop = this.recapScroll;
+  }
+
   private presentSelected(): void {
-    if (this.mode !== 'present' || this.tab === 'memo') return;
+    if (this.mode !== 'present' || this.tab === 'memo' || this.recapOpen) return;
     const picked = this.tab === 'evidence' ? this.held[this.sel] : this.people[this.sel];
     if (picked) {
       this.finish?.(picked.id);
@@ -276,6 +311,14 @@ export class CourtRecord {
   }
 
   private setTab(t: Tab): void {
+    if (this.recapOpen) {
+      this.recapOpen = false;
+      if (t === this.tab) {
+        sfx('select');
+        this.render();
+        return;
+      }
+    }
     if (t === this.tab) return;
     this.tab = t;
     this.sel = this.mode === 'present' ? -1 : 0;
@@ -332,8 +375,15 @@ export class CourtRecord {
     this.tabBtns.memo.textContent = unread ? `메모 ${unread}` : '메모';
     this.tabBtns.memo.classList.toggle('unread', unread > 0);
     if (this.tab === 'memo' && this.tabBtns.memo.hidden) this.tab = 'evidence';
-    this.body.classList.toggle('memo-mode', this.tab === 'memo');
-    this.presentBtn.hidden = this.mode !== 'present' || this.tab === 'memo';
+    this.body.classList.toggle('memo-mode', this.tab === 'memo' || this.recapOpen);
+    this.presentBtn.hidden = this.mode !== 'present' || this.tab === 'memo' || this.recapOpen;
+    this.recapBtn.classList.toggle('on', this.recapOpen);
+    setLabel(this.recapBtn, this.recapOpen ? '기록으로 돌아가기  Esc' : '이번 공방');
+    if (this.recapOpen) {
+      this.grid.replaceChildren();
+      this.renderRecap();
+      return;
+    }
     if (this.tab === 'memo') {
       this.grid.replaceChildren();
       this.renderMemo();
@@ -381,6 +431,27 @@ export class CourtRecord {
     el('h2', 'sheet-title', this.sheet, '지금까지 알게 된 것');
     const list = el('ol', 'memo-list', this.sheet);
     for (const line of this.memos()) el('li', '', list, line);
+  }
+
+  private renderRecap(): void {
+    const r = this.recap();
+    this.sheet.replaceChildren();
+    el('div', 'sheet-label', this.sheet, '이번 공방 · 지금까지의 정리');
+    if (!r) {
+      el('p', 'sheet-empty', this.sheet, '지금은 정리할 공방이 없어요.');
+      return;
+    }
+    const box = el('div', 'recap', this.sheet);
+    el('div', 'recap-kicker', box, '지금 확인하려는 것');
+    el('h2', 'sheet-title recap-question', box, r.question);
+    if (r.facts.length) {
+      el('div', 'recap-kicker', box, '이미 확인한 것');
+      const list = el('ul', 'recap-facts', box);
+      for (const f of r.facts.slice(0, 3)) el('li', '', list, f);
+    }
+    el('div', 'recap-kicker', box, '아직 확인할 것');
+    el('p', 'recap-pending', box, r.pending);
+    el('p', 'recap-note', box, '여기에는 이미 밝혀진 것만 적혀요. 막히면 힌트를 열어 보세요.');
   }
 
   private scrollToUnread(): void {

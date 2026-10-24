@@ -1,19 +1,25 @@
 import { cgImage } from '../../engine/assets';
 import type { CaseData, Checkpoint } from '../../engine/game';
-import { say, think } from '../script';
-import { ANN_AUTOPSY, ANN_CALL112, ANN_RECORDER, ANN_SHARE, FINALE_SCENES, FINALE_TESTIMONIES } from './finale';
+import { recapFlag, say, think } from '../script';
+import { ANN_ALLEY, ANN_AUTOPSY, ANN_CALL112, ANN_DOOR, ANN_RECORDER, ANN_SHARE, FINALE_SCENES, FINALE_TESTIMONIES } from './finale';
 import { OPENING_SCENES } from './opening';
+import { RECAP_ASSAULT, RECAP_OUTLINE, RECAP_OUTSIDE, RECAP_RECESS, RECAP_WAITING } from './recaps';
 import { EVIDENCE, PROFILES } from './records';
 import { TAPE_SCENES, TAPE_TESTIMONIES } from './tape';
 import { TRIAL_SCENES, TRIAL_TESTIMONIES } from './trial';
 
-// 제1화 「무인(無人)의 밤」 — 시리즈의 첫 사건이자 튜토리얼 (개정 EP1-R4).
+// 제1화 「무인(無人)의 밤」 — 시리즈의 첫 사건이자 튜토리얼 (개정 EP1-R5).
 // 범인을 먼저 보여 주는 도치 서술. 녹음기가 담은 02:41의 첫 폭행을 사망 순간으로 읽을 뻔하다가,
-// 오정택의 인정 뒤에도 치명상 시각이 남는다는 것을 확인하고, 상처 조각 감정 + 112 현장 공유 사진 + 골목 녹음으로
-// 태오가 그 10초에 없었음을 자백 전에 입증한다.
+// 오정택의 인정 뒤에도 머리 손상의 시각이 남는다는 것을 확인한다. 자백 전 입증: 상처 속 조각은 태오가 나간 뒤인
+// 02:55:48에도 판에 붙어 있었고(감정 + 112 현장 공유 사진), 태오는 나간 뒤 복귀까지 골목과 경찰 동행으로 행적이 확인된다.
 // 줄거리는 docs/series-bible.md, 논리 설계와 정답표는 docs/ep1-rewrite.md, 진상 시간표는 records.ts 맨 위에 있다.
 
 const BASE = ['iguardLog', 'autopsy', 'scenePhoto', 'sceneItems', 'layout', 'shutterPhoto', 'call112', 'share112'];
+
+/** Addenda written in court during 「통화 중, 피고인은 어디에」. */
+const AFTER_OUTSIDE = [
+  `ann:recorder|${ANN_RECORDER}`, `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_ALLEY}`, `ann:doorLog|${ANN_DOOR}`,
+];
 
 const CHECKPOINTS: Record<string, Checkpoint> = {
   trial: {
@@ -28,7 +34,7 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: '2. 오정택의 첫 목격 증언',
     evidence: BASE,
     flags: [
-      'issue|그날 밤 창고에 있던 사람은 태오 씨뿐이었나?', 'ep1:foodTold',
+      'issue|그날 밤 창고에 있던 사람은 태오 씨뿐이었나?', 'ep1:foodTold', recapFlag(RECAP_OUTLINE),
       'memo:[장면 선택] 아이가드의 "1명"은 매장 구역의 관측. 창고 구석과 뒷문은 카메라 밖.',
     ],
     gauge: 90.2,
@@ -38,7 +44,7 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: '3. 조말순 할머니의 증언',
     evidence: [...BASE, 'oh'],
     flags: [
-      'ep1:foodTold', 'memo:[장면 선택] 셔터 때문에 "봤다"는 철회. 02:45 무렵 태오는 CAM1에 계속 찍혔다.',
+      'ep1:foodTold', recapFlag(RECAP_RECESS), 'memo:[장면 선택] 셔터 때문에 "봤다"는 철회. 02:45 무렵 태오는 CAM1에 계속 찍혔다.',
     ],
     gauge: 69.1,
     status: '진술 검토 중',
@@ -47,7 +53,7 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: '4. 녹음기',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder'],
     flags: [
-      'issue|봉지 속은 무엇이었나? 「무단 반출」은 절도였나?', 'ep1:foodTold', 'ep1:recorderFound',
+      'issue|봉지 속은 무엇이었나? 「무단 반출」은 절도였나?', 'ep1:foodTold', 'ep1:recorderFound', recapFlag(RECAP_RECESS),
       'memo:[장면 선택] 봉지는 점주가 허락해 온 폐기 음식. 그 바닥에서 녹음기가 나왔다.',
     ],
     gauge: 60.9,
@@ -57,19 +63,20 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: '5. 오후 도어락 심문',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
-      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault',
+      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault', recapFlag(RECAP_ASSAULT),
       'memo:[장면 선택] 02:41 첫 폭행은 오정택(본인 인정). 머리 치명상이 언제 생겼는지는 아직. 오정택: "02:45쯤 나갔다".',
     ],
     gauge: 48.0,
-    status: '치명상 시점 미확인',
+    status: '머리 손상 시각 미확인',
   },
   callcross: {
     label: '6. 상패와 머리 손상 심문',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
       'issue|상패가 깨질 때 머리도 다쳤나? 그렇다면 언제였나?',
-      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`,
-      'memo:[장면 선택] 오정택은 02:57까지 창고 안에 있었다(도어락). 통화 중 태오는 골목에 있었다(녹음기·도어락).',
+      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:returnVerified',
+      ...AFTER_OUTSIDE, recapFlag(RECAP_OUTSIDE),
+      'memo:[장면 선택] 오정택은 02:57까지 창고 안에 있었다(도어락). 태오는 나간 뒤 골목에 있었고(녹음기·조말순·도어락), 복귀는 경찰 동행.',
     ],
     gauge: 42.0,
     status: '치명상 시점 미확인',
@@ -78,7 +85,8 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: '7. 오후 4시 감정 결과',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
-      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:compareNeeded', `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`,
+      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:returnVerified',
+      'ep1:compareNeeded', ...AFTER_OUTSIDE, recapFlag(RECAP_WAITING),
       'memo:[장면 선택] 상처 속 조각과 가방 속 판 본체의 대조 결과를 기다렸다(오후 4시).',
     ],
     gauge: 42.0,
@@ -88,10 +96,10 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
     label: '8. 판결 뒤 에필로그',
     evidence: [...BASE, 'oh', 'malsun', 'samgak', 'recorder', 'watchLog', 'doorLog'],
     flags: [
-      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:compareNeeded',
-      'ep1:fragmentMatch',
-      'ep1:injuryWindow', 'ep1:defenseComplete', 'ep1:reportFalse', 'photomark:share112',
-      `ann:call112|${ANN_CALL112}`, `ann:recorder|${ANN_RECORDER}`, `ann:autopsy|${ANN_AUTOPSY}`, `ann:share112|${ANN_SHARE}`,
+      'ep1:foodTold', 'ep1:recorderFound', 'ep1:firstAssault', 'ep1:ohStayed', 'ep1:taeoOutside', 'ep1:returnVerified',
+      'ep1:compareNeeded', 'ep1:fragmentMatch', 'ep1:plateWindow',
+      'ep1:injuryAfterExit', 'ep1:defenseComplete', 'ep1:reportFalse', 'photomark:share112',
+      ...AFTER_OUTSIDE, `ann:autopsy|${ANN_AUTOPSY}`, `ann:share112|${ANN_SHARE}`,
     ],
     gauge: 0,
     status: '심리 종료',
@@ -99,10 +107,11 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
 };
 
 export const CASE_EP1: CaseData = {
-  // r4: 2026-10 네 번째 개정(EP1-R4: 초반 정보 배치·법정 화면·튜토리얼 안내·유머). 예전 저장은 이어하지 않고 지우지도 않는다.
-  id: 'case1-orot-r4',
-  revision: 'EP1-R4',
-  legacyIds: ['case1-orot', 'case1-orot-v2', 'case1-orot-r2', 'case1-orot-r3'],
+  // r5: 2026-10 다섯 번째 개정(EP1-R5 = 설계 EP1-Q1: 머리 손상 입증 범위, 태오의 복귀까지 행적, Q10 교체, 이번 공방).
+  // 예전 저장은 이어하지 않고 지우지도 않는다.
+  id: 'case1-orot-r5',
+  revision: 'EP1-R5',
+  legacyIds: ['case1-orot', 'case1-orot-v2', 'case1-orot-r2', 'case1-orot-r3', 'case1-orot-r4'],
   ep: 1,
   menu: {
     no: '제1화',
@@ -171,6 +180,7 @@ export const CASE_EP1: CaseData = {
     breakdown: '오정택의 고백',
     verdict: '판결',
     epilogue: '에필로그: 밥은 먹었어?',
+    aftercourt: '에필로그: 종료 기록 검토',
     office: '에필로그: 국선 사무실',
   },
   endingTitle: '제1화 「무인(無人)의 밤」 끝',

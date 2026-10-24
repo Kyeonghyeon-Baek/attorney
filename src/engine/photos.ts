@@ -202,7 +202,7 @@ export const PHOTO_SETS: Record<string, PhotoSet> = {
 function markSvg(r: PhotoRect, view: PhotoRect): string {
   const u = view.w / 250;
   const label = view.w > 600
-    ? `<text x="${r.x}" y="${r.y - 4 * u}" font-size="${4.4 * u}" fill="#ffb347" font-family="'Apple SD Gothic Neo',sans-serif">감정 주석</text>`
+    ? `<text x="${r.x}" y="${r.y - 4 * u}" font-size="${4.4 * u}" fill="#ffb347" font-family="'Apple SD Gothic Neo',sans-serif">감정 주석 · 조각 ①②③의 자리</text>`
     : '';
   return `<g class="ph-mark"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="${1.6 * u}" fill="#ffb347" fill-opacity="0.12" stroke="#ffb347" stroke-width="${u}" stroke-dasharray="${2.4 * u} ${1.6 * u}"/>${label}</g>`;
 }
@@ -330,7 +330,7 @@ export class PhotoView {
    * belong to, then pick the last frame that still shows it and the first that does not. Wrong
    * picks only get a line of feedback; nothing is spent.
    */
-  task(stage: HTMLElement, setId: string, t: PhotoTask, openRecord?: () => Promise<unknown>): Promise<void> {
+  task(stage: HTMLElement, setId: string, t: PhotoTask, openRecord?: () => Promise<unknown>, onHint?: () => void): Promise<void> {
     const set = PHOTO_SETS[setId];
     const root = el('div', 'photoview task', stage);
     const panel = el('div', 'photoview-panel', root);
@@ -345,6 +345,8 @@ export class PhotoView {
     say.setAttribute('aria-live', 'polite');
     const foot = el('footer', 'photoview-foot', panel);
     const hint = el('span', 'photoview-hint', foot);
+    const hintBtn = onHint ? el('button', 'btn', foot, '힌트  H') : null;
+    hintBtn?.addEventListener('click', onHint!);
     const go = el('button', 'btn btn-primary', foot);
 
     let stage2 = false;
@@ -468,6 +470,7 @@ export class PhotoView {
         el('p', 'photoview-closing', extra, t.closing);
         stepTag.textContent = '정리';
         hint.textContent = '';
+        if (hintBtn) hintBtn.hidden = true;
         setLabel(go, '계속  Enter');
         go.disabled = false;
         return;
