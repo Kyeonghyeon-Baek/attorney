@@ -921,7 +921,8 @@ export class Game {
     const crossTrack = tm.crossBgm ?? this.data.crossBgm ?? this.bgm ?? 'cross';
     this.box.hide();
     if (!resume) {
-      this.music(tm.hearing ?? 'testimony');
+      // The testimony is heard over the same track its cross-examination uses.
+      this.music(tm.hearing ?? crossTrack);
       await this.fx.banner('증언 개시', tm.title);
       const first = this.visible(tm);
       for (let k = 0; k < first.length; k++) {

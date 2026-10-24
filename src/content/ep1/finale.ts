@@ -40,8 +40,7 @@ const PENDING: Script = [
 const REMAINING: Testimony = {
   id: 'remaining',
   title: '남은 시간',
-  // From here the trial closes in: the cross-examination theme turns tense.
-  hearing: 'testimonyTense',
+  // From here the trial closes in: testimony and cross-examination both turn tense.
   crossBgm: 'crossTense',
   statements: [
     {
@@ -210,7 +209,6 @@ const PLATE_WINDOW: Script = [
 const CALL: Testimony = {
   id: 'call',
   title: '상패와 머리 손상',
-  hearing: 'testimonyTense',
   crossBgm: 'crossTense',
   statements: [
     {

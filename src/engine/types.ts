@@ -284,7 +284,7 @@ export interface Testimony {
   statements: Statement[];
   /** Plays after the testimony is heard once, before cross-examination starts. */
   beforeCross?: Script;
-  /** Music while the testimony is heard the first time (default: 'testimony'). */
+  /** Music while the testimony is heard the first time (default: the cross-examination track). */
   hearing?: BgmName;
   /** Music during cross-examination (default: the case's `crossBgm`, else what was playing). */
   crossBgm?: BgmName;
