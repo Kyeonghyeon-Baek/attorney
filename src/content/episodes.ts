@@ -10,13 +10,7 @@ export async function loadEpisodes(): Promise<EpisodeSlot[]> {
       locked: true, no: '제4화', title: '대체된 증인',
       tagline: 'AI 상담원이 증언대에 섰다. 사람을 대신한다던 그 기계 뒤에는, 사람이 있었다.',
     };
-  // 제2화 stays locked in public builds until the creator's playtest; `npm run dev` plays it.
-  const second: EpisodeSlot = import.meta.env.DEV
-    ? (await import('./ep2/case')).CASE_EP2
-    : {
-      locked: true, no: '제2화', title: '재개발의 한(恨)',
-      tagline: '숫자로 매겨진 집에, 사람이 산다.',
-    };
+  const second: EpisodeSlot = (await import('./ep2/case')).CASE_EP2;
   return [
     CASE_EP1,
     second,

@@ -14,7 +14,7 @@
 
 **제4화 「대체된 증인」** (약 40분, 조사 + 법정 3일): 누리랩 조사 → AI 증인 다온 → 박하은 → 서지훈 신문, 진범 붕괴, 무죄, 에필로그.
 
-공개 빌드에서는 제1화만 플레이할 수 있고 제2~4화는 "준비 중"으로 나와요. 제4화 대본은 공개 빌드에서 제외되며 `?ep=4`로도 열리지 않아요. `npm run dev`로 실행하는 로컬 개발 환경에서는 제4화도 플레이할 수 있어요.
+공개 빌드에서는 제1~2화를 플레이할 수 있고 제3~4화는 "준비 중"으로 나와요. 제4화 대본은 공개 빌드에서 제외되며 `?ep=4`로도 열리지 않아요. `npm run dev`로 실행하는 로컬 개발 환경에서는 제4화도 플레이할 수 있어요.
 
 ## 공개 배포
 
@@ -36,7 +36,7 @@ npm run dev
 | 주소 뒤에 붙이기 | 하는 일 |
 |---|---|
 | `?ep=1` · `?ep=4` | 사건 기록부를 건너뛰고 그 화를 바로 열기 (저장은 평소처럼) |
-| `?ep=2&scene=day1` | 2화(개발 서버 전용). 장면: `prologue` `office` `day1` `day1night` `lobby1` `trial1` `witness2` `tape119` `homecam1` `recess1` `ahnStand` `lunch1` `afternoon1` `night1` `day2` `day2eve` `lobby2` `trial2` `ahnStand2` `clip` `ahnStand3` `sixLinks` `motive` `minus040` `breakdown` `verdict` `epilogue`. 체크포인트(CP1~CP11)는 `case.ts` |
+| `?ep=2&scene=day1` | 2화. 장면: `prologue` `office` `day1` `day1night` `lobby1` `trial1` `witness2` `tape119` `homecam1` `recess1` `ahnStand` `lunch1` `afternoon1` `night1` `day2` `day2eve` `lobby2` `trial2` `ahnStand2` `clip` `ahnStand3` `sixLinks` `motive` `minus040` `breakdown` `verdict` `epilogue`. 체크포인트(CP1~CP11)는 `case.ts` |
 | `?ep=1&scene=trial` | 1화 개정부터 (저장 안 함). 셔터 사진만 가진 채 시작해서, 모두진술에서 나머지 기록을 받아요. 1화 장면: `prologue` `morning` `lobby` `trial` `cross0` `witness1` `cross1` `cross2` `recess` `grandma` `tape` `cross3` `watch` `lunch` `afternoon` `cross4` `outside` `callcross` `waiting` `result` `lastword` `breakdown` `verdict` `epilogue` `office`. 체크포인트 장면(`trial` `witness1` `grandma` `tape` `afternoon` `callcross` `result` `epilogue`)은 그때까지 모았을 증거·사실·판관 예측으로 시작하고, 그 밖의 장면은 바로 앞 체크포인트의 사실·예측에 증거를 전부 가진 채 시작해요 |
 | `?scene=intro` | 4화: 조사를 건너뛰고 법정부터 시작 (`?scene=`만 쓰면 그 장면이 있는 화를 찾아요. 1화에도 있는 장면 이름은 1화가 열리니 `?ep=4&`를 붙여요) |
 | `?ep=4&scene=cross1` | 첫 번째 반대신문부터 시작 |
@@ -243,12 +243,12 @@ crossAgain('x4'),                               // 이미 들은 증언으로 �
 ```
 
 - **증거의 부분(탭):** 증거에 `tabs: [{ id: 'notice', label: '[공지] 음성 안내 없음', requires? }]`를 달면, 정답이 `'phoneDump#notice'`처럼 부분을 가리킬 때 제시한 뒤 "어느 부분?"을 묻는다. 맞는 기록의 다른 부분을 고르면 감점 없이 한 줄로 알려 준다. `ifPresented('phoneDump')`는 그 기록의 어느 부분이든 맞는다. 나중에 생기는 부분은 `requires` 플래그로 연다.
-- **요약 카드와 자세히 보기(`engine/evidence-view.ts`, 2화):** 증거에 `pages`를 달면 법원기록에는 대표 그림 · 요약(2~3줄, 60자 이내) · [자세히 보기 Space]만 나오고, 원문은 전체 화면 상세에서 쪽별로 읽는다. 쪽 종류는 `photo`(그림+설명) `messages`(문자 말풍선) `table` `frames`(시각별 장면) `document` `figure` `map`. 쪽에 `tab`을 주면 그 쪽에서 Enter·[이 부분을 제시한다]로 `증거id#tab`을 바로 제시한다(「어느 부분?」을 다시 묻지 않음). 잠긴 탭(`requires`)의 쪽은 열리기 전엔 없고, 그림도 카드에 새지 않는다. `annotate()`한 줄은 쪽의 `addenda` 접두어(예: `'[세탁소]'`)로 그 쪽 아래 「나중에 확인된 것」에 붙고, 맞는 쪽이 없으면 마지막 「새로 확인된 것」 쪽에 붙는다. 갱신은 화면에 실제로 보였을 때 읽음 처리. 상세에서 ← → · 스와이프 · 아래 쪽 목록으로 넘기고, Esc는 카드로 돌아가 [자세히 보기]에 포커스를 돌려준다. `showRecord('phoneDump#texts0614')`처럼 쪽을 지정하면 그 쪽이 바로 열리고, 닫으면 대본이 이어진다. 2화 카드 문안·쪽은 `content/ep2/evidence-pages.ts`, 도식(`diag…` 판)은 `content/ep2/diagrams.ts`(개발 빌드 전용). 1화·4화는 `pages`가 없어 예전 법원기록 그대로다.
+- **요약 카드와 자세히 보기(`engine/evidence-view.ts`, 2화):** 증거에 `pages`를 달면 법원기록에는 대표 그림 · 요약(2~3줄, 60자 이내) · [자세히 보기 Space]만 나오고, 원문은 전체 화면 상세에서 쪽별로 읽는다. 쪽 종류는 `photo`(그림+설명) `messages`(문자 말풍선) `table` `frames`(시각별 장면) `document` `figure` `map`. 쪽에 `tab`을 주면 그 쪽에서 Enter·[이 부분을 제시한다]로 `증거id#tab`을 바로 제시한다(「어느 부분?」을 다시 묻지 않음). 잠긴 탭(`requires`)의 쪽은 열리기 전엔 없고, 그림도 카드에 새지 않는다. `annotate()`한 줄은 쪽의 `addenda` 접두어(예: `'[세탁소]'`)로 그 쪽 아래 「나중에 확인된 것」에 붙고, 맞는 쪽이 없으면 마지막 「새로 확인된 것」 쪽에 붙는다. 갱신은 화면에 실제로 보였을 때 읽음 처리. 상세에서 ← → · 스와이프 · 아래 쪽 목록으로 넘기고, Esc는 카드로 돌아가 [자세히 보기]에 포커스를 돌려준다. `showRecord('phoneDump#texts0614')`처럼 쪽을 지정하면 그 쪽이 바로 열리고, 닫으면 대본이 이어진다. 2화 카드 문안·쪽은 `content/ep2/evidence-pages.ts`, 도식(`diag…` 판)은 `content/ep2/diagrams.ts`. 1화·4화는 `pages`가 없어 예전 법원기록 그대로다.
 - **사진 판(`engine/plates.ts`):** 논증에 쓰이는 사진(남산 기준 사진, 201·302호, 인증 클립 프레임)은 `src/assets/photos/<이름>.png`(1536×1024, 배경처럼 위아래가 잘림)를 쓰고, 파일이 없으면 코드 그림으로 대신한다. `flip: true`면 좌우로 뒤집어 보여 준다(감정 리포트의 302호 = 201호 사진 반전). `cg('namsan')`, `examine('namsan', …)`, `compare`가 같은 판을 쓴다. 증거에 `plates: ['namsan', …]`를 달면 법원기록에 사진 칸이 생기고 눌러서 크게 본다. 좌표는 무대 기준(무대 y = 그림 y × 0.8333 − 66.7).
 - **도식·지도:** `figure('rail')`(W3 난간 단면), `maps.ts`의 `village`·`happyRoof`·`happySection`(단면, `pinpoint` 정답 `basket`).
 - **조사 장소의 `requires`:** 그 플래그가 생기기 전엔 이동 목록에 나오지 않는다(이미 방문한 장소는 저장 호환을 위해 재방문 가능). 2화 동선은 `ep2/investigation-flow.ts`에서 관리하며 `progress`를 조사 메뉴 전에 실행해 핵심 단서가 모이면 다음 장소와 연결 대사를 연다. 1일차는 접견 → 현장 → 목격 재현 뒤 선택 동선, 2일차는 고철 확보 뒤 두 조사 갈래다. `maskUnvisited` 장소는 첫 방문 전 그림 대신 검정 바탕 `?`를 보여주고, `knownFrom`으로 전날 방문한 같은 장소를 알아본다.
 - 2화 증거 카드는 그림 + 설명 1~2줄이다(`source`·`proves`·`limits` 없음). 증거를 받으면 알림에 설명 한 줄이 나온다.
-- 2화는 개발 서버(`npm run dev`)에서만 열린다(`?ep=2`). 공개 빌드에선 제작자 플레이테스트 전까지 "준비 중". 2화 그림은 `src/assets/ep2/`에 따로 있어서 공개 빌드에 들어가지 않는다(공개할 때 공용 폴더로 옮긴다).
+- 2화는 공개 사이트와 개발 서버에서 모두 열린다(`?ep=2`). 2화 그림은 `src/assets/ep2/`에 보관하며 공개 빌드에도 포함된다. 4화는 개발 서버에서만 열린다.
 
 ## 판관 예측 · 재검토 기회 · 힌트 (1화)
 

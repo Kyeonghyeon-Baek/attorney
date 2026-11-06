@@ -2,7 +2,7 @@ import type { Plate } from '../../engine/plates';
 
 // 2화 explanatory diagrams for the evidence detail pages, drawn in code so their labels, counts and
 // measurements are exact (records.ts and docs/ep2/case-truth.md). They are schematic, never passed
-// off as photos, and live with the episode's content so the public build doesn't carry them.
+// off as photos, and live with the episode's content.
 // 1280×720 stage coordinates, like every plate.
 
 const W = 1280;

@@ -25,21 +25,18 @@ const photos = import.meta.glob('../assets/photos/*.png', {
   eager: true, query: '?url', import: 'default',
 }) as Record<string, string>;
 
-// Art for an episode still in development lives in assets/ep<n>/ with the same folders
-// (assets/ep2/chars/ahn/normal.png). The glob is lazy and only development builds keep it, so
-// the public build neither ships nor preloads those files (an eager glob would still emit them).
-// Releasing the episode = moving its files up into the shared folders.
-const devOnly = (import.meta.env.DEV
-  ? import.meta.glob('../assets/ep2/**/*.png', { query: '?url', import: 'default' })
-  : {}) as Record<string, () => Promise<unknown>>;
+// Released episode art keeps its episode folder and joins the shared lookups at startup.
+const episodeArt = import.meta.glob('../assets/ep2/**/*.png', {
+  eager: true, query: '?url', import: 'default',
+}) as Record<string, string>;
 
-/** Development builds: resolves the unreleased episodes' art into the lookups above. Call before the game starts. */
-export async function loadDevArt(): Promise<void> {
+/** Resolves released episode art into the shared lookups before the game starts. */
+export async function loadEpisodeArt(): Promise<void> {
   const maps: Record<string, Record<string, string>> = { chars, bg: backgrounds, items, portraits, cg: cgs, photos };
-  await Promise.all(Object.entries(devOnly).map(async ([path, load]) => {
+  await Promise.all(Object.entries(episodeArt).map(async ([path, url]) => {
     const shared = path.replace(/^\.\.\/assets\/ep\d+\//, '../assets/');
     const map = maps[shared.split('/')[2]];
-    if (map && !(shared in map)) map[shared] = String(await load());
+    if (map && !(shared in map)) map[shared] = url;
   }));
 }
 

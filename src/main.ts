@@ -2,14 +2,14 @@ import 'galmuri/dist/galmuri.css';
 import '@fontsource/black-han-sans';
 import './style.css';
 import { loadEpisodes } from './content/episodes';
-import { loadDevArt } from './engine/assets';
+import { loadEpisodeArt } from './engine/assets';
 import { Game, type CaseData } from './engine/game';
 
 // ?ep=1 opens that episode directly, ?scene=<id> also jumps to a scene in it
 // (?scene alone finds the episode that has the scene), ?fast types text instantly,
 // ?spots outlines every examine spot (for lining them up with new backgrounds).
 async function start(): Promise<void> {
-  await loadDevArt();
+  await loadEpisodeArt();
   const episodes = await loadEpisodes();
   const params = new URLSearchParams(location.search);
   if (params.has('spots')) document.body.classList.add('show-spots');
