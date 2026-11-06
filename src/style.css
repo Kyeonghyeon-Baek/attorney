@@ -397,7 +397,8 @@ button { font: inherit; }
 .stage.title-mode .hud { display: none; }
 .hud-tools { display: flex; gap: 6px; }
 /* Outside the courtroom (and after the verdict) there is nothing to review or predict. */
-.stage.offstage .chances { display: none; }
+.stage.offstage .chances,
+.stage.investigating .chances { display: none; }
 
 .gauge {
   width: 300px;
@@ -1074,6 +1075,14 @@ button { font: inherit; }
   background-position: center;
   background-color: var(--cover-dark);
   border-radius: 3px;
+}
+.inv-thumb-unknown {
+  display: grid;
+  place-items: center;
+  background: #000;
+  color: var(--paper);
+  font-size: 42px;
+  font-weight: bold;
 }
 .inv-back { align-self: flex-end; margin-top: 14px; }
 .show-spots .spot { border-color: rgba(255, 60, 60, 0.9); }

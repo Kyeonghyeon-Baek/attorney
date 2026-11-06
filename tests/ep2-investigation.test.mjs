@@ -160,3 +160,143 @@ test('court asks about code #7 for the first time when the optional investigatio
     assert.ok(game.revealed.has('x4-5b'));
   }
 });
+
+async function progress(day, flags = []) {
+  const game = harness(CASE_EP2, flags);
+  game.exec = async function(cmd) {
+    if (cmd.t === 'say' || cmd.t === 'think') { this.lines.push(cmd.text); return; }
+    if (cmd.t === 'memo') return;
+    return Game.prototype.exec.call(this, cmd);
+  };
+  assert.ok(CASE_EP2.locations[day].progress, 'episode has progress script');
+  await game.run(CASE_EP2.locations[day].progress);
+  return game;
+}
+function destinations(game, from) {
+  return CASE_EP2.locations[from].connects.filter(id => {
+    const req = CASE_EP2.locations[id].requires;
+    return !req || game.has(req) || game.has(`visited:${id}`);
+  });
+}
+test('day one opens only the next scene until witness reconstruction, then two leads', async () => {
+  let g = await progress('d1visit');
+  assert.deepEqual(destinations(g, 'd1visit'), []);
+  g = await progress('d1visit', ['d1:soyoonRoof', 'd1:boilerCode']);
+  assert.deepEqual(destinations(g, 'd1visit'), ['d1alley']);
+  const flags = [...g.flags, 'postmortem', 'phoneScreen', 'firstStatement', 'dalbitMap'];
+  g = await progress('d1alley', flags);
+  assert.ok(destinations(g, 'd1alley').includes('d1entrance'));
+  assert.ok(!destinations(g, 'd1alley').includes('d1roof'));
+  g = await progress('d1entrance', [...g.flags, 'appraisal']);
+  assert.ok(destinations(g, 'd1entrance').includes('d1roof'));
+  g = await progress('d1roof', [...g.flags, 'd1:roofTab', 'd1:reenactReady']);
+  assert.ok(destinations(g, 'd1roof').includes('d1laundry'));
+  g = await progress('d1laundry', [...g.flags, 'd1:windowShot', 'talked:d1laundry:saw']);
+  assert.ok(destinations(g, 'd1laundry').includes('d1shrine'));
+  assert.ok(destinations(g, 'd1laundry').includes('d1realty'));
+  assert.ok(!destinations(g, 'd1laundry').includes('d1senior'));
+  for (const order of [['d1:okbunTalk', 'd1:ahnMet'], ['d1:ahnMet', 'd1:okbunTalk']]) {
+    const first = await progress('d1shrine', [...g.flags, order[0]]);
+    assert.ok(!destinations(first, 'd1shrine').includes('d1senior'));
+    const both = await progress('d1realty', [...first.flags, order[1], 'roofDoorLog']);
+    assert.ok(destinations(both, 'd1realty').includes('d1senior'));
+    const resumed = await progress('d1realty', [...both.flags]);
+    assert.deepEqual(resumed.lines, [], 'saved transitions must not repeat');
+  }
+});
+
+test('day two secures scrap before opening trails and requires consent and photo leads', async () => {
+  let g = await progress('d2roof', ['d2:strapSeen', 'd2:scrapHint']);
+  assert.deepEqual(destinations(g, 'd2roof'), ['d2scrap']);
+  g = await progress('d2scrap', [...g.flags, 'd2:binBag']);
+  assert.ok(destinations(g, 'd2scrap').includes('d2mgmt'));
+  assert.ok(destinations(g, 'd2scrap').includes('d2laundry'));
+  assert.ok(!destinations(g, 'd2scrap').includes('d2visit'));
+  g = await progress('d2mgmt', [...g.flags, 'd2:camFound']);
+  assert.ok(destinations(g, 'd2mgmt').includes('d2visit'));
+  g = await progress('d2visit', [...g.flags, 'd2:soyoonConsent']);
+  assert.ok(destinations(g, 'd2visit').includes('d2shrine'));
+  assert.ok(!destinations(g, 'd2visit').includes('d2ladder'));
+  g = await progress('d2shrine', [...g.flags, 'originals', 'd2:highShot', 'talked:d2shrine:why', 'd2:laundryBag']);
+  assert.ok(destinations(g, 'd2shrine').includes('d2ladder'));
+  assert.ok(destinations(g, 'd2shrine').includes('d2byeon'));
+});
+
+test('move list masks unknown EP2 places but preserves known previews and legacy access', async () => {
+  const stop = new Error('captured destinations');
+  for (const visited of [false, true]) {
+    const g = harness(CASE_EP2, ['visited:d1visit', 'route:d1alley', ...(visited ? ['visited:d1alley'] : [])]);
+    g.hasFresh = () => false;
+    g.inv.menu = async () => 'move';
+    g.inv.list = async (title, items) => {
+      const alley = items.find(i => i.id === 'd1alley');
+      assert.ok(alley);
+      assert.equal(alley.unknown, !visited);
+      if (!visited) assert.equal(alley.thumb, undefined);
+      throw stop;
+    };
+    await assert.rejects(g.runInvestigate(investigate('d1visit', [], [], '끝')), e => e === stop);
+  }
+});
+
+test('both investigations can collect every finish requirement through reachable places', async () => {
+  const { DAY1_GOALS } = await vite.ssrLoadModule('/src/content/ep2/investigation1.ts');
+  const { DAY2_GOALS } = await vite.ssrLoadModule('/src/content/ep2/investigation2.ts');
+  for (const [start, goals] of [['d1visit', DAY1_GOALS], ['d2roof', DAY2_GOALS]]) {
+    for (const reverse of [false, true]) {
+      const g = harness(CASE_EP2);
+      g.exec = async function(cmd) {
+        if (['if', 'flag'].includes(cmd.t)) return Game.prototype.exec.call(this, cmd);
+        if (cmd.t === 'addEvidence') this.flags.add(cmd.id);
+        if (cmd.t === 'examine') {
+          for (const spot of cmd.spots) await this.run(spot.script);
+          assert.ok(this.has(cmd.until), 'the available examine actions satisfy its exit condition');
+        }
+        if (cmd.t === 'ask') {
+          const correct = cmd.options.find(option => option.correct);
+          if (correct) await this.run(correct.then);
+        }
+      };
+      const reached = new Set([start]);
+      for (let pass = 0; pass < 25 && !goals.every(id => g.has(id)); pass++) {
+        const ids = [...reached];
+        if (reverse) ids.reverse();
+        for (const id of ids) {
+          const loc = CASE_EP2.locations[id];
+          if (!g.has(`visited:${id}`)) {
+            g.flags.add(`visited:${id}`);
+            await g.run(loc.enter ?? []);
+          }
+          for (const topic of loc.talks ?? []) {
+            if (topic.requires && !g.has(topic.requires)) continue;
+            g.flags.add(`talked:${id}:${topic.id}`);
+            await g.run(topic.script);
+          }
+          for (const spot of loc.hotspots) await g.run(spot.script);
+          await g.run(loc.progress ?? []);
+          destinations(g, id).forEach(next => reached.add(next));
+        }
+      }
+      assert.deepEqual(goals.filter(id => !g.has(id)), [], `${start}, reverse=${reverse}: no blocked finish requirements`);
+    }
+  }
+});
+
+test('legacy visited places remain reachable and day-two revisits keep their artwork', async () => {
+  const stop = new Error('captured destinations');
+  for (const [from, target, flags] of [
+    ['d1visit', 'd1senior', ['visited:d1visit', 'visited:d1senior']],
+    ['d2roof', 'd2laundry', ['visited:d2roof', 'route:d2mgmt', 'visited:d1laundry']],
+  ]) {
+    const g = harness(CASE_EP2, flags);
+    g.hasFresh = () => false;
+    g.inv.menu = async () => 'move';
+    g.inv.list = async (title, items) => {
+      const item = items.find(i => i.id === target);
+      assert.ok(item, 'visited legacy destination or unlocked lead remains accessible');
+      assert.equal(item.unknown, false);
+      throw stop;
+    };
+    await assert.rejects(g.runInvestigate(investigate(from, [], [], '끝')), e => e === stop);
+  }
+});

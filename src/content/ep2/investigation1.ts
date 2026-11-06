@@ -1,3 +1,4 @@
+import { guideDayOne } from './investigation-flow';
 import type { Location, Script } from '../../engine/types';
 import {
   addEvidence, addProfile, ambience, annotate, app, bgm, board, boardOff, cg, fadeIn, fadeOut, field, flag, goto,
@@ -218,7 +219,7 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
         say('dan', '휴대폰 화면 구석의 "원격 지원 중" 배지는 누구랑 연결돼 있던 건가요?', 'normal'),
         say('gu', '아, 관리소장 맡고 계신 안태수 씨한테 물어봤슴다.', 'serious'),
         say('gu', '그날 소장님이 화면을 봐 드리고 있었답니다. 앱 사진 찍는 거 도와준다고요.', 'serious'),
-        say('gu', '자세한 건 달빛공인에 가서 소장님께 직접 들어 보십쇼. 그때 화면을 본 사람은 그분뿐임다.', 'serious'),
+        say('gu', '그때 화면을 본 사람은 그분뿐임다. 현장 확인 끝나면 따로 말씀 들어 보셔야겠슴다.', 'serious'),
         say('narae', '아하, 안 아저씨가 어르신들 스마트폰 쓰는 거 늘 도와주시거든.', 'normal'),
         memo('휴대폰 배지 「원격 지원 중」: 관리소장 안태수가 화면을 보고 있었다(화면만, 말은 못 한다고).'),
       ] },
@@ -729,7 +730,7 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
     talks: [
       { id: 'remote', label: '원격 지원', script: [
         say('ahn', '사실 경찰에도 말씀드렸는데… 그날 제가 최 사장님 화면을 봐 드리고 있었어요.', 'explain'),
-        say('dan', '재인증 구도 맞추는 걸 도와주셨다고 들었어요.', 'normal'),
+        say('dan', '휴대폰 화면 구석에 "원격 지원 중" 배지가 떠 있더라고요. 사진 찍는 걸 도와주신 건가요?', 'normal'),
         say('ahn', '네. 그 원격 기능은 화면만 보이고 말은 전혀 못 해요. 앱 안내대로 움직이시던데…', 'explain'),
         say('ahn', '화면이 갑자기 휙 돌더니 끊겨서, 전 그냥 실수로 폰만 떨어뜨리신 줄 알았죠.', 'sweat'),
         say('ahn', '그게 십 년 인연의 마지막일 줄은 꿈에도 몰랐습니다.', 'sweat'),
@@ -787,6 +788,8 @@ DAY1_LOCATIONS.d1realty.hotspots.find((h) => h.id === 'card')!.script.push(...ah
 
 export const DAY1_SCENES: Record<string, Script> = {
   day1: [
+    // The date card sits on the visiting room, not the empty courtroom (and without the court HUD).
+    field('visit'),
     place('6월 16일 월요일', '오전 10시', '서울구치소'),
     investigate('d1visit', DAY1_GOALS, [goto('day1night')], '조사를 마친다'),
   ],
@@ -836,3 +839,5 @@ export const DAY1_SCENES: Record<string, Script> = {
     goto('lobby1'),
   ],
 };
+
+guideDayOne(DAY1_LOCATIONS);

@@ -1443,6 +1443,7 @@ export class Game {
           this.scene.showPlace(loc.person);
           if (loc.enter && (await this.run(loc.enter)) === STOP) return STOP;
         }
+        if (loc.progress && (await this.run(loc.progress)) === STOP) return STOP;
         if (goalsMet() && !cmd.finishLabel) {
           this.box.hide();
           this.scene.showPlace(loc.person);
@@ -1476,10 +1477,15 @@ export class Game {
         } else if (action === 'move') {
           const dest = await this.inv.list('어디로 갈까?', loc.connects.filter((id) => {
             const req = this.data.locations[id].requires;
-            return !req || this.has(req);
-          }).map((id) => ({
-            id, label: this.data.locations[id].name, thumb: bgImage(this.data.locations[id].bg), fresh: this.hasFresh(id),
-          })));
+            return !req || this.has(req) || this.flags.has(`visited:${id}`);
+          }).map((id) => {
+            const destination = this.data.locations[id];
+            const known = this.flags.has(`visited:${id}`) ||
+              !!destination.knownFrom && this.flags.has(`visited:${destination.knownFrom}`);
+            const unknown = !!destination.maskUnvisited && !known;
+            return { id, label: destination.name, unknown,
+              thumb: unknown ? undefined : bgImage(destination.bg), fresh: this.hasFresh(id) };
+          }));
           if (dest) {
             sfx('step');
             const arrive = this.data.locations[dest].arrive;

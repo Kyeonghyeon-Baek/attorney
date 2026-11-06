@@ -1,3 +1,4 @@
+import { guideDayTwo } from './investigation-flow';
 import type { Location, Script } from '../../engine/types';
 import {
   addEvidence, addProfile, ambience, annotate, app, bgm, choose, examine, fadeIn, fadeOut, field, flag, goto,
@@ -5,7 +6,7 @@ import {
 } from '../script';
 
 // 2일차 조사 (6/18). 새 장소 다섯(관리사무실·고철 컨테이너·변복만 옥상·하늘사다리·검사실). docs/ep2/play-flow.md §7.
-// 시간: 아침 공사 현장 → 마을 전체 → (필수를 모으고 조사를 마치면) 15시 정한의 전화로 검사실 → 저녁 정한의 연락(홈캠 원본) → 노을의 옥상.
+// 시간: 아침 공사 현장 → 고철 확보 → 단서별 동선 → (필수를 모으고 조사를 마치면) 15시 정한의 전화로 검사실 → 저녁 정한의 연락(홈캠 원본) → 노을의 옥상.
 
 const MORNING = ['d2roof', 'd2mgmt', 'd2laundry', 'd2scrap', 'd2byeon', 'd2visit', 'd2shrine', 'd2ladder'];
 const others = (id: string) => [...MORNING.filter((x) => x !== id), 'd2prosecutor'];
@@ -355,7 +356,7 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     talks: [
       { id: 'papers', label: '원본 서류', script: [
         say('dan', '할머니 쌀독에 맡긴 서류 말이에요. 내일 법정에 꼭 필요해요.'),
-        say('dan', '할머니께선 맡긴 사람 허락 없이는 절대 단지를 못 연다고 버티고 계세요.', 'normal'),
+        say('dan', '맡긴 분 동의부터 받아 가려고요. 그 서류를 저희에게 맡겨 주시겠어요?', 'normal'),
         say('soyoon', '…끝까지 입 다물어 주셨구나.', 'shaken'),
         say('soyoon', '…할머니한테 제가 괜찮다고 했다고 전해 주세요.', 'shaken'),
         say('soyoon', '그거 지키느라 할머니가 욕먹는 거, 더는 싫어요.', 'tears'),
@@ -581,6 +582,8 @@ export const DAY2_SCENES: Record<string, Script> = {
   day2: [
     // Keep the saved phase even when the player revisits the village after the phone call.
     when('d2:call15', prosecutorInvestigation, [
+      // The date card sits on the roof, not the empty courtroom (and without the court HUD).
+      field('happyRoofW'),
       place('6월 18일 수요일', '오전 6시 50분', '행복하우스 옥상'),
       investigate('d2roof', DAY2_GOALS, [
         sfx('phone'),
@@ -631,3 +634,5 @@ export const DAY2_SCENES: Record<string, Script> = {
     goto('lobby2'),
   ],
 };
+
+guideDayTwo(DAY2_LOCATIONS);

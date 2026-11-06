@@ -394,6 +394,12 @@ export interface Location {
   arrive?: SfxName;
   person?: CharId;
   connects: string[];
+  /** Evaluated before each investigation menu; scripts guard one-time transitions with flags. */
+  progress?: Script;
+  /** Hide destination artwork until visited (episode opt-in). */
+  maskUnvisited?: boolean;
+  /** Same physical location in an earlier investigation. */
+  knownFrom?: string;
   /** Plays the first time the player arrives. */
   enter?: Script;
   /** Flag or evidence id needed before the place shows up in the move list. */

@@ -9,6 +9,7 @@ export interface ListItem {
   id: string;
   label: string;
   thumb?: string;
+  unknown?: boolean;
   done?: boolean;
   /** Something new to see or ask here since the last visit. */
   fresh?: boolean;
@@ -74,7 +75,8 @@ export class InvestigateUi {
       b.disabled = !enabled[i];
       return b;
     });
-    let sel = 0;
+    // Nothing is highlighted until an arrow key picks a button, so 조사하기 doesn't look preselected.
+    let sel = -1;
     const paint = () => buttons.forEach((b, i) => b.classList.toggle('on', i === sel));
     paint();
     return new Promise((resolve) => {
@@ -86,9 +88,13 @@ export class InvestigateUi {
       };
       buttons.forEach((b, i) => b.addEventListener('click', () => done(actions[i].id)));
       const step = (d: number) => {
+        // The first arrow press lands on the first usable button, whichever way it points.
         let next = sel;
-        do next = (next + d + actions.length) % actions.length;
-        while (!enabled[next]);
+        if (next < 0) next = enabled.indexOf(true);
+        else {
+          do next = (next + d + actions.length) % actions.length;
+          while (!enabled[next]);
+        }
         sel = next;
         sfx('select');
         paint();
@@ -98,7 +104,7 @@ export class InvestigateUi {
         if (n !== undefined && enabled[n]) done(actions[n].id);
         else if (a === 'right' || a === 'down') step(a === 'down' ? 2 : 1);
         else if (a === 'left' || a === 'up') step(a === 'up' ? -2 : -1);
-        else if (a === 'advance') done(actions[sel].id);
+        else if (a === 'advance' && sel >= 0) done(actions[sel].id);
         else if (a === 'record') done('record');
         else if (a === 'present' && enabled[3]) done('present');
       }, { strict: true });
@@ -173,7 +179,11 @@ export class InvestigateUi {
     const wrap = el('div', 'inv-list-items', this.listEl);
     const buttons = items.map((it, i) => {
       const b = el('button', 'inv-item', wrap);
-      if (it.thumb) {
+      if (it.unknown) {
+        const th = el('span', 'inv-thumb inv-thumb-unknown', b, '?');
+        th.setAttribute('aria-hidden', 'true');
+        b.setAttribute('aria-label', `${it.label} · 아직 가보지 않은 장소`);
+      } else if (it.thumb) {
         const th = el('span', 'inv-thumb', b);
         th.style.backgroundImage = `url("${it.thumb}")`;
       } else {
