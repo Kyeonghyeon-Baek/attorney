@@ -959,6 +959,7 @@ button { font: inherit; }
 .inv-action:hover:not(:disabled),
 .inv-action.on:not(:disabled) { background: var(--red); }
 .inv-action:disabled { opacity: 0.35; cursor: default; }
+.inv-action.inv-finish { grid-column: 1 / -1; justify-content: center; border-color: var(--ochre); }
 .inv-key { font-size: 15px; color: var(--ochre); }
 .inv-action.on .inv-key,
 .inv-action:hover:not(:disabled) .inv-key { color: var(--paper); }

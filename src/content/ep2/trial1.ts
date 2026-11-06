@@ -10,6 +10,20 @@ import { RECAP_FALL, RECAP_PRICE, RECAP_SHOUT } from './recaps';
 // 판관 89.4 → 88.6(X1) → 76.0(X2) → 84.2(119) → 71.5(X3) → 83.0(홈캠) → 78.5(X4) → 70.0(소매) → 93.1(계획성 지표).
 // docs/ep2/play-flow.md §6.
 
+const FIRST_STATEMENT_SIGHT: Script = [
+  say('dan', '사건 직후 지구대 메모엔 "확 밀었다"가 아니라, "난간 휘청" 다음에 "팔 뻗음"이라고 적혀 있어요.', 'point'),
+  think('(순서가 바뀐 건 맞아. 그런데 "똑똑히 봤다"는 확신부터 깨지 않으면 말실수로 넘어가 버려.)'),
+  think('(사 층 창가에서 두 팔이 "닿는 순간"이 과연 보일 수 있었는지, 시야부터 짚어야 해.)'),
+  memo('배정숙 첫 진술엔 "난간 휘청"이 있었다. 먼저 "똑똑히 봤다"를 짚어야 한다.'),
+];
+
+const FIRST_STATEMENT_TIMING: Script = [
+  say('dan', '첫 진술 메모를 보면, 외침이 나온 순서도 지금 말씀과는 달라요.', 'point'),
+  say('eom', '메모 끝에 적힌 외침만으론 선후가 모호합니다. 지금 쟁점은 피고인이 팔을 뻗은 행위와 추락의 순서죠.', 'normal'),
+  think('(외침 순서도 수상하지만, 화살표로 또렷이 적힌 건 동작 순서야. "팔을 뻗은 시점" 문장에 들이대자.)'),
+  memo('최초 진술의 동작 순서: 난간 휘청 → 여자 튀어나와 팔 뻗음. 팔을 뻗은 시점을 대조하자.'),
+];
+
 export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
   // ---------------------------------------------------------------- X1 구만두 「추락 경위」 (차감 없음)
   x1: {
@@ -40,6 +54,11 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
           say('gu', '최 사장님이 먼저 올라가셨고, 곧이어 피고인이 태그했슴다. 그 뒤론 없슴다.', 'serious'),
         ] },
       { id: 'x1-3', who: 'gu', emo: 'serious', text: '피해자는 난간에 등을 댄 채 뒤로 넘어갔슴다. 등 아래 가로 멍이 그 자리임다.',
+        nearMiss: { postmortem: [
+          say('gu', '넵, 제가 방금 말씀드린 등 아래 가로 멍이 바로 그 검시 결과에 적힌 내용임다!', 'normal'),
+          think('(검시 결과를 꺼낸 건 맞아. 기댄 자세 자체는 다툼이 없으니, "앞에서 확 밀었다"고 단정한 문장에 들이대자.)'),
+          memo('검시는 기댄 자세를 뒷받침한다. "앞에서 확 밀었다"는 단정은 별개다.'),
+        ] },
         press: [
           say('dan', '난간에 등을 대고 서 있었다는 건 확실한가요?'),
           say('gu', '검시의 소견임다. 허리 아래 가로 멍이 난간 상단 높이랑 딱 맞슴다.', 'serious'),
@@ -61,6 +80,11 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
           think('(보통은 그렇다. 하지만 법정에선 "보통"보다 몸에 남은 기록이 먼저야.)'),
         ] },
       { id: 'x1-5', who: 'gu', emo: 'serious', text: '난간은 낡아서 같이 떨어졌슴다.',
+        nearMiss: { postmortem: [
+          say('eom', '검시 결과는 피해자의 신체 기록이지 난간 감식서가 아닙니다. 추락 자세와 관련이 있다는 점은 알겠군요.', 'normal'),
+          think('(검시 결과를 집은 건 맞아. 낡은 난간이 아니라, "앞에서 누가 확 밀었다"고 단정한 문장을 반박하자.)'),
+          memo('검시는 몸에 남은 흔적이다. 난간 노후가 아니라 "밀었다"는 단정을 대조하자.'),
+        ] },
         press: [
           say('dan', '난간이 낡아서 부러졌다는 건 정밀 감식을 거친 결과인가요?'),
           say('gu', '…솔직히 말씀드리면 낡았다는 건 제 눈대중임다.', 'panic'),
@@ -133,6 +157,7 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
           think('(서쪽 노을 역광이라 사람이 검은 그림자로만 보였다… 방금 아주 중요한 말씀이 나왔어.)'),
         ] },
       { id: 'x2-3', who: 'jeongsuk', text: '그 아가씨가 "떨어져!" 하고 소리를 지르더니',
+        nearMiss: { firstStatement: FIRST_STATEMENT_SIGHT },
         press: [
           say('dan', '골목 건너편 사 층 창가인데, "떨어져"라는 말이 또렷이 들렸나요?'),
           say('jeongsuk', '그럼! 창문을 반쯤 열어 놨는데 골목이 쩌렁쩌렁 울렸어.', 'confident'),
@@ -143,6 +168,7 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
         ] },
       { id: 'x2-4', who: 'jeongsuk', emo: 'confident', text: '두 팔로 남자를 확 밀었어요. 똑똑히 봤어요.',
         accept: ['dalbitMap#window'],
+        nearMiss: { firstStatement: FIRST_STATEMENT_SIGHT },
         press: [
           say('dan', '팔을 뻗는 동작 말고, 두 손바닥이 최 사장님 몸에 닿는 순간을 보셨어요?'),
           say('jeongsuk', '봤다니까 그러네! 아가씨가 팔을 쭉 뻗었고, 그 자리에서 남자가 쑥 없어졌어!', 'confident'),
@@ -151,16 +177,7 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
           think('(높이가 같아서 오히려 생기는 사각지대가 있어. 어제 우리가 직접 서 봤잖아.)'),
         ] },
       { id: 'x2-5', who: 'jeongsuk', text: '그래서 남자가 떨어진 거예요.',
-        nearMiss: {
-          firstStatement: [
-            say('dan', '사장님, 사건 당일 밤 지구대에서 하신 말씀은 지금이랑 조금 달랐어요.', 'point'),
-            say('jeongsuk', '어? 뭐가 달라요, 변호사 양반. 내 입으로 한 말인데 다 똑같지!', 'confident'),
-            say('eom', '증인이 두 손으로 미는 장면을 직접 봤다고 유지하는 이상, 초기 메모의 사소한 차이는 지엽적입니다.', 'normal'),
-            think('(순서가 다른 건 맞아. 그런데 먼저 "똑똑히 봤다"는 확신부터 걷어 내야 해.)'),
-            think('("닿는 걸 봤다"가 남아 있는 한, 순서는 사소한 말실수로 묻혀 버려.)'),
-            memo('배정숙 첫 진술엔 "난간 휘청"이 있었다. 먼저 "똑똑히 봤다"를 짚어야 한다.'),
-          ],
-        },
+        nearMiss: { firstStatement: FIRST_STATEMENT_SIGHT },
         press: [
           say('dan', '최 사장님이 추락한 게, 오로지 피고인이 밀었기 때문이라고 확신하시나요?'),
           say('jeongsuk', '아이고 답답해라. 둘밖에 없는 옥상에서 팔 뻗자마자 떨어졌는데 그거 말고 뭐가 있어?', 'gossip'),
@@ -198,6 +215,7 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
     ],
     statements: [
       { id: 'x2b-2', who: 'jeongsuk', text: '남자가 두 손을 번쩍 들고 뒷걸음질 쳤어요.',
+        nearMiss: { firstStatement: FIRST_STATEMENT_TIMING },
         press: [
           say('dan', '누가 떠민 게 아니라, 최 사장님이 제 발로 뒤로 물러났다는 건 확실하죠?'),
           say('jeongsuk', '그건 진짜 봤어! 살금살금 뒤로 가더라니까. 내 눈 아직 그 정도는 멀쩡해!', 'confident'),
@@ -205,6 +223,7 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
           say('jeongsuk', '어… 그렇게 말하니까 괜히 쑥스럽네.', 'normal'),
         ] },
       { id: 'x2b-3', who: 'jeongsuk', text: '그 아가씨가 "떨어져!" 하고 소리를 지르면서',
+        nearMiss: { firstStatement: FIRST_STATEMENT_TIMING },
         press: [
           say('dan', '그 외침이 들렸을 때, 서쪽 난간은 멀쩡히 서 있었나요?'),
           say('jeongsuk', '소리는 확실해. 세탁기 돌아가는 소리 사이로도 귀는 눈보다 더 멀쩡하거든.', 'normal'),
@@ -451,8 +470,14 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
         reveal('x4-3b'),
       ], [
         say('dan', '행복하우스 옥상 출입 기록이에요. 6월 11일 오후 2시 52분, "임시 코드 #7"로 문이 열렸어요.', 'point'),
-        say('dan', '어제 중개사무소에서 이 코드가 누구 거냐고 여쭸을 때, "물탱크 청소 업체"라고 하셨죠.'),
-        say('ahn', '네, 물탱크 청소요. 더워지기 전에 한 번씩 씻어 드려야죠. 그게 왜…', 'normal'),
+        when('talked:d1realty:log', [
+          say('dan', '어제 중개사무소에서 이 코드가 누구 거냐고 여쭸을 때, "물탱크 청소 업체"라고 하셨죠.'),
+          say('ahn', '네, 물탱크 청소요. 더워지기 전에 한 번씩 씻어 드려야죠. 그게 왜…', 'normal'),
+        ], [
+          say('dan', '이 임시 코드 #7은 어디에 내주신 건가요?', 'point'),
+          say('ahn', '아, 수요일 오후 거요? 그건 난간 점검이 아니라 물탱크 청소 업체예요.', 'explain'),
+          say('ahn', '더워지기 전에 물탱크 한 번씩 씻어 드려야죠. 그게 왜요?', 'normal'),
+        ]),
         say('dan', '정기 점검이 다음 주였고 난간이 멀쩡했다는 증언이 맞으려면, 이날 올라간 사람이 정말 청소 업체여야 해요.', 'point'),
         say('judge', '흐음, 사흘 전에 옥상에 올라간 외주 업체가 누구였는지 확인해 볼 만하군요.', 'normal'),
         say('eom', '…임시 코드 발급 기록을 조회하면 간단히 끝날 일입니다. 검찰이 확인하겠습니다.', 'normal'),

@@ -691,8 +691,8 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
     hotspots: [
       { id: 'frame', label: '벽 액자', x: 30, y: 0, w: 235, h: 285,
         script: [
-          note('「달빛마을 최고 조망 — 행복하우스 옥상」 노을 속 남산 타워 사진.'),
-          say('narae', '우와, 이 액자 볼 때마다 예술이야. 노을 위로 남산 타워가 딱 보이네!', 'happy'),
+          note('「달빛마을 최고 조망 — 행복하우스 옥상」 맑은 낮 하늘 아래 남산 타워가 선명히 찍힌 사진.'),
+          say('narae', '우와, 이 액자 볼 때마다 예술이야. 파란 하늘 위로 남산 타워가 딱 보이네!', 'happy'),
           say('ahn', '하하, 제가 직접 찍었어요. 미세먼지 없던 날 좋은 날, 운 좋게 건졌죠.', 'explain'),
           say('dan', '구도가 사진작가 못지않으시네요.', 'normal'),
         ] },
@@ -756,7 +756,7 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
         say('dan', '옥상 출입 기록에 있는 6월 11일 오후 "임시 코드 #7"은 누군가요?', 'point'),
         say('ahn', '아, 11일 오후요? 반년마다 부르는 물탱크 청소 업체 기사님들이요.', 'normal'),
         say('dan', '그럼 6월 13일 금요일 아침 열 시 십사 분의 관리 마스터는요?', 'normal'),
-        say('ahn', '그건 저죠. 방금 말씀드린 방수 작업하러 올라갔을 때입니다.', 'explain'),
+        say('ahn', '그건 저죠. 방수 작업하러 올라갔을 때입니다.', 'explain'),
         memo('출입 기록: 6/11 임시 코드 #7 = "물탱크 청소 업체"(안태수). 6/13 10:14 마스터 = 안태수(방수 작업).'),
       ] },
     ],
@@ -788,7 +788,7 @@ DAY1_LOCATIONS.d1realty.hotspots.find((h) => h.id === 'card')!.script.push(...ah
 export const DAY1_SCENES: Record<string, Script> = {
   day1: [
     place('6월 16일 월요일', '오전 10시', '서울구치소'),
-    investigate('d1visit', DAY1_GOALS, [goto('day1night')]),
+    investigate('d1visit', DAY1_GOALS, [goto('day1night')], '조사를 마친다'),
   ],
 
   day1night: [
@@ -815,8 +815,12 @@ export const DAY1_SCENES: Record<string, Script> = {
     say('narae', '근데 밥 먹으면서 생각할수록 좀 이상하지 않아?', 'sad'),
     say('narae', '옥상에서 앱이 말로 시키더랬잖아. 내가 아까 마당에서 해 보니까—', 'normal'),
     say('dan', '…말은 한마디도 안 하고 화살표만 나왔지.', 'normal'),
-    say('narae', '응. 띡띡. 경로당 위원장 할아버지도 벙어리 상자랬고.', 'normal'),
-    think('(둘 다 수저를 쥔 채 거기서 멈췄다. 아직은… 말로 꺼내기엔 이른 생각이야.)'),
+    when('talked:d1senior:app', [
+      say('narae', '응. 띡띡. 경로당 위원장 할아버지도 벙어리 상자랬고.', 'normal'),
+    ], [
+      say('narae', '응. 띡띡.', 'normal'),
+    ]),
+    think('(버전이나 설정 차이일까, 아니면 원래 음성 기능이 없는 걸까. 앱의 공식 사양부터 확인해 봐야겠어.)'),
     boardOff,
     sfx('phone'),
     note('엄정한 검사의 문자 「내일 10시. 판관의 근거 항목도 함께 확인하겠습니다.」'),

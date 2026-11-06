@@ -562,7 +562,7 @@ export class Game {
     // persistent presentation commands before the saved interaction: dialogue,
     // evidence, prediction and other story effects have already been saved.
     if (this.resumeLoc || this.resumeCross) {
-      const target = script.findIndex((cmd) => {
+      const matches = (cmd: Cmd): boolean => {
         if (this.resumeCross) return cmd.t === 'cross' && cmd.id === this.resumeCross.id;
         if (cmd.t !== 'investigate' || !this.resumeLoc) return false;
         const pending = [cmd.start];
@@ -575,14 +575,29 @@ export class Game {
           pending.push(...(this.data.locations[id]?.connects ?? []));
         }
         return false;
-      });
-      if (target >= 0) {
-        for (const cmd of script.slice(0, target)) {
+      };
+      // Search the restored phase, leaving conditions AFTER the interaction unevaluated.
+      const locate = (commands: Script): { before: Script; rest: Script } | null => {
+        const before: Script = [];
+        for (let i = 0; i < commands.length; i++) {
+          const cmd = commands[i];
+          if (matches(cmd)) return { before, rest: commands.slice(i) };
+          if (cmd.t === 'if') {
+            const nested = locate(this.has(cmd.has) ? cmd.then : cmd.else ?? []);
+            if (nested) return { before: [...before, ...nested.before], rest: [...nested.rest, ...commands.slice(i + 1)] };
+          }
+          before.push(cmd);
+        }
+        return null;
+      };
+      const target = locate(script);
+      if (target) {
+        for (const cmd of target.before) {
           if (cmd.t === 'field' || cmd.t === 'bgm' || cmd.t === 'ambience' || cmd.t === 'hud' || cmd.t === 'dimHud' || cmd.t === 'tint') {
             if ((await this.exec(cmd)) === STOP) return STOP;
           }
         }
-        script = script.slice(target);
+        script = target.rest;
       } else {
         // An obsolete or corrupt fine-grained marker must not affect later scenes.
         this.resumeLoc = null;
@@ -1428,7 +1443,7 @@ export class Game {
           this.scene.showPlace(loc.person);
           if (loc.enter && (await this.run(loc.enter)) === STOP) return STOP;
         }
-        if (goalsMet()) {
+        if (goalsMet() && !cmd.finishLabel) {
           this.box.hide();
           this.scene.showPlace(loc.person);
           return await this.run(cmd.then);
@@ -1437,20 +1452,23 @@ export class Game {
         this.box.hide();
         this.scene.showPlace(loc.person);
         this.autosave(`조사: ${loc.name}`, { loc: here });
-        const action = await this.inv.menu(!!loc.person);
+        const action = await this.inv.menu(!!loc.person, goalsMet() ? cmd.finishLabel : undefined);
         let r: Result = undefined;
-        if (action === 'record') {
+        if (action === 'finish' && cmd.finishLabel && goalsMet()) {
+          return await this.run(cmd.then);
+        } else if (action === 'record') {
           await this.record.open('view');
         } else if (action === 'examine') {
-          // Stay in examine mode until the player backs out (or the day's goals are met).
+          // Newly completed goals return to the menu to reveal the finish action.
           for (;;) {
             const spot = await this.inv.examine(loc.hotspots, (s) => this.spotState(here, s));
             if (!spot) break;
             const key = `seen:${here}:${spot.id}`;
             const again = this.flags.has(key) && spot.again;
             this.flags.add(key);
+            const wasReady = goalsMet();
             r = await this.run(again ? spot.again! : spot.script);
-            if (r === STOP || goalsMet()) break;
+            if (r === STOP || (!wasReady && goalsMet())) break;
             this.box.hide();
             this.scene.showPlace(loc.person);
             this.autosave(`조사: ${loc.name}`, { loc: here });
@@ -1478,8 +1496,9 @@ export class Game {
             const topic = topics.find((t) => t.id === pick);
             if (!topic) break;
             this.flags.add(`talked:${here}:${topic.id}`);
+            const wasReady = goalsMet();
             r = await this.run(topic.script);
-            if (r === STOP || goalsMet()) break;
+            if (r === STOP || (!wasReady && goalsMet())) break;
             this.box.hide();
             this.scene.showPlace(loc.person);
             this.autosave(`조사: ${loc.name}`, { loc: here });

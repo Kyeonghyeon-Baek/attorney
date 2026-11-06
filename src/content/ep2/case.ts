@@ -82,12 +82,12 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
   },
   ahnStand3: {
     label: '9. 제5 공방: 다 온 줄 알았다', evidence: [...T2, 'serverReply'],
-    flags: [...T2_FLAGS, 't2:callOne', recapFlag(RECAP_ARRIVED)], gauge: 34.0, status: '추락을 일으킨 접촉 미입증',
+    flags: [...T2_FLAGS, 't2:callOne', recapFlag(RECAP_ARRIVED)], gauge: 34.0, status: '피고인의 가해 주장 철회',
   },
   motive: {
     label: '10. 제6 공방: 동기', evidence: [...T2, 'serverReply'],
     flags: [...T2_FLAGS, 't2:callOne', 't2:x7a', 't2:x7b', 't2:x7c', 't2:x7d', 't2:x7e', recapFlag(RECAP_MOTIVE)],
-    gauge: 21.0, status: '대안 가설 — 고의의 이유 미확인',
+    gauge: 21.0, status: '가해 주장 철회 · 예측 근거 재검토',
   },
   epilogue: { label: '11. 에필로그', evidence: [...T2, 'serverReply'], flags: T2_FLAGS, gauge: 0, status: '심리 종료' },
 };

@@ -3,7 +3,7 @@ import { el, replay } from './dom';
 import { push, type Action } from './input';
 import type { Hotspot } from './types';
 
-export type InvestAction = 'examine' | 'move' | 'talk' | 'present' | 'record';
+export type InvestAction = 'examine' | 'move' | 'talk' | 'present' | 'record' | 'finish';
 
 export interface ListItem {
   id: string;
@@ -20,7 +20,7 @@ export interface ListItem {
  */
 export type SpotState = 'done' | 'fresh' | 'wait' | '';
 
-/** Number keys pick list items (the action menu has four, so 5~9 simply find nothing there). */
+/** Number keys pick actions or list items. */
 const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3, n5: 4, n6: 5, n7: 6, n8: 7, n9: 8 };
 
 const ACTIONS: { id: InvestAction; label: string }[] = [
@@ -30,7 +30,7 @@ const ACTIONS: { id: InvestAction; label: string }[] = [
   { id: 'present', label: '제시하기' },
 ];
 
-/** Location header, the four-way action menu, the examine cursor, and pick lists. */
+/** Location header, action menu with optional finish button, examine cursor, and pick lists. */
 export class InvestigateUi {
   private chip: HTMLElement;
   private chipName: HTMLElement;
@@ -60,12 +60,15 @@ export class InvestigateUi {
     this.listEl.hidden = true;
   }
 
-  menu(canTalk: boolean): Promise<InvestAction> {
+  menu(canTalk: boolean, finishLabel?: string): Promise<InvestAction> {
     this.menuEl.replaceChildren();
     this.menuEl.hidden = false;
-    const enabled = ACTIONS.map((a) => canTalk || (a.id !== 'talk' && a.id !== 'present'));
-    const buttons = ACTIONS.map((a, i) => {
+    const actions = [...ACTIONS];
+    if (finishLabel) actions.push({ id: 'finish', label: finishLabel });
+    const enabled = actions.map((a) => canTalk || (a.id !== 'talk' && a.id !== 'present'));
+    const buttons = actions.map((a, i) => {
       const b = el('button', 'inv-action', this.menuEl);
+      if (a.id === 'finish') b.classList.add('inv-finish');
       el('span', 'inv-key', b, String(i + 1));
       el('span', '', b, a.label);
       b.disabled = !enabled[i];
@@ -81,10 +84,10 @@ export class InvestigateUi {
         sfx('select');
         resolve(a);
       };
-      buttons.forEach((b, i) => b.addEventListener('click', () => done(ACTIONS[i].id)));
+      buttons.forEach((b, i) => b.addEventListener('click', () => done(actions[i].id)));
       const step = (d: number) => {
         let next = sel;
-        do next = (next + d + ACTIONS.length) % ACTIONS.length;
+        do next = (next + d + actions.length) % actions.length;
         while (!enabled[next]);
         sel = next;
         sfx('select');
@@ -92,13 +95,13 @@ export class InvestigateUi {
       };
       const pop = push((a) => {
         const n = NUM[a];
-        if (n !== undefined && enabled[n]) done(ACTIONS[n].id);
+        if (n !== undefined && enabled[n]) done(actions[n].id);
         else if (a === 'right' || a === 'down') step(a === 'down' ? 2 : 1);
         else if (a === 'left' || a === 'up') step(a === 'up' ? -2 : -1);
-        else if (a === 'advance') done(ACTIONS[sel].id);
+        else if (a === 'advance') done(actions[sel].id);
         else if (a === 'record') done('record');
         else if (a === 'present' && enabled[3]) done('present');
-      });
+      }, { strict: true });
     });
   }
 

@@ -69,8 +69,8 @@ export const addEvidence = (id: string): Cmd => ({ t: 'addEvidence', id });
 export const flag = (name: string): Cmd => ({ t: 'flag', name });
 /** Branches on a flag or a piece of evidence the player holds. */
 export const when = (has: string, then: Script, otherwise?: Script): Cmd => ({ t: 'if', has, then, else: otherwise });
-/** Free investigation that ends once every id in `until` is held, then plays `then`. */
-export const investigate = (start: string, until: string[], then: Script): Cmd => ({ t: 'investigate', start, until, then });
+/** Goals either finish automatically or unlock a player-selected finish action. */
+export const investigate = (start: string, until: string[], then: Script, finishLabel?: string): Cmd => ({ t: 'investigate', start, until, then, finishLabel });
 export const addProfile = (id: string): Cmd => ({ t: 'addProfile', id });
 /**
  * Leaves the courtroom for a location, or returns with null. The player's side stays

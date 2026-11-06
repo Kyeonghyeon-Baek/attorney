@@ -32,10 +32,10 @@ const H = 720;
 const NAMSAN = `
   <defs>
     <linearGradient id="ns-sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2a2452"/>
-      <stop offset="0.45" stop-color="#7a4a78"/>
-      <stop offset="0.8" stop-color="#e9845a"/>
-      <stop offset="1" stop-color="#f7b072"/>
+      <stop offset="0" stop-color="#3b8edb"/>
+      <stop offset="0.45" stop-color="#74b6ed"/>
+      <stop offset="0.8" stop-color="#b8dcf5"/>
+      <stop offset="1" stop-color="#e2f1fa"/>
     </linearGradient>
     <linearGradient id="ns-brick" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#6b4a3e"/><stop offset="1" stop-color="#3e2a26"/>
@@ -139,7 +139,8 @@ function room(kind: '201' | '302real' | '302fake'): string {
 // The victim's phone, held overhead at W3, faced ENE: the roof, the stair hut on the left, the
 // laundry building and its sign frame ahead. The railing is behind him and never in frame, so a
 // frame can only show where 소윤 is. She stands about 2 m in front until 33 s, comes at him from
-// 35 s, and her hand enters at the bottom edge at 37 s.
+// 35 s with her face and outstretched hand visible; at 37 s only her hand and sleeve fill the
+// lower edge, with her face out of frame. The frame alone does not establish physical contact.
 function clipFrame(sec: number): string {
   const sky = `<rect width="${W}" height="${H}" fill="#e98a5c"/><rect width="${W}" height="300" fill="#6a4a78"/>`;
   const town = `

@@ -198,7 +198,7 @@ export type Cmd =
   | { t: 'field'; bg: string | null; everyone?: boolean }
   | { t: 'flag'; name: string }
   | { t: 'if'; has: string; then: Script; else?: Script }
-  | { t: 'investigate'; start: string; until: string[]; then: Script }
+  | { t: 'investigate'; start: string; until: string[]; then: Script; finishLabel?: string }
   | { t: 'cg'; id: string | null }
   | { t: 'cctv'; cam: string | null; time?: string; status?: string }
   | { t: 'detect'; boxes: DetectBox[] }

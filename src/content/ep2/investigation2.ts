@@ -5,7 +5,7 @@ import {
 } from '../script';
 
 // 2일차 조사 (6/18). 새 장소 다섯(관리사무실·고철 컨테이너·변복만 옥상·하늘사다리·검사실). docs/ep2/play-flow.md §7.
-// 시간: 아침 공사 현장 → 마을 전체 → (필수를 다 모으면) 15시 정한의 전화로 검사실 → 저녁 정한의 연락(홈캠 원본) → 노을의 옥상.
+// 시간: 아침 공사 현장 → 마을 전체 → (필수를 모으고 조사를 마치면) 15시 정한의 전화로 검사실 → 저녁 정한의 연락(홈캠 원본) → 노을의 옥상.
 
 const MORNING = ['d2roof', 'd2mgmt', 'd2laundry', 'd2scrap', 'd2byeon', 'd2visit', 'd2shrine', 'd2ladder'];
 const others = (id: string) => [...MORNING.filter((x) => x !== id), 'd2prosecutor'];
@@ -165,10 +165,8 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         // Once opened, later clicks get the aftermath (an `again` would also fire after a refusal).
         script: [
           when('d2:laundryBag', [
-            say('jeongsuk', '봉투는 형사님이 가져갔어. 영수증 열두 장짜리 봉투는 남았고.', 'gossip'),
-            say('gu', '배 사장님! 제 바지 주머니 만두 영수증 얘기는 빼 주십쇼!', 'panic'),
-            say('narae', '열두 장이요? 형사님, 세탁소에 바지 맡길 때마다 만두를 드신 거예요?', 'happy'),
-            think('(구 형사님 주머니는 뒤집어 볼 필요도 없이 어제 메뉴가 나오네.)'),
+            say('jeongsuk', '안 사장 봉투는 방금 형사님이 챙겨 갔어. 내 서랍엔 이제 동네 단골들 단추랑 동전뿐이여.', 'normal'),
+            think('(점퍼에서 나온 너트와 타이는 이미 확보했어. 다른 곳을 마저 살펴보자.)'),
           ], [
             when('d2:jacketTold', [
               say('gu', '임의 제출로 받겠슴다. 배 사장님, 봉투 여시겠슴까?', 'serious'),
@@ -205,7 +203,6 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         say('dan', '마침 여쭤보려고 했어요. 높이를 재 봐도 될까요?'),
         say('jeongsuk', '얼마든지 재 봐! 버스 정류장에서도 보이게 철골을 이층집만큼 올렸거든!', 'confident'),
         say('gu', '비켜 보십쇼. 레이저 거리계는 형사의 기본임다.', 'normal'),
-        say('narae', '오, 형사님 주머니에서 영수증 말고 기계도 나오네요!', 'happy'),
         note('정숙세탁 옥상 간판틀 윗선: 행복하우스 옥상에서 약 34m 앞, 높이는 그 옥상 바닥보다 약 7.7m 위.'),
         annotate('dalbitMap', '[간판틀 · 6/18 구만두 측량] 정숙세탁 옥상 간판틀 윗선은 행복하우스 옥상에서 동북동 약 34m, 옥상 바닥 +7.7m.'),
         say('jeongsuk', '봐, 내가 그랬지? 그 옥상에선 우리 간판밖에 안 보인다니까.', 'confident'),
@@ -257,16 +254,10 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
               think('(맞아. 봉투가 그 사무소 거라고, 버린 사람이 정해지진 않아. 더 확실한 물증이 필요해.)'),
             ]),
           ], 'd2:binBag'),
-          sfx('thud'),
-          say('gu', '으억, 배가 끼었슴다!', 'panic'),
-          say('narae', '숨 들이마시고 뒤로 빼요! 야식 만두 좀 끊으시라니까!', 'angry'),
-          say('gu', '만두는 죄가 없슴다…! 이 동네 왕만두 피가 유독 두꺼웠을 뿐임다!', 'panic'),
-          say('dan', '자, 제가 양팔 잡을 테니까 하나 둘 하면 발 구르세요!', 'sweat'),
-          think('(증거 봉투는 무사히 건졌는데, 형사님을 고철 차에 보낼 뻔했네.)'),
+          say('gu', '고철 차 오기 전에 건져서 다행임다. 지문 안 번지게 바로 봉인하겠슴다!', 'serious'),
         ],
         again: [
-          say('gu', '저 안엔 다시 안 들어감다. 제 갈비뼈랑 배가 기억하고 있슴다.', 'panic'),
-          say('narae', '오늘 점심은 만두 말고 샐러드 드세요, 형사님.', 'happy'),
+          say('gu', '바닥 구석까지 싹 뒤졌슴다. 건질 만한 건 다 챙겼슴다.', 'serious'),
         ] },
     ],
     presentDefault: [
@@ -295,17 +286,17 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         ] },
       { id: 'lettuce', label: '상추밭', x: 350, y: 490, w: 510, h: 220,
         script: [
-          say('byeon', '한 포기 따 가. 대의를 위해서.', 'proud'),
-          say('narae', '상추랑 대의가 무슨 상관이에요.', 'normal'),
-          say('byeon', '변호사도 쌈밥을 든든히 먹어야 마을 대의를 밝히지!', 'speech'),
-          think('(위원장님 사전에 "대의"는 아무 데나 넣어도 되는 만능 참기름 같은 거구나.)'),
+          say('byeon', '싱싱할 때 한 포기 따 가. 다 달빛마을 대의를 위해서 키우는 상추여!', 'proud'),
+          think('("대의를 위해서"라… 위원장님 마음을 움직이는 주문이 뭔지 알 것 같네.)'),
         ] },
     ],
     talks: [
       { id: 'original', label: '13일 영상 원본', script: [
         say('dan', '위원장님, 단톡방에 올리셨던 13일 아침 영상 말이에요. 휴대폰에 있는 원본을 볼 수 있을까요?'),
         say('byeon', '내 폰이 최신형 4K여! 단톡방에 올리니까 지 맘대로 깍두기가 돼서 그렇지!', 'proud'),
-        say('byeon', '그, 근데 원본은 좀 곤란한디… 상추 물 주면서 부른 내 콧노래까지 다 들어갔단 말여.', 'flustered'),
+        say('byeon', '그, 근데 원본은 좀 곤란한디… 상추 물 주면서 부른 내 콧노래도 민망하고, 괜히 안 소장 입장이 난처해지면 동네 이주 일은 누가 돕냔 말여.', 'flustered'),
+        say('narae', '위원장님, 저도 우리 할머니 하루라도 빨리 이사 가셨으면 좋겠거든요? 상자 위에서 밥 드시는 거 보기 싫어요.', 'sad'),
+        say('narae', '그래도 안 한 일을 저 302호 언니한테 덮어씌우고 가는 건 싫어요. 아저씨가 수리한 게 맞으면 원본 봐도 괜찮잖아요!', 'angry'),
         choose('변복만에게', '어떻게 부탁할까?', [
           option('경찰에 압수해 달라고 할게요.', [
             say('byeon', '압수? 추진위원장 폰을? 그건 대의가 아니지!', 'flustered'),
@@ -317,7 +308,7 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
           ]),
           option('대의를 위해서요, 위원장님.', [
             say('byeon', '…!', 'speech'),
-            say('byeon', '대의를 위해서라면야! 변복만이 그거 하나는 평생 지키는 사람이여!', 'speech'),
+            say('byeon', '나래 말도 맞고 변호사 양반 말도 맞어! 애먼 사람 잡는 건 달빛마을 대의가 아니지!', 'speech'),
             say('dan', '역시 달빛마을 추진위원장님이시네요. 음성 말고 화면만 확대해서 볼게요.', 'confident'),
           ], true),
         ], 'byeon', { free: true }),
@@ -336,14 +327,14 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         say('dan', '한 가지만 더요. 토요일 설명회 다과 휴식 때, 경로당 강당 옆 복도도 카메라에 찍히나요?'),
         say('byeon', '찍히지. 현관 쪽 복도 카메라는 내가 직접 관리하는데. 근데 그거 일주일이면 덮어써져.', 'normal'),
         say('narae', '일주일이면 이번 주 토요일에 지워진다는 거잖아요!', 'surprised'),
-        say('byeon', '걱정 마! 대의를 위해서, 내일 아침 댓바람에 USB에 뽑아 가지고 법원으로 바로 갈게!', 'speech'),
+        say('byeon', '걱정 마! 내일 아침 댓바람에 USB에 뽑아 가지고 법원으로 바로 갈게!', 'speech'),
         say('dan', '꼭 부탁드릴게요, 위원장님. 몇 분 몇 초에 나갔는지가 중요하거든요.', 'normal'),
         memo('변복만: 경로당 복도 CCTV(일주일 덮어쓰기)를 내일 아침 법원으로 가져온다.'),
         flag('d2:cctvAsked'),
       ] },
     ],
     presentDefault: [
-      say('byeon', '그건 달빛마을 대의랑은 별 상관없는 물건 같은데.', 'normal'),
+      say('byeon', '글쎄, 그건 내가 아는 동네 사정하고는 거리가 먼 물건인디.', 'normal'),
     ],
   },
 
@@ -491,8 +482,6 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
           note('나래가 바스켓에 타고 3m쯤 올라간다.'),
           say('narae', '와하하! 단비 언니 정수리 다 보여! 어제 없던 새치 한 가닥 찾았다!', 'happy'),
           say('dan', '새치 아니야, 형광등 불빛이야! 얼른 내려와!', 'sweat'),
-          say('haneul', '어제 들으니까 재판장님 같은 분은 절대 못 타세요, 이거. 아래 한 번 보고 기절하실걸요.', 'normal'),
-          think('(재판장님은 3미터가 아니라 바스켓 발판만 밟으셔도 휴정을 선언하실 분이지.)'),
         ] },
     ],
     talks: [
@@ -545,12 +534,10 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
       { id: 'notice', label: '집값닷AI 공지', script: [
         say('eom', '먼저 캐시에 남은 5월 20일 집값닷AI 공지입니다. 6월 14일까지 같은 구도로 다시 찍어 80%를 넘기라는 내용이죠.'),
         note('「안내는 화면과 알림음으로만 제공됩니다(음성 안내 없음).」'),
-        say('narae', '…!', 'surprised'),
-        say('narae', '…', 'surprised'),
-        think('(나래가 숨을 멈췄어. …나도 마찬가지야.)'),
-        think('(신당 마당에서도 그랬어. 화살표와 삑 알림음뿐, 이 앱은 원래 말을 하지 않아.)'),
-        think('(소윤 씨가 옥상 스피커로 들은 "뒤로", "팔 쭉"… 그건 기계 소리가 아니었어.)'),
-        memo('[남은 질문] 그 앱이 말을 하지 않는다면, 소윤 씨가 들은 목소리는 누구였나?'),
+        say('narae', '…언니, 봐. 설정 문제가 아니었어. 공식 공지에도 음성 안내 없음이라고 못 박혀 있잖아!', 'surprised'),
+        say('dan', '첫날 신당 마당에서 의심했던 그대로네요. 이 앱은 원래 말을 하지 않아요.', 'point'),
+        think('(공식 사양까지 확인됐어. 소윤 씨가 옥상 스피커로 들은 "뒤로", "팔 쭉"은 기계가 아니라 사람의 목소리야.)'),
+        memo('[확인] 집값닷AI는 공식 사양상 음성 안내가 없다. 옥상 스피커에서 난 소리는 사람의 목소리.'),
         say('eom', '하단 약관의 작은 글씨도 눈여겨보시죠. 현장 인증 클립은 영상과 음성이 서버에 30일 보관됩니다.', 'normal'),
         say('eom', '핵심은 마지막 줄입니다. 허위 자료가 한 건이라도 확인되면, 그 계정이 등록한 매물 전체가 재심사로 묶입니다.', 'normal'),
         think('(영상과 음성이 30일 보관… 그리고 허위 자료 하나가 드러나면 계정 전체가 무너진다.)'),
@@ -586,17 +573,24 @@ const prosecutorDone: Script = [when('d2:noticeRead', [when('d2:textsRead', [fla
 DAY2_LOCATIONS.d2prosecutor.talks![0].script.push(...prosecutorDone);
 DAY2_LOCATIONS.d2prosecutor.talks![1].script.push(...prosecutorDone);
 
+const prosecutorInvestigation: Script = [
+  investigate('d2prosecutor', ['d2:prosecutorDone'], [goto('day2eve')], '조사를 마친다'),
+];
+
 export const DAY2_SCENES: Record<string, Script> = {
   day2: [
-    place('6월 18일 수요일', '오전 6시 50분', '행복하우스 옥상'),
-    investigate('d2roof', DAY2_GOALS, [
-      sfx('phone'),
-      place('6월 18일 수요일', '오후 3시'),
-      sayAs('eom', '전화 속 엄정한', '변호인. 피해자 휴대폰 분석이 나왔습니다. 검사실로 오시겠습니까.'),
-      say('dan', '기다리고 있었습니다, 검사님. 지금 바로 서초동으로 갈게요.', 'point'),
-      say('narae', '언니, 가자! 최 사장님 폰 안에 뭐가 남았는지 직접 봐야겠어.', 'normal'),
-      flag('d2:call15'),
-      investigate('d2prosecutor', ['d2:prosecutorDone'], [goto('day2eve')]),
+    // Keep the saved phase even when the player revisits the village after the phone call.
+    when('d2:call15', prosecutorInvestigation, [
+      place('6월 18일 수요일', '오전 6시 50분', '행복하우스 옥상'),
+      investigate('d2roof', DAY2_GOALS, [
+        sfx('phone'),
+        place('6월 18일 수요일', '오후 3시'),
+        sayAs('eom', '전화 속 엄정한', '변호인. 피해자 휴대폰 분석이 나왔습니다. 검사실로 오시겠습니까.'),
+        say('dan', '기다리고 있었습니다, 검사님. 지금 바로 서초동으로 갈게요.', 'point'),
+        say('narae', '언니, 가자! 최 사장님 폰 안에 뭐가 남았는지 직접 봐야겠어.', 'normal'),
+        flag('d2:call15'),
+        ...prosecutorInvestigation,
+      ], '조사를 마친다'),
     ]),
   ],
 
