@@ -1,8 +1,9 @@
 import type { Script, Testimony } from '../../engine/types';
 import {
-  addEvidence, ambience, annotate, bgm, board, boardOff, cg, chapter, choose, cross, crossAgain, examine, fadeIn,
-  fadeOut, field, figure, figureOff, flag, goto, guide, ifPresented, introduce, memo, note, option, pinpoint, place, predict,
-  keys, pulse, rec, recNote, recap, reveal, row, say, sayAs, sfx, showRecord, spot, tape, think, wait, when,
+  addEvidence, ambience, annotate, bgm, board, boardOff, card, cg, chapter, choose, cross, crossAgain, examine,
+  fadeIn, fadeOut, field, figure, figureOff, flag, goto, guide, ifPresented, introduce, keys, memo, note,
+  option, panel, panelOff, pinpoint, place, predict, pulse, rec, recap, recNote, reveal, revise, row, say, sayAs,
+  sfx, spot, tape, think, wait, when,
 } from '../script';
 import { RECAP_ARRIVED, RECAP_HAND, RECAP_REMOTE } from './recaps';
 
@@ -422,6 +423,18 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
         ] },
       { id: 'x7-3', who: 'ahn', emo: 'normal', text: '난간을 푼 건 교체 준비였을 뿐입니다. 임시로 잡아 뒀으니 버틸 줄 알았죠.',
         accept: ['groupVideo'],
+        nearMiss: {
+          railReport: [
+            say('dan', '구조 감정을 보면, 그날 W3를 붙잡고 있던 건 고정이 다 풀린 채 끈 하나뿐이었어요.', 'point'),
+            say('ahn', '그러니까 끈으로 잡아 뒀다니까요. 교체하려면 일단 풀어야죠.', 'sweat'),
+            think('(감정은 "풀린 상태"를 말해 줘. 하지만 "교체 준비"였는지는 그 아침에 그가 실제로 무엇을 했는지가 말해 줄 거야.)'),
+          ],
+          phoneDump: [
+            say('dan', '당일 문자엔 "서쪽 난간은 어제 손봐 놨어요"라고 보내셨죠.', 'point'),
+            say('ahn', '손봐 놓은 건 맞죠. 교체 준비도 손보는 거니까요.', 'sweat'),
+            think('(말로는 얼마든지 둘러댈 수 있어. 그 아침 W3 앞에서 그의 손이 한 일을 직접 보여 줘야 해. 흔들어서 더 들어 보는 것도 방법이야.)'),
+          ],
+        },
         press: [
           say('dan', '교체 준비로 너트와 클램프를 다 풀어 놓은 사람이, 왜 당일 문자엔 "서쪽 난간은 어제 손봐 놨어요"라고 거짓 보고를 하셨죠?', 'point'),
           say('ahn', '…그, 그건 어르신 걱정하실까 봐 안심시켜 드리려고 한 말이었죠. 끈으로 잡아 뒀으니까요.', 'sweat'),
@@ -430,9 +443,28 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
           reveal('x7-3a'),
         ] },
       { id: 'x7-3a', who: 'ahn', emo: 'sweat', hidden: true, replaces: 'x7-3', text: '…안심하시라고 손봐 놨다고 한 겁니다. 끈으로 잡아 뒀으니까요.',
+        // "The strap was holding it" is exactly what the structural report answers.
+        accept: ['railReport'],
+        nearMiss: {
+          phoneDump: [
+            say('dan', '"서쪽 난간은 어제 손봐 놨어요." 그 문자는 이제 증인도 인정했어요.', 'point'),
+            think('(남은 건 "끈으로 잡아 뒀으니까"라는 말이야. 그 끈이 무엇을 붙잡고 있었는지 보여 줄 기록이 있지.)'),
+          ],
+        },
         press: [say('ahn', '그 끈만 그대로 있었으면 잠깐 서 계시는 동안엔 버텼을 거라고요.', 'sweat')] },
       { id: 'x7-4', who: 'ahn', emo: 'explain', text: '끈을 풀라고 한 것도 파란 천이 화면을 가릴까 봐서였지, 위험할 줄은 몰랐습니다.',
         accept: ['railReport'],
+        nearMiss: {
+          phoneDump: [
+            say('dan', '"방수포는 끈 풀고 걷으시면 돼요." 끈을 풀라고 한 건 증인도 방금 인정했어요.', 'point'),
+            think('(쟁점은 그 끈을 풀면 무슨 일이 생기는지 알았느냐야. 그 끈이 무엇을 붙잡고 있었는지 말해 주는 기록이 필요해.)'),
+          ],
+          inspection: [
+            say('dan', '6월 11일, "사람이 기대면 넘어갈 수 있어요"라는 경고 문자에 "제가 통제하겠습니다"라고 답하셨죠.', 'point'),
+            say('ahn', '그건 수요일 얘기잖아요. 그다음에 끈으로 단단히 잡아 뒀으니까요.', 'sweat'),
+            think('(경고를 받은 건 확인됐어. 남은 건 그 끈이 무엇을 붙잡고 있었고, 풀면 어떻게 되는지야.)'),
+          ],
+        },
         press: [
           say('dan', '아까 제4 공방에서 본인이 직접 인정하셨잖아요. 난간이 흔들리길래 그 끈으로 묶어 둔 거라고요!'),
           say('ahn', '그땐 사진 구도 맞추는 데만 정신이 팔려서, 끈을 풀면 난간까지 헐거워진다는 걸 미처 생각을 못 했죠…', 'sweat'),
@@ -470,7 +502,7 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
             spot('frame', '간판틀', [450, 110, 500, 135], [think('(세탁소 간판틀 위로 타워가 보인다. 높은 곳인 건 맞는데, 난간 안인지 밖인지는 다른 곳이 말해 줘.)')]),
             spot('hut', '옥탑과 물탱크', [70, 60, 300, 420], [think('(옥탑이 왼쪽에 비스듬히 보인다. 옥탑 지붕 위에서 찍은 사진은 아니라는 뜻이야.)')]),
           ], 't2:signPicked'),
-          say('dan', '맨 아래 초록색 표지판 「행복하우스」를 보세요! 이 간판은 골목을 보도록 W3 {r}바깥면{/}에 달려 있어요.', 'point'),
+          say('dan', '맨 아래 표지판 「행복하우스」를 보세요! 이 간판은 골목을 보도록 W3 {r}바깥면{/}에 달려 있어요.', 'point'),
           say('dan', '옥상 안에 서서 내려다보면 은색 뒷면과 볼트 네 개만 보여요. 그런데 이 사진에선 글자가 바로 읽혀요!'),
           say('ahn', '편, 편집 앱이 반전한 거겠죠! 요즘 카메라 앱은 알아서 좌우를…', 'sweat'),
           choose('반전?', '편집 앱이 사진을 뒤집었다면?', [
@@ -482,7 +514,7 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
             option('남산이 사라졌을 거다', [think('(좌우로 뒤집는다고 있던 산이 사라지진 않지. 간판 속 글자를 생각해 보자.)')]),
           ], 'dan', { free: true, hints: ['어제 겹쳐 보기에서 확인한 것.', '뒤집힌 사진의 글자는 어떻게 보였지?'] }),
           say('eom', '…바깥이라면 높이도 확인하겠습니다. 어제 측량한 세탁소 간판틀과 남산 전망대를 잇는 시선입니다.', 'normal'),
-          say('eom', '이 붉은 시선보다 아래에서는 앞 건물 간판에 막혀 남산이 보이지 않습니다.'),
+          say('eom', '이 노란 점선보다 아래에서는 앞 건물 간판에 막혀 남산이 보이지 않습니다.'),
           pinpoint('happySection', '이 사진을 찍은 카메라는 어디에 있었나?', 'basket', [
             say('judge', '옥상 바닥이 아니라… 난간 바깥 허공에서 찍은 사진이었단 말입니까!', 'surprised'),
             say('dan', '네, 재판장님. 옥상 안에 서선 절대 볼 수 없는 풍경을 허공에서 찍어 올린 거예요.', 'point'),
@@ -539,9 +571,12 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
         flag('t2:x7c'),
       ]),
       ifPresented('railReport', [
-        say('dan', '위험할 줄 몰랐다고요? 구조 감정서를 보세요. 너트와 클램프를 당신 손으로 다 뺀 상태에서, 난간을 붙잡고 있던 건 그 끈 하나뿐이었어요!', 'point'),
-        showRecord('phoneDump'),
+        say('dan', '구조 감정서를 보세요. 너트와 클램프를 당신 손으로 다 뺀 상태에서, 난간을 붙잡고 있던 건 그 끈 하나뿐이었어요!', 'point'),
+        panel('피해자 휴대폰 분석 · [문자] 6월 14일 오후', [card('안태수 → 최봉구 · 6/14 16:02', {
+          img: 'item:phoneDump', text: '"서쪽 난간은 어제 손봐 놨어요. 방수포는 끈 풀고 걷으시면 돼요."', tag: '기록', tone: 'fact',
+        })]),
         say('dan', '그 위험을 누구보다 잘 알면서 16시 2분 문자로 "방수포는 끈 풀고 걷으시면 돼요"라며, 마지막 고정 장치마저 피해자 손으로 풀게 지시했잖아요!'),
+        panelOff,
         say('ahn', '…….', 'cornered'),
         flag('t2:x7d'),
       ]),
@@ -552,9 +587,6 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
 };
 
 export const TRIAL2_SCENES: Record<string, Script> = {
-  // X6′ is its own scene, so a save inside it resumes there.
-  ahnCall: [cross('x6b')],
-
   lobby2: [
     place('6월 19일 목요일', '오전 9시 30분', '법원 복도'),
     field('courtHall', true),
@@ -567,7 +599,7 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     say('dan', '경로당 복도 CCTV군요! 아침 일찍 관리실 문 열자마자 다녀오신 거예요?', 'shock'),
     say('byeon', '노인회장 도장 받아서 새벽같이 달려갔지! 내 폰만 4K인 줄 알았더니 복도 카메라도 제법 또렷해!', 'proud'),
     say('dan', '잠깐만 확인해 볼게요. 설명회 다과 휴식이던 일곱 시 사십일분…'),
-    note('무음 영상 속 복도로 나온 안태수가 휴대폰을 입가에 대고 무언가 말하고 있다.'),
+    note('무음 영상 속 복도로 나온 안태수가 휴대폰을 입가에 대고 여러 번 말한다. 19:46:38 화면을 본 채 굳고, 41초에 화면을 누른 뒤 47분 10초에 웃으며 강당으로 돌아간다.'),
     say('narae', '…진짜네. 물만 마시러 나온 사람의 모습이 아니잖아.', 'sad'),
     think('(복도의 안태수 씨가 휴대폰을 보며 분명히 말하고 있어. 이제 메신저 통화 기록만 도착하면 누구와 통화했는지 못 박을 수 있겠어.)'),
     say('dan', '지워지기 전에 큰일 해 주셨어요, 위원장님. 정말 고맙습니다.', 'confident'),
@@ -592,6 +624,9 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     say('eom', '내용은 없습니다. 언제, 누가, 누구에게, 어떻게 끊었는지만 기록되어 있습니다.'),
     flag('t2:messengerIn'),
     annotate('phoneDump', '[메신저 회신 · 6/19 오전] 발신 안태수 계정 → 수신 최봉구 계정 · 보이스톡 · 19:41:50 연결 · 19:46:41 종료 · 종료 사유: 발신자 측 사용자 조작.'),
+    revise('phoneDump', '피해자 폰 문자·공지 기록. 메신저 회신: 안태수 계정→최봉구 계정 보이스톡 19:41:50~46:41.'),
+    say('eom', '발신 안태수 계정, 수신 최봉구 계정. 보이스톡입니다. 6월 14일 19시 41분 50초 연결.', 'normal'),
+    say('eom', '19시 46분 41초 종료. 종료 사유는 "발신자 측 사용자 조작"입니다.', 'normal'),
     say('judge', '안태수 증인의 계정에서 피해자의 계정으로… 사고 직전 보이스톡이 연결돼 있었군요.', 'surprised'),
     say('eom', '계정 기록만으로 실제 통화자를 단정하진 않겠습니다. 다음은 국과수의 구조 감정입니다.', 'normal'),
     addEvidence('railReport'),
@@ -624,6 +659,10 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     think('(친절한 동네 해결사의 미소. 그 4분 동안 무슨 일이 있었는지 이제 벗겨 내자.)'),
     cross('x6'),
   ],
+
+  // X6′ is its own scene, so a save inside it resumes there. Listed after ahnStand2 so a scene
+  // jump here starts from that checkpoint (call record in hand).
+  ahnCall: [cross('x6b')],
 
   clip: [
     say('eom', '재판장님. 집값닷AI 운영사의 서버 회신이 방금 도착했습니다. 바로 제출합니다.', 'normal'),
@@ -678,24 +717,28 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     cg('clip38'),
     note('38초.'),
     cg(null),
-    guide('프레임 비교', ['법원기록의 「집값닷AI 서버 회신」에 프레임 다섯 장이 있어요. 눌러서 크게 보며 비교해요.', keys('고르는 화면에서도 [R]로 법원기록을 열 수 있어요.', '고르는 화면에서도 「법원기록」 버튼으로 열 수 있어요.')]),
+    guide('프레임 비교', [
+      '고르는 화면에 프레임이 그림으로 나와요. 31초부터 38초까지 다섯 장을 그 자리에서 비교해요.',
+      keys('[←] [→]로 고르고 [Space]로 크게 봐요. 크게 본 화면에서도 [←] [→]로 다섯 장을 넘겨요. 정하는 건 [Enter].',
+        '그림을 눌러 고르고 「크게 보기」로 다섯 장을 넘겨 봐요. 정하는 건 「이걸로 정한다」.'),
+    ]),
     choose('프레임 고르기 1', '소윤 씨가 피해자 앞에 떨어져 서 있는 마지막 프레임은?', [
-      option('31초', [think('(그 뒤로도 아직 같은 자리에 서 있어. 끼익 소리 직전의 마지막 프레임을 찾자.)')]),
+      option('31초', [think('(그 뒤로도 아직 같은 자리에 서 있어. 끼익 소리 직전의 마지막 프레임을 찾자.)')], false, 'clip31'),
       option('33초', [
         say('dan', '33초예요. 난간이 기울기 바로 1초 전까지도 소윤 씨는 피해자 앞 약 2미터에 서 있어요.', 'point'),
         say('dan', '팔을 뻗어도 절대 닿지 않는 거리예요.'),
         flag('t2:frame33'),
-      ], true),
-      option('35초', [think('(35초엔 이미 움직이기 시작했어. 그 바로 전 프레임을 골라야 해.)')]),
-    ], 'dan', { free: true, hints: ['난간이 기울기 시작한 건 34초의 끼익.', '그 전의 프레임 중 마지막 것.', '33초: 아직 약 2m 앞.'], hintKey: 'q11a' }),
+      ], true, 'clip33'),
+      option('35초', [think('(35초엔 이미 움직이기 시작했어. 그 바로 전 프레임을 골라야 해.)')], false, 'clip35'),
+    ], 'dan', { free: true, hints: ['난간이 기울기 시작한 건 34초의 끼익.', '그 전의 프레임 중 마지막 것.', '33초: 아직 약 2m 앞.'], hintKey: 'q11a' }, ['clip31', 'clip33', 'clip35', 'clip37', 'clip38']),
     choose('프레임 고르기 2', '소윤 씨의 얼굴이 화면 밖으로 벗어나고, 손과 소매만 아래에서 크게 들어온 프레임은?', [
-      option('35초', [think('(얼굴이랑 뻗은 손이 한 화면에 같이 보여. 외치며 달려드는 중이지, 아직 코앞까진 못 왔어.)')]),
+      option('35초', [think('(얼굴이랑 뻗은 손이 한 화면에 같이 보여. 외치며 달려드는 중이지, 아직 코앞까진 못 왔어.)')], false, 'clip35'),
       option('37초', [
         say('dan', '37초예요. 35초까지만 해도 얼굴과 뻗은 손이 함께 보일 만큼 거리가 남아 있었어요.', 'point'),
         say('dan', '얼굴이 화면 밖으로 벗어나고 손과 소매만 아래에서 크게 들어온 건 37초고, 바로 다음인 38초엔 하늘이에요.'),
-      ], true),
-      option('38초', [think('(38초엔 이미 휴대폰이 넘어가며 하늘만 비추고 있어.)')]),
-    ], 'dan', { free: true, hints: ['얼굴과 뻗은 손이 함께 보이면 아직 거리가 남아 있다는 뜻이야.', '38초엔 이미 하늘이야. 코앞까지 와서 얼굴이 화면 밖으로 벗어난 프레임을 찾자.', '37초: 얼굴은 화면 밖이고, 손과 소매만 아래에서 크게 들어온다.'], hintKey: 'q11b' }),
+      ], true, 'clip37'),
+      option('38초', [think('(38초엔 이미 휴대폰이 넘어가며 하늘만 비추고 있어.)')], false, 'clip38'),
+    ], 'dan', { free: true, hints: ['얼굴과 뻗은 손이 함께 보이면 아직 거리가 남아 있다는 뜻이야.', '38초엔 이미 하늘이야. 코앞까지 와서 얼굴이 화면 밖으로 벗어난 프레임을 찾자.', '37초: 얼굴은 화면 밖이고, 손과 소매만 아래에서 크게 들어온다.'], hintKey: 'q11b' }, ['clip31', 'clip33', 'clip35', 'clip37', 'clip38']),
     say('dan', '34초 끼익, 35초 "난간에서 떨어져!" 그리고 배정숙 사장님의 첫 진술 메모와 구조 감정을 함께 놓으면…'),
     choose('무엇이 확인되나', '이 12초와 첫 진술, 구조 감정이 함께 말하는 것은?', [
       option('소윤 씨는 끝까지 손대지 않았다', [
@@ -726,9 +769,12 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     recap(RECAP_ARRIVED),
     cg('namsan'),
     wait(1800),
-    say('eom', '법정 화면에 기준 사진을 띄웁니다. 감정 리포트의 남산 사진과, 서버의 기준 사진은 같은 파일입니다.', 'normal'),
+    say('eom', '법정 화면에 기준 사진을 띄웁니다. 감정 리포트의 남산 사진과, 서버의 기준 사진은 같은 파일입니다. 촬영 2030년 3월 22일 14시 41분.', 'normal'),
     say('judge', '일치율 팔십 퍼센트를 넘겨야 했던 바로 그 기준 사진이군요.', 'normal'),
     cg(null),
+    say('eom', '서버 회신에는 달빛공인중개사 계정 기록도 붙어 있습니다. 이 계정이 등록한 달빛마을 매물은 23건.', 'normal'),
+    say('eom', '5월 24일 오후 연습 인증 아홉 번, 최고 79퍼센트. 그리고 사건 당일 21시 40분, 기준 사진 삭제와 조망 가산 비활성화.', 'normal'),
+    revise('serverReply', '인증 클립 12초와 달빛공인 계정 기록. 매물 23건, 5/24 연습 최고 79%, 당일 밤 사진 삭제.'),
     say('ahn', '다 온 줄 알았습니다! 78퍼센트까지 올라왔으니까 정말 조금만 더 하면 될 줄 알았어요!', 'sweat'),
     say('dan', '그 "조금만 더"가 옥상 위에서 가능한 일이었는지, 지금부터 따져 보죠.', 'point'),
     cross('x7'),

@@ -6,6 +6,7 @@ import { FIGURES, paintFigure } from './figures';
 import { PLATES, plateSvg } from './plates';
 import { paintCompare } from './photos';
 import { paintFace, paintItem } from './portrait';
+import { coverOf, firstUnread, layoutPages, openEvidenceViewer, paintVisual, renderTable } from './evidence-view';
 import type { Evidence, Profile, Recap } from './types';
 
 type Tab = 'evidence' | 'profiles' | 'memo';
@@ -51,6 +52,14 @@ export class CourtRecord {
   photoMarked: (setId: string) => boolean = () => false;
   /** Persists what has been read: (id, addenda read). */
   onSeen: ((id: string, n: number) => void) | null = null;
+  /** Whether a flag or evidence is held (a detail page's `requires`); set by the game. */
+  canSee: (id: string) => boolean = (id) => this.owned.has(id);
+  /** The full-screen detail is open over the record (its own input handler is on top). */
+  private viewerOpen = false;
+  /** The detail was opened for the script (showRecord): closing it closes the record too. */
+  private viewerOnly = false;
+  /** The statement being contradicted, kept in view in the detail too. */
+  private pin: { label: string; text: string } | undefined;
   /** Opens the hint window for the current question; null hides the button. */
   onHint: (() => void) | null = null;
   /** 강단비's notebook lines, newest last; set by the game. The tab shows up once there is one. */
@@ -186,6 +195,7 @@ export class CourtRecord {
     focus?: string,
   ): Promise<string | null> {
     this.mode = mode;
+    this.pin = pin;
     this.root.hidden = false;
     this.root.dataset.mode = mode;
     this.prompt.replaceChildren();
@@ -214,14 +224,15 @@ export class CourtRecord {
         scroll = back.scroll;
       }
     }
-    if (focus) {
-      const i = this.held.findIndex((e) => e.id === focus);
-      if (i >= 0) this.sel = i;
-    }
+    // `focus` may name a part ("phoneDump#texts0614"): compact evidence then opens on that page.
+    const [focusId, focusPart] = (focus ?? '').split('#');
+    const focusEv = focusId ? this.held.find((e) => e.id === focusId) : undefined;
+    if (focusEv) this.sel = this.held.indexOf(focusEv);
     this.render();
     // Once the sheet is laid out (a timer, not a frame: frames pause in a background tab).
     setTimeout(() => {
-      if (focus) this.scrollToUnread();
+      if (focusEv?.pages) void this.openViewer(focusPart, true);
+      else if (focus) this.scrollToUnread();
       else if (scroll) this.sheet.scrollTop = scroll;
     }, 30);
     sfx('paper');
@@ -245,6 +256,7 @@ export class CourtRecord {
         else if (a === 'down') this.moveRow(1);
       }, { strict: true });
       this.finish = (id) => {
+        this.viewerOpen = false;
         if (this.recapOpen) {
           this.recapOpen = false;
           this.sheet.scrollTop = this.recapScroll;
@@ -320,7 +332,8 @@ export class CourtRecord {
   /** Space (and Enter in view mode) opens the selected evidence's map or photos, if it has one. */
   private openExtra(): void {
     const ev = this.tab === 'evidence' ? this.held[this.sel] : undefined;
-    if (ev?.map) void this.onMap?.(ev.map);
+    if (ev?.pages) void this.openViewer();
+    else if (ev?.map) void this.onMap?.(ev.map);
     else if (ev?.photos) void this.onPhotos?.(ev.photos);
   }
 
@@ -434,6 +447,69 @@ export class CourtRecord {
     this.renderSheet();
   }
 
+  /**
+   * The compact card (evidence with `pages`): the picture, two or three lines saying what the record
+   * is, and the way into its full-screen detail. Nothing of the source is cut short here: it is all
+   * in the detail.
+   */
+  private renderCompact(ev: Evidence): void {
+    const card = el('div', 'ev-compact', this.sheet);
+    const pic = el('button', 'ev-cover', card);
+    pic.setAttribute('aria-label', `${ev.name} 자세히 보기`);
+    paintVisual(pic, coverOf(ev, this.canSee), ev);
+    pic.addEventListener('click', () => void this.openViewer());
+    const text = el('div', 'ev-compact-text', card);
+    el('div', 'sheet-label', text, ev.label);
+    el('h2', 'sheet-title', text, ev.name);
+    el('p', 'sheet-summary ev-compact-summary', text, ev.summary);
+    const adds = this.addenda.get(ev.id) ?? [];
+    const seen = this.addendaSeen.get(ev.id) ?? 0;
+    const laid = layoutPages(ev, this.canSee, adds);
+    const actions = el('div', 'ev-compact-actions', text);
+    const more = el('button', 'btn ev-more', actions, touchLayout() ? '자세히 보기' : '자세히 보기  Space');
+    more.addEventListener('click', () => void this.openViewer());
+    if (adds.length > seen) {
+      const upd = el('button', 'sheet-upd ev-upd', actions, `갱신 ${adds.length - seen}건 · 보기`);
+      upd.addEventListener('click', () => void this.openViewer());
+    } else if (laid.length > 1) el('span', 'ev-pages-count', actions, `${laid.length}쪽`);
+  }
+
+  /** Opens the selected evidence's full-screen detail; in present mode it can present from there. */
+  private async openViewer(part?: string, only = false): Promise<void> {
+    const ev = this.tab === 'evidence' ? this.held[this.sel] : undefined;
+    if (!ev?.pages || this.viewerOpen || this.recapOpen) return;
+    const adds = this.addenda.get(ev.id) ?? [];
+    const laid = layoutPages(ev, this.canSee, adds);
+    if (!laid.length) return;
+    const seen = this.addendaSeen.get(ev.id) ?? 0;
+    let start = part ? laid.findIndex((l) => l.page.tab === part || l.page.id === part) : -1;
+    if (start < 0) start = Math.max(0, firstUnread(laid, seen));
+    this.viewerOpen = true;
+    this.viewerOnly = only;
+    const picked = await openEvidenceViewer(this.root, {
+      ev, laid, addenda: adds, seen, start, mode: this.mode, onMap: this.onMap,
+      pin: this.mode === 'present' ? this.pin : undefined,
+      onSeen: (n) => {
+        this.addendaSeen.set(ev.id, n);
+        this.onSeen?.(ev.id, n);
+      },
+    });
+    if (!this.viewerOpen) return;
+    this.viewerOpen = false;
+    if (picked) {
+      this.finish?.(picked);
+      return;
+    }
+    if (this.viewerOnly) {
+      this.viewerOnly = false;
+      this.finish?.(null);
+      return;
+    }
+    // Back on the card, with the tile's badge brought up to date and focus where the player left.
+    this.render();
+    if (!touchLayout()) this.sheet.querySelector<HTMLElement>('.ev-more')?.focus({ preventScroll: true });
+  }
+
   private renderMemo(): void {
     const n = this.memos().length;
     if ((this.addendaSeen.get('memo') ?? 0) < n) {
@@ -486,6 +562,14 @@ export class CourtRecord {
       }
       const wasNew = !this.viewed.has(ev.id);
       this.viewed.add(ev.id);
+      if (ev.pages) {
+        this.renderCompact(ev);
+        if (wasNew) {
+          this.onSeen?.(ev.id, this.addendaSeen.get(ev.id) ?? 0);
+          this.grid.querySelectorAll('.tile')[this.sel]?.querySelector('.tile-badge.new')?.remove();
+        }
+        return;
+      }
       const top = el('div', 'sheet-top', this.sheet);
       paintItem(el('div', 'sheet-icon', top), ev);
       const titles = el('div', '', top);
@@ -614,15 +698,4 @@ export class CourtRecord {
       el('p', 'sheet-summary', this.sheet, p.summary);
     }
   }
-}
-
-function renderTable(parent: HTMLElement, t: NonNullable<Evidence['table']>): void {
-  const table = el('table', 'sheet-table', parent);
-  const head = el('tr', '', el('thead', '', table));
-  for (const h of t.head) el('th', '', head, h);
-  const body = el('tbody', '', table);
-  t.rows.forEach((cells, i) => {
-    const tr = el('tr', t.quiet?.includes(i) ? 'quiet' : '', body);
-    for (const c of cells) el('td', '', tr, c);
-  });
 }

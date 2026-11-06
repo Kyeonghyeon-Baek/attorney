@@ -1,7 +1,7 @@
 import { guideDayTwo } from './investigation-flow';
 import type { Location, Script } from '../../engine/types';
 import {
-  addEvidence, addProfile, ambience, annotate, app, bgm, choose, examine, fadeIn, fadeOut, field, flag, goto,
+  addEvidence, addProfile, ambience, annotate, app, bgm, cg, choose, examine, fadeIn, fadeOut, field, flag, goto,
   investigate, memo, note, option, place, revise, say, sayAs, sfx, shake, spot, think, tint, wait, when,
 } from '../script';
 
@@ -179,6 +179,9 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
               ...partsCard,
               annotate('looseParts', '[세탁소] 배정숙 장부 "6/13 10:55 달빛공인 안 사장 작업 점퍼 녹물(길에서 받음)". 봉투 「안 사장 6/13」: 녹슨 M12 너트 1개(점퍼 안감 솔기에 끼어 있었다) · 끊긴 노란 타이 1개.'),
               flag('d2:laundryBag'),
+              // This part alone first; once the other find is in too, the summary covers both.
+              revise('looseParts', '풀린 부품. 세탁소에 맡겨진 안 사장 점퍼(6/13) 안감의 녹슨 M12 너트 하나와 끊긴 노란 타이.'),
+              when('d2:binBag', [revise('looseParts', '컨테이너 봉투의 클램프·너트 셋·테이프와, 세탁소 점퍼 안감(6/13)의 녹슨 너트 하나·노란 타이.')]),
               when('d2:binBag', [think('(컨테이너의 셋과 합치면… 넷. 볼트 네 자리의 짝이 다 모였어.)')]),
             ], [
               say('jeongsuk', '남의 봉투는 그냥은 못 열어. 사연이 있어야지.', 'confident'),
@@ -190,7 +193,7 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     ],
     talks: [
       { id: 'jacket', label: '안 사장 점퍼', script: [
-        say('dan', '금요일에 맡았다던 안 소장님 작업 점퍼요. 어떻게 받으신 건지 기억나세요?'),
+        say('dan', '사장님, 최근에 안 소장님 작업복을 맡으신 적 있나요?'),
         say('jeongsuk', '13일 아침 열한 시 다 돼서였나. 안 사장이 행복하우스에서 내려오는 걸 길에서 붙잡았지.', 'gossip'),
         say('jeongsuk', '소매가 시뻘건 녹물 범벅이라, "지금 안 빼면 옷 버려!" 하고 벗겨 왔어.', 'gossip'),
         say('narae', '길 가던 사람 겉옷을 그 자리에서 벗겨 오셨다고요?', 'surprised'),
@@ -206,6 +209,7 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         say('gu', '비켜 보십쇼. 레이저 거리계는 형사의 기본임다.', 'normal'),
         note('정숙세탁 옥상 간판틀 윗선: 행복하우스 옥상에서 약 34m 앞, 높이는 그 옥상 바닥보다 약 7.7m 위.'),
         annotate('dalbitMap', '[간판틀 · 6/18 구만두 측량] 정숙세탁 옥상 간판틀 윗선은 행복하우스 옥상에서 동북동 약 34m, 옥상 바닥 +7.7m.'),
+        revise('dalbitMap', '옥상·시야·간판 측량 도면. 세탁소 옥상 간판틀은 동북동 약 34m, 옥상 바닥보다 7.7m 높다.'),
         say('jeongsuk', '봐, 내가 그랬지? 그 옥상에선 우리 간판밖에 안 보인다니까.', 'confident'),
         think('(동북동 34미터 앞, 옥상 바닥보다 7.7미터 위. 시야 한복판을 떡하니 가로막는 높이야.)'),
         flag('d2:signMeasured'),
@@ -250,6 +254,9 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
               ...partsCard,
               annotate('looseParts', '[컨테이너] 「달빛공인중개사」 전단 봉투: 노란 임시 클램프 2(스텐실 "튼튼 0611") · 볼트 캡 4 · 연결 클램프 4(W3 색 페인트) · 녹슨 M12 너트 3 · 감긴 노란 테이프.'),
               flag('d2:binBag'),
+              // This part alone first; once the other find is in too, the summary covers both.
+              revise('looseParts', '풀린 부품. 고철 컨테이너의 달빛공인 전단 봉투: 임시·연결 클램프, 녹슨 너트 셋, 노란 테이프.'),
+              when('d2:laundryBag', [revise('looseParts', '컨테이너 봉투의 클램프·너트 셋·테이프와, 세탁소 점퍼 안감(6/13)의 녹슨 너트 하나·노란 타이.')]),
               when('d2:laundryBag', [think('(세탁소의 하나와 합치면… 녹슨 너트 넷이 딱 맞아떨어져.)')], [think('(너트가 셋뿐이네. 볼트는 네 개인데, 나머지 하나는 어디 갔지?)')]),
               say('narae', '그치만 저 전단 봉투는 동네 할머니들도 장바구니 대신 막 들고 다니는데…', 'sad'),
               think('(맞아. 봉투가 그 사무소 거라고, 버린 사람이 정해지진 않아. 더 확실한 물증이 필요해.)'),
@@ -314,12 +321,12 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
           ], true),
         ], 'byeon', { free: true }),
         note('변복만의 휴대폰 갤러리. 4K 원본 95초. 구만두가 해시를 떠서 임의 제출로 받는다.'),
-        revise('groupVideo', '6월 13일 아침 변복만이 찍은 4K 원본(95초). 구만두가 임의 제출로 받았다.'),
+        revise('groupVideo', '6/13 아침 4K 원본(95초). 「달빛공인중개사」 점퍼 남자가 W3 부품을 풀어 담고 끈을 묶는다.'),
         annotate('groupVideo', '[4K 원본 · 6/18] 10:14~ 확대 ① 고개를 든 얼굴, 점퍼 자수 「달빛공인중개사」 ② W3 밑에 쪼그려 앉아 래칫 렌치를 돌리는 손(40초), 양옆 연결 클램프를 떼어 봉투에 ③ 파란 천을 덮고 끈을 빨래대 기둥에 걸어 조이는 모습.'),
         say('byeon', '거 봐, 4K라 자수 실밥까지 쨍하잖여! …어? 저거 수리하는 게 아닌디?', 'flustered'),
         say('dan', '양옆 연결 클램프를 떼서 봉투에 넣고… 래칫 렌치로 밑동 너트를 풀고 있어요.', 'point'),
         say('narae', '…방수 작업이라며.', 'sad'),
-        say('narae', '어제 우리 보고도 분명히 그랬잖아. 방수 양생 중이라 덮어 놓은 거라고…', 'sad'),
+        say('narae', '처음 만났을 때 우리한테 분명히 그랬잖아. 방수 양생 중이라 덮어 놓은 거라고…', 'sad'),
         think('(나래 표정이 굳었어. 동네 어른들 챙기던 아저씨가 왜 거짓말을 했는지, 눈으로 봐 버렸으니까.)'),
         think('(렌치로 돌린 건 방수포가 아니라 난간 밑동이야. 그리고 끈 하나로 아슬아슬하게 당겨 세워 놨어.)'),
         flag('d2:video4k'),
@@ -416,7 +423,9 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
               addEvidence('originals'),
               note('서류 맨 위에 청구서 한 장. 「감정 자료 패키지 DB-0322 — 외관 촬영 고소작업 차량 25만 포함」.'),
               say('narae', '어? 맨 위 영수증에 "고소작업 차량 25만 포함"이라고 적혀 있어. 그거 사다리차잖아!', 'surprised'),
-              say('dan', '건물 외관 사진을 찍는데 사다리차까지 불렀다는 뜻이네요.', 'point'),
+              say('dan', '건물 외관 사진을 찍는데 사다리차까지 불렀다는 뜻이네요. 그 아래엔… 옆 빌라 14억 거래 해제 합의서.', 'point'),
+              say('narae', '매수인 이름은 처음 보는 사람인데, 연락처 칸은 010-2030-1004네.', 'normal'),
+              think('(끝자리 1004… 이 번호, 어디서 들었더라.)'),
               say('gu', '와, 밑에 수첩은 깨알같이도 적어 놨슴다. 행복하우스 말고 소망빌라에, 그 밑에 주소가 줄줄이…', 'normal'),
               say('gu', '최 사장님, 부동산 공부 꽤나 하셨나 봄다.', 'normal'),
               say('okbun', '공부는 무슨. 남 믿고 도장 찍었다가 뒤늦게 살길 찾느라 적은 글씨여.'),
@@ -497,6 +506,9 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         say('haneul', '뭘 찍었는진 몰라요. 풍경 쪽이 아니라 건물 옥상 쪽을 마주 보고 찍던데요.', 'normal'),
         say('haneul', '사람 태운 특이 작업이라 보험 때문에 아래서 현장 사진 한 장 찍어 배차 일지에 붙여 뒀어요.', 'cheer'),
         addEvidence('ladderLog'),
+        cg('photoBasket'),
+        say('dan', '일지엔 "2030년 3월 22일 14:00~15:30, 행복하우스 서측, 난간 외측 1.2m, 바스켓 탑승 1인"이라고 적혀 있네요.', 'point'),
+        cg(null),
         say('narae', '…태수 아저씨가 왜 사다리차까지 타고 허공에서 옥상 사진을 찍었지?', 'sad'),
         think('(2030년 3월 22일, 난간 밖 허공에서 옥상 쪽을 보고… "조금만 더 뒤로".)'),
         memo('[남은 질문] 2030.3.22 바스켓에서 찍은 사진은 무엇이었나?'),
@@ -540,6 +552,7 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         think('(공식 사양까지 확인됐어. 소윤 씨가 옥상 스피커로 들은 "뒤로", "팔 쭉"은 기계가 아니라 사람의 목소리야.)'),
         memo('[확인] 집값닷AI는 공식 사양상 음성 안내가 없다. 옥상 스피커에서 난 소리는 사람의 목소리.'),
         say('eom', '하단 약관의 작은 글씨도 눈여겨보시죠. 현장 인증 클립은 영상과 음성이 서버에 30일 보관됩니다.', 'normal'),
+        say('eom', '그리고 "해당 공간에 서서 촬영한 것만 인정", 사다리차 같은 외부 장비나 고소작업 차량 촬영은 제외랍니다.', 'normal'),
         say('eom', '핵심은 마지막 줄입니다. 허위 자료가 한 건이라도 확인되면, 그 계정이 등록한 매물 전체가 재심사로 묶입니다.', 'normal'),
         think('(영상과 음성이 30일 보관… 그리고 허위 자료 하나가 드러나면 계정 전체가 무너진다.)'),
         flag('d2:noticeRead'),
@@ -548,6 +561,7 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
         say('eom', '다음은 문자 기록입니다. 사건 당일인 6월 14일 16시 2분, 안태수 씨의 답장입니다.'),
         note('「사장님, 서쪽 난간은 어제 손봐 놨어요. 방수포는 끈 풀고 걷으시면 돼요. 7시 40분에 원격 지원 걸게요.」'),
         say('dan', '"서쪽 난간은 어제 손봐 놨어요"… "방수포는 끈 풀고 걷으시면 돼요". 시간까지 7시 40분으로 찍어 줬군요.', 'point'),
+        say('eom', '건물 관리 앱에도 6월 13일 오전 10시 40분, "옥상 서쪽 난간 · 보수 완료" 작업 보고가 올라와 있습니다.', 'normal'),
         say('eom', '그리고 나흘 전인 6월 10일입니다. 피해자가 월요일 법률 상담 예약 문자를 안태수 씨에게 그대로 전달했더군요.'),
         say('eom', '혼자 독박 쓰지 않겠다는 취지였고, 거기에 안태수 씨는 "백 프로 맞춰 드린다"고 답했습니다.', 'normal'),
         say('narae', '뭐야, 그렇게 큰소리 빵빵 쳐 놓고 정작 토요일엔 칠십팔에서 멈췄잖아.', 'angry'),
@@ -581,9 +595,10 @@ const prosecutorInvestigation: Script = [
 export const DAY2_SCENES: Record<string, Script> = {
   day2: [
     // Keep the saved phase even when the player revisits the village after the phone call.
-    when('d2:call15', prosecutorInvestigation, [
+    when('d2:call15', [fadeIn, ...prosecutorInvestigation], [
       // The date card sits on the roof, not the empty courtroom (and without the court HUD).
       field('happyRoofW'),
+      fadeIn,
       place('6월 18일 수요일', '오전 6시 50분', '행복하우스 옥상'),
       investigate('d2roof', DAY2_GOALS, [
         sfx('phone'),
@@ -604,10 +619,10 @@ export const DAY2_SCENES: Record<string, Script> = {
     sayAs('eom', '전화 속 엄정한', '1일차에 요청한 홈캠 원본이 왔습니다. 발췌 밖에, 이게 있더군요.'),
     say('dan', '파일 전송받았어요. 고맙습니다, 검사님. 내일 법정에서 뵙겠습니다.', 'normal'),
     annotate('homecam', '[원본 전체 · 6/18 정한 개시] 19:30 피해자가 금고에서 서류를 책상 봉투로 → 19:51 피고인이 봉투를 들고 나감 → 20:14 안태수가 들어와 곧장 금고·책상으로 → 20:21 프린터 출력 → 그 뒤로도 서랍·책상 밑·휴지통·소파 틈을 뒤진다(~20:31).'),
-    revise('homecam', '피해자 사무실의 블루투스 스피커 속 카메라. 원본 전체(19:20~20:40).'),
+    revise('homecam', '사무실 홈캠 원본. 19:51 피고인 반출 뒤, 20:14~20:31 안태수가 출력 후에도 방을 뒤진다.'),
     flag('d2:homecamFull'),
     say('narae', '사람 떨어지고 삼십 분도 안 됐는데… 뭘 찾는 거야, 저거?', 'surprised'),
-    say('dan', '들어오자마자 망설임 없이 금고랑 책상부터 열었어. 소파 틈이랑 휴지통까지 십 분 넘게 뒤지고 있고.', 'point'),
+    say('dan', '20시 14분, 들어오자마자 망설임 없이 금고랑 책상부터 열었어. 20시 21분에 프린터로 뭘 뽑은 뒤에도 31분까지 서랍, 휴지통, 소파 틈을 뒤지고 있고.', 'point'),
     say('narae', '동네 어르신들 놀라실까 봐 수습하러 다녔다면서… 다 거짓말이었어?', 'sad'),
     think('(소윤 씨가 19시 51분에 봉투를 들고 나가지 않았다면, 저 서류 뭉치는 20시 14분에 영영 사라졌을 거야.)'),
     place('6월 18일 수요일', '저녁 7시 45분', '행복하우스 옥상'),

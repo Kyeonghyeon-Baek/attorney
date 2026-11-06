@@ -1,8 +1,8 @@
 import type { Script, Testimony } from '../../engine/types';
 import {
-  bgm, board, boardOff, cg, chapter, cross, crossAgain, dimHud, end, fadeIn, fadeOut, field, flag, goto, hud,
-  ifPresented, memo, note, place, predict, present, pulse, recap, redflash, reveal, row, say, sayAs, sfx, shake, showRecord,
-  think, verdict, wait, when, zoom,
+  bgm, board, boardOff, card, cg, chapter, cross, crossAgain, dimHud, end, fadeIn, fadeOut, field, flag, goto, hud,
+  ifPresented, memo, note, panel, panelOff, place, predict, present, pulse, recap, redflash, reveal, row, say, sayAs, sfx,
+  shake, think, verdict, wait, when, zoom,
 } from '../script';
 import { RECAP_MOTIVE } from './recaps';
 
@@ -113,10 +113,14 @@ export const FINALE_TESTIMONIES: Record<string, Testimony> = {
     ],
     contradiction: [
       ifPresented('phoneDump#texts0610', [
-        say('dan', '아드님 혼사 얘기가 아니었어요. 통화 직후 최 사장님이 당신에게 전달한 건 월요일 열 시 형사 상담 예약 문자였죠.', 'point'),
-        showRecord('phoneDump'),
+        say('dan', '재인증 일정이 아니었어요. 그 밤 최 사장님이 당신에게 전달한 건 월요일 열 시 형사 상담 예약 문자였죠.', 'point'),
+        panel('피해자 휴대폰 분석 · [문자] 6월 10일 밤', [
+          card('최봉구 → 안태수 · 21:38~39', { img: 'item:phoneDump', text: '[법무법인 한결] 6/16(월) 10:00 형사 상담 예약 · "나 혼자 독박 안 써"', tag: '기록', tone: 'fact' }),
+          card('안태수 → 최봉구 · 21:52', { img: 'item:phoneDump', text: '"예약부터 취소하셔요. 토요일에 제가 원격 붙어서 백 프로 맞춰 드립니다."', tag: '기록', tone: 'fact' }),
+        ]),
         say('dan', '"나 혼자 독박 안 써." 사장님은 원본을 들고 가겠다고 했고, 당신은 읽자마자 답장까지 보냈어요.'),
         say('dan', '"예약부터 취소하셔요. 토요일에 제가 원격 붙어서 {r}백 프로{/} 맞춰 드립니다."'),
+        panelOff,
         say('eom', '"금시초문"이라기엔 취소하라고 말린 당사자가 증인 본인이군요.', 'normal'),
         say('ahn', '아— 그거요! 대출 막힐까 봐 홧김에 겁주신 걸 동네 소장으로서 달래 드린 거죠.', 'sweat'),
         say('ahn', '토요일에 재인증만 무사히 통과하면 변호사 찾아가실 일도 없었잖아요!', 'sweat'),
@@ -127,7 +131,7 @@ export const FINALE_TESTIMONIES: Record<string, Testimony> = {
         flag('t2:m2go'),
       ]),
       ifPresented('originals', [
-        say('dan', '인쇄 심부름만 하셨다고요? 이건 옆 동네 소망빌라를 14억으로 띄웠다가 깬 계약 해제 합의서예요.', 'point'),
+        say('dan', '남의 거래 속사정은 모른다고요? 이건 옆 동네 소망빌라를 14억으로 띄웠다가 깬 계약 해제 합의서예요.', 'point'),
         say('dan', '매수인 이름은 남인데, 그 옆에 적힌 연락처는 {r}010-2030-1004{/}네요.'),
         say('dan', '동네 일이면 새벽 두 시에도 자다가 받는다던, 당신 명함 속 그 "천사 번호"요!', 'point'),
         sfx('shock'),
@@ -154,8 +158,11 @@ export const FINALE_TESTIMONIES: Record<string, Testimony> = {
         say('judge', '아홉 번 내내 막혀 놓고도 백 프로를 장담하며 옥상으로 불렀다… 가벼운 장사치의 허풍으로 보긴 어렵군요.', 'stern'),
         say('eom', '한 가지 확인하겠습니다. 사다리차 재촬영은요? 처음처럼 다시 바스켓에 오르면 되지 않았습니까.', 'normal'),
         say('dan', '5월 20일 개편 공지로 막혔어요. "해당 공간에 서서 촬영한 것만 인정. 외부 장비 제외."', 'point'),
-        showRecord('phoneDump'),
+        panel('피해자 휴대폰 분석 · [공지·작은 글씨]', [card('집값닷AI 재인증 공지 · 5/20', {
+          img: 'item:phoneDump', text: '"해당 공간에 서서 촬영한 것만 인정합니다(외부 장비·고소작업 차량 촬영 제외)." "허위로 확인되면 등록 계정의 모든 매물을 재심사합니다."', tag: '기록', tone: 'fact',
+        })]),
         say('dan', '사다리차를 다시 부르면 심사에서 걸리고, 옥상 바닥에선 아홉 번을 찍어도 통과 한 번 못 해 본 상태였던 거예요.'),
+        panelOff,
         memo('[M2] 5/24에 79%를 직접 본 뒤 6/10에 근거 없이 "백 프로". 사다리차 재촬영은 공지로 불가.'),
         flag('t2:m2'),
       ])]),
@@ -207,13 +214,19 @@ export const FINALE_SCENES: Record<string, Script> = {
 
   minus040: [
     say('dan', '당신이 잃을 뻔한 건 월 35만 원짜리 관리비가 아니에요.', 'point'),
-    showRecord('serverReply'),
+    panel('피해자 휴대폰 분석 · [공지·작은 글씨]', [card('집값닷AI 재인증 공지 · 5/20', {
+      img: 'item:phoneDump', text: '"해당 공간에 서서 촬영한 것만 인정합니다(외부 장비·고소작업 차량 촬영 제외)." "허위로 확인되면 등록 계정의 모든 매물을 재심사합니다."', tag: '기록', tone: 'fact',
+    })]),
     say('dan', '집값닷AI 개편 공지의 맨 아래 작은 글씨를 보시죠.'),
     say('dan', '"등록 자료가 허위로 확인되면, 그 자료를 등록한 계정의 모든 매물을 재심사합니다."'),
+    panel('집값닷AI 서버 회신 · [계정 기록]', [card('달빛공인중개사 계정', {
+      img: 'item:serverReply', text: '등록 매물 23건(달빛마을) · 행복하우스 기준 사진 = 감정 리포트와 같은 파일', tag: '기록', tone: 'fact',
+    })]),
     say('dan', '그리고 서버 회신으로 확인된 계정 기록. 안태수 소장님 계정이 등록한 달빛마을 매물만 무려 {r}23건{/}이에요.', 'point'),
     say('dan', '행복하우스 남산 사진이 사다리차 위에서 찍은 가짜라고 들통나는 순간, 그 스물세 건이 통째로 재심사에 들어가요.'),
     say('dan', '재개발 보상 협의도, 세입자 이주 대출도, 중개 보수도 그 자리에서 줄줄이 멈춰 서는 거예요.'),
     say('dan', '최 사장님이 월요일 아침 열 시에 들고 가려던 건 종이 몇 장이 아니라, 당신이 이 동네에 쌓아 올린 집값 전부였어요!', 'point'),
+    panelOff,
     MOTIVE_BOARD(true),
     sfx('shock'),
     shake,

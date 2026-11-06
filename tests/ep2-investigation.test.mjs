@@ -43,6 +43,32 @@ const fixture = { locations: {
 } };
 const ending = [{ t: 'say', text: '다음 장면' }];
 
+test('first detention visit reveals the scene after leaving the office', async () => {
+  const game = harness(CASE_EP2);
+  let black = false;
+  let background = null;
+  let entered = false;
+  game.cinema = { async fade(value) { black = value; } };
+  game.stage.classList.toggle = () => {};
+  game.scene.setField = (bg) => { background = bg; };
+  game.fx = { async place() {} };
+  game.exec = async function(cmd) {
+    if (['fade', 'field', 'goto', 'place'].includes(cmd.t)) {
+      return Game.prototype.exec.call(this, cmd);
+    }
+    if (cmd.t === 'investigate') {
+      entered = true;
+      assert.equal(background, 'visit');
+      assert.equal(black, false, 'the office fade must be lifted before the first visit');
+    }
+  };
+  await game.run(CASE_EP2.scenes.office);
+  assert.equal(game.next, 'day1');
+  assert.equal(black, true);
+  await game.run(CASE_EP2.scenes.day1);
+  assert.equal(entered, true);
+});
+
 test('last clue unlocks finish and leaves optional conversations available', async () => {
   const game = harness(fixture);
   const actions = ['talk', 'talk', 'finish'];
@@ -57,6 +83,31 @@ test('last clue unlocks finish and leaves optional conversations available', asy
   assert.deepEqual(game.lines, ['남은 이야기', '다음 장면']);
   assert.deepEqual(game.menus.map(m => m.finishLabel), [undefined, '조사를 마친다', '조사를 마친다']);
   assert.ok(game.saves.some(s => s.flags.includes('clue') && s.loc === 'room'));
+});
+
+test('day two lifts the night fade before either investigation phase', async () => {
+  for (const flags of [[], ['d2:call15']]) {
+    const game = harness(CASE_EP2, flags);
+    let black = false;
+    let entered = false;
+    game.cinema = { async fade(value) { black = value; } };
+    game.stage.classList.toggle = () => {};
+    game.fx = { async place() {} };
+    game.exec = async function(cmd) {
+      if (['fade', 'field', 'goto', 'place', 'if'].includes(cmd.t)) {
+        return Game.prototype.exec.call(this, cmd);
+      }
+      if (cmd.t === 'investigate') {
+        entered = true;
+        assert.equal(black, false, 'the previous night must not cover the investigation');
+      }
+    };
+    await game.run(CASE_EP2.scenes.night1);
+    assert.equal(black, true);
+    assert.equal(game.next, 'day2');
+    await game.run(CASE_EP2.scenes.day2);
+    assert.equal(entered, true);
+  }
 });
 
 test('completed investigation resumes at its menu until the player finishes', async () => {
@@ -109,6 +160,7 @@ for (const [testimony, statement, evidence] of [
   ['x1', 'x1-3', 'postmortem'], ['x1', 'x1-5', 'postmortem'],
   ['x2', 'x2-3', 'firstStatement'], ['x2', 'x2-4', 'firstStatement'],
   ['x2b', 'x2b-2', 'firstStatement'], ['x2b', 'x2b-3', 'firstStatement'],
+  ['x3', 'x3-4', 'firstStatement'],
 ]) {
   test(`${statement}: related ${evidence} explains the missing link without spending a chance`, async () => {
     const tm = CASE_EP2.testimonies[testimony];

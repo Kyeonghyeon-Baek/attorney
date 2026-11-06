@@ -1,4 +1,5 @@
 import type { Evidence, Profile } from '../../engine/types';
+import { EVIDENCE_CARDS } from './evidence-pages';
 
 // 제2화 「재개발의 한(恨)」 — 진상 시간표 (설계 EP2-D2, docs/ep2/case-truth.md §4가 원본).
 //
@@ -26,7 +27,7 @@ import type { Evidence, Profile } from '../../engine/types';
 //       21:40        안태수 계정으로 기준 사진 삭제·조망 가산 비활성화.
 // 06.16 1일차 조사 · 06.17 1일차 공판 · 06.18 2일차 조사 · 06.19 2일차 공판.
 
-export const EVIDENCE: Evidence[] = [
+const RECORDS: Evidence[] = [
   // ------------------------------------------------------------ 1일차 조사
   {
     id: 'roofScene', name: '현장 사진', label: '증 제1호', icon: 'card', group: '현장',
@@ -262,6 +263,9 @@ export const EVIDENCE: Evidence[] = [
     plates: ['clip31', 'clip33', 'clip35', 'clip37', 'clip38', 'namsan'],
   },
 ];
+
+/** The records as compact cards: short summary + full-screen pages (evidence-pages.ts). */
+export const EVIDENCE: Evidence[] = RECORDS.map((e) => ({ ...e, ...EVIDENCE_CARDS[e.id] }));
 
 export const PROFILES: Profile[] = [
   {

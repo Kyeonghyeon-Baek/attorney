@@ -30,7 +30,9 @@ function edits(...sources: unknown[]): string[] {
     else Object.values(v).forEach(walk);
   };
   sources.forEach(walk);
-  return [...new Set(out)];
+  // A summary written in several places (one per order of finds) counts where it is written last, so
+  // a checkpoint's final revision is the one normal play ends on; addenda keep their first place.
+  return out.filter((x, i) => (x.startsWith('rev:') ? out.lastIndexOf(x) === i : out.indexOf(x) === i));
 }
 
 const ED1 = edits(DAY1_LOCATIONS);
@@ -38,6 +40,8 @@ const ET1AM = [...ED1, ...edits(TRIAL1_SCENES.tape119)];
 const ET1 = [...ED1, ...edits(TRIAL1_SCENES, TRIAL1_TESTIMONIES)];
 const ED2 = [...ET1, ...edits(DAY2_LOCATIONS, DAY2_SCENES)];
 const ET2 = [...ED2, ...edits(TRIAL2_SCENES.trial2)];
+// After the round-5 briefing (ahnStand3): the server reply's account record is on its card.
+const ET2B = edits(TRIAL2_SCENES.ahnStand3);
 
 // Evidence, plus the people met so far (profiles marked `later`).
 const D1 = [
@@ -86,10 +90,10 @@ const CHECKPOINTS: Record<string, Checkpoint> = {
   },
   motive: {
     label: '10. 제6 공방: 동기', evidence: [...T2, 'serverReply'],
-    flags: [...T2_FLAGS, 't2:callOne', 't2:x7a', 't2:x7b', 't2:x7c', 't2:x7d', 't2:x7e', recapFlag(RECAP_MOTIVE)],
+    flags: [...T2_FLAGS, ...ET2B, 't2:callOne', 't2:x7a', 't2:x7b', 't2:x7c', 't2:x7d', 't2:x7e', recapFlag(RECAP_MOTIVE)],
     gauge: 21.0, status: '가해 주장 철회 · 예측 근거 재검토',
   },
-  epilogue: { label: '11. 에필로그', evidence: [...T2, 'serverReply'], flags: T2_FLAGS, gauge: 0, status: '심리 종료' },
+  epilogue: { label: '11. 에필로그', evidence: [...T2, 'serverReply'], flags: [...T2_FLAGS, ...ET2B], gauge: 0, status: '심리 종료' },
 };
 
 export const CASE_EP2: CaseData = {

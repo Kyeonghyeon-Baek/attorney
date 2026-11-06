@@ -1,8 +1,8 @@
 import type { Script, Testimony } from '../../engine/types';
 import {
-  addEvidence, addProfile, ambience, annotate, bgm, card, chapter, choose, compare, cross, crossAgain, fadeIn, fadeOut, field,
-  flag, goto, guide, ifPresented, introduce, keys, memo, note, option, panel, panelOff, place, predict, pulse, recap, rec,
-  reveal, say, sayAs, sfx, shake, tape, think, when,
+  addEvidence, addProfile, ambience, annotate, bgm, card, chapter, choose, compare, cross, crossAgain,
+  fadeIn, fadeOut, field, flag, goto, guide, ifPresented, introduce, keys, memo, note, option, panel,
+  panelOff, place, predict, pulse, rec, recap, reveal, revise, say, sayAs, sfx, shake, tape, think, when,
 } from '../script';
 import { RECAP_FALL, RECAP_PRICE, RECAP_SHOUT } from './recaps';
 
@@ -306,6 +306,13 @@ export const TRIAL1_TESTIMONIES: Record<string, Testimony> = {
           think('(바로 그 지구대 메모예요, 사장님.)'),
         ] },
       { id: 'x3-4', who: 'jeongsuk', text: '그 말을 하고 아가씨가 앞으로 튀어나갔어요.',
+        nearMiss: {
+          firstStatement: [
+            say('dan', '첫 메모에는 난간이 먼저 흔들리고, 그다음 아가씨가 팔을 뻗었다고 적혀 있어요.'),
+            think('(이 기록으로 따질 건 뛰어든 방향이 아니라 원인이야. 바로 앞의 "그 말 때문에 떨어졌다"는 증언에 내밀자.)'),
+            memo('X3: 첫 메모는 난간 휘청 → 여자가 팔을 뻗음. "그 말 때문에 떨어졌다"는 인과관계와 맞댄다.'),
+          ],
+        },
         press: [
           say('dan', '뒤로 물러선 게 아니라, 무너지는 서쪽 끝을 향해 앞으로 뛰어들었다고요?'),
           say('jeongsuk', '그건 백 번 물어도 확실해! 총알처럼 앞으로 쏜살같이 튀어나갔어.', 'confident'),
@@ -507,7 +514,7 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     say('narae', '…무섭다. 내 이번 달 떡볶이 외상이랑 카드값 들어가면 백 프로 찍겠는데?', 'sad'),
     say('dan', '네 카드값은 살인 지표가 아니라 할머니 빗자루 지표를 백 프로로 올리겠지.', 'sweat'),
     say('narae', '흥, 그건 이미 백이십 프로거든. …근데 언니, 저 한소윤 언니는 아침부터 눈도 안 깜빡이네.', 'normal'),
-    think('(농담으로 넘겼지만 입안이 쓰다. 피해자의 빈 통장을, 기계는 살인 동기로 세고 있어.)'),
+    think('(농담으로 넘겼지만 입안이 쓰다. 피고인의 빈 통장을, 기계는 살인 동기로 세고 있어.)'),
     say('dan', '들어가자, 나래야. 숫자가 빼먹은 사람 이야기를 하러 가야지.', 'confident'),
     fadeOut,
     field(null),
@@ -539,6 +546,7 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     addEvidence('snsPost'),
     say('soyoon', '…제가 쓴 글 맞아요. 지우지도 않았어요.', 'cold'),
     say('dan', '(소윤 씨, 지금은 제가 말할게요.)', 'sweat'),
+    say('narae', '(언니, 출력본 귀퉁이에 경찰 접수 도장이 있어. "6월 14일 20시 02분 제보 · 관리 대행 안태수.")', 'surprised'),
     panel('판관 예측 · 근거', [
       card('판관 89.4%', { img: 'icon:pangwan', role: '법원의 판결 예측 AI', text: '① 목격 진술 ② 피고인 경제 지표 ③ 위협 표현', tag: 'AI 분류', tone: 'ai' }),
     ]),
@@ -612,6 +620,7 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     say('eom', '다만 난간에서 비키라는 경고일 수도, 문자 그대로 절벽에서 떨어지라는 말일 수도 있습니다.'),
     say('eom', '이 한 문장만으로는 정할 수 없군요. 목격자에게 그 외침이 나온 시점을 다시 묻겠습니다.'),
     annotate('call119', '[6/17 법정 확인] 19:47:18 [불명확 0.6초] 구간을 느리게 반복하면 흐느낌 사이로 "난간에서…"가 들린다.'),
+    revise('call119', '추락 직후 피고인의 119 신고 녹음. 불명확 0.6초 구간에서 「난간에서…」가 들린다.'),
     recap(RECAP_SHOUT),
     cross('x3'),
   ],
@@ -684,6 +693,7 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     say('eungyeol', '언니! 찾았어요! 언니 입주 날 찍어 둔 사진, 클라우드 백업 폴더에 그대로 있었어요!', 'firm'),
     say('eungyeol', '언니가 보라고 허락해 준 폴더만 뒤졌어요! 모임 규칙 안 어겼어요!', 'worried'),
     addEvidence('moveInPhoto'),
+    say('dan', '감정 리포트의 302호 사진이랑 같은 구도로 찍었네요. 소화기랑 인터폰도 보여요.', 'point'),
     say('soyoon', '…은결아, 우리 총무 고마워. 숨부터 고르고 물 마셔.', 'smile'),
     say('eungyeol', '네…! 언니 오늘 꼭 무죄 받고 같이 집에 가요!', 'tears'),
     say('narae', '근데 언니. 보증금 서류야 그렇다 쳐도, 안 아저씨가 옥상 일을 꾸몄다는 건 말이 안 되잖아.', 'angry'),
@@ -748,6 +758,7 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     say('eom', '오전 공판에서 확인이 필요했던 자료 두 건을 검찰이 직접 제출하겠습니다.', 'normal'),
     say('eom', '먼저 국과수에서 회신한 피해자의 오른 소매 솔기와 손톱 밑 섬유 감식입니다.'),
     annotate('postmortem', '[2쪽 · 6/17 오후 정한 제출] 오른 소매 솔기는 안쪽(옥상 쪽)으로 당겨지며 찢겼다. 손톱 밑 섬유는 피고인의 옷과 같은 종류.'),
+    revise('postmortem', '앞쪽엔 밀친 흔적이 없다. 오른 소매는 안쪽으로 당겨 찢겼고, 손톱 밑 섬유는 피고인 옷과 같은 종류.'),
     say('eom', '소매 솔기는 바깥이 아니라 옥상 안쪽으로 강하게 당겨지며 찢겼습니다. 붙잡으려 했다는 피고인 주장과 부합합니다.'),
     say('eom', '다만, 먼저 민 뒤 뒤늦게 붙잡았을 가능성까지는 배제하지 못합니다.', 'normal'),
     predict(70.0, '소매: 안쪽으로 당겨짐 (붙잡으려 했다)'),
@@ -760,7 +771,8 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     say('cheolju', '6월 11일 수요일 오후에 제가 그 옥상 난간을 점검했습니다.', 'normal'),
     say('cheolju', '서쪽 세 번째, W3 밑판이 칠 할이나 삭았고 연결부가 덜렁거렸습니다! 임시 클램프 물리고 노란 테이프를 쳤습니다!', 'lecture'),
     say('cheolju', '이십 년 밥 먹고 산 제 손으로 볼트 유격 만져 보고 친 줄입니다! 어른 허리만 닿아도 통째로 꺾인다고 안 사장 면전에 대고 못을 박았다고요!', 'lecture'),
-    say('cheolju', '제가 구청에 위험 시설물 신고서만 바로 넣었어도… 사람이 안 떨어졌을 텐데…', 'guilty'),
+    say('cheolju', '그날 오후 4시 22분엔 문자로도 보냈습니다. "사람이 기대면 넘어갈 수 있어요. 즉시 교체 요망."', 'lecture'),
+    say('cheolju', '18분 뒤에 달빛공인중개사에서 "제가 통제하겠습니다" 답장이 왔고요. 제가 구청에 신고서만 바로 넣었어도…', 'guilty'),
     addEvidence('inspection'),
     say('narae', '(노란 줄…! 언니, 울 할머니가 목요일에 봤다던 노란 줄이 바로 저 테이프였구나!)', 'surprised'),
     say('ahn', '아, 아유… 제가 관리하는 건물이 워낙 많다 보니 정기 점검을 물탱크 청소랑 헷갈렸습니다. 죄송합니다!', 'sweat'),

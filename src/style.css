@@ -2605,3 +2605,211 @@ button { touch-action: manipulation; }
 .compare-cross::before { left: 11px; top: -8px; width: 2px; height: 40px; }
 .compare-cross::after { top: 11px; left: -8px; height: 2px; width: 40px; }
 .touch-layout .compare-cross { display: none; }
+
+/* ---------------------------------------------------------------- 2화: compact evidence card + full-screen detail */
+
+/* The card: a wide picture, then what the record is in two or three lines, then the way in. */
+.ev-compact { display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; }
+.ev-cover {
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0;
+  background: #1d2338;
+  border: 3px solid #e6dfcc;
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.25);
+  cursor: zoom-in;
+}
+.ev-cover:focus-visible { outline: 3px solid var(--ochre); outline-offset: 2px; }
+.ev-cover { position: relative; }
+.ev-cover .ev-pic, .ev-cover .ev-plate { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.ev-cover .ev-item { width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; color: var(--paper); }
+.ev-cover .ev-item img { width: 100%; height: 100%; object-fit: contain; }
+.ev-cover .ev-item svg { width: 64px; height: 64px; }
+.ev-cover .ev-figure { width: 100%; height: 100%; background: var(--paper); }
+.ev-cover .ev-figure .fig-row { height: 100%; }
+.ev-cover .ev-figure .fig-legend { display: none; }
+.ev-cover .ev-figure .fig-draw, .ev-cover .ev-figure svg { width: 100%; height: 100%; }
+.ev-compact-text { flex: none; }
+.ev-compact-summary { margin: 8px 0 10px; }
+.ev-compact-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ev-compact-actions .sheet-upd { margin: 0; }
+.ev-pages-count { font-size: 14px; color: #6b5f4a; }
+
+/* The detail: over the whole court record, paper on the dark desk. */
+.evview {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 28px 16px;
+  color: var(--ink);
+  background: rgba(10, 14, 28, 0.94);
+}
+.evview-head { display: flex; align-items: center; gap: 18px; color: var(--paper); }
+.evview-titles { display: flex; align-items: baseline; gap: 12px; flex: none; }
+.evview-label { font-size: 14px; color: var(--ochre); }
+.evview-name { margin: 0; font-family: var(--display); font-weight: 400; font-size: 28px; }
+.evview-page { flex: 1; min-width: 0; font-family: var(--doc); font-size: 18px; font-weight: 700; color: #f3d9a4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evview-count { font-family: var(--doc); font-size: 15px; color: rgba(244, 240, 230, 0.7); font-variant-numeric: tabular-nums; }
+.evview-main { flex: 1; min-height: 0; display: grid; grid-template-columns: 52px 1fr 52px; gap: 10px; margin: 12px 0; }
+.evview-arrow {
+  align-self: center;
+  height: 120px;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--paper);
+  background: rgba(43, 58, 115, 0.7);
+  border: 2px solid rgba(244, 240, 230, 0.35);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.evview-arrow:disabled { opacity: 0.2; cursor: default; }
+.evview-arrow.gone { visibility: hidden; }
+.evview-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 22px;
+  background: var(--paper);
+  border-radius: 3px;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+  outline: none;
+  scrollbar-width: thin;
+}
+.evview-caption { margin: 0 0 10px; font-family: var(--doc); font-size: 18px; line-height: 1.6; word-break: keep-all; }
+.evview-lines { border-top: none; padding-top: 0; }
+.evview-lines .row, .evview-lines .row-text { font-size: 17px; }
+/* photo: the picture as large as fits, its notes beside it */
+.evview-photo { margin: 0; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; height: 100%; min-height: 0; }
+.evview-pic { display: flex; align-items: center; justify-content: center; min-height: 0; background: #1d2338; border-radius: 3px; overflow: hidden; }
+.evview-pic .ev-pic, .evview-pic .ev-plate { width: 100%; height: 100%; object-fit: contain; display: block; }
+.evview-pic .ev-item { width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; color: var(--paper); }
+.evview-pic .ev-item img { width: 100%; height: 100%; object-fit: contain; }
+.evview-pic .ev-item svg { width: 90px; height: 90px; }
+.evview-pic.small { height: 220px; margin: 10px 0; }
+.evview-pic.wide { height: 260px; margin-bottom: 12px; }
+.evview-photo .evview-pic { height: 100%; }
+.evview-side { overflow: auto; }
+.evview-mapbtn { margin: 6px 0 12px; }
+.evview-figure { margin: 0; }
+/* messages: a phone's thread */
+.evview-thread { display: flex; flex-direction: column; gap: 12px; padding: 12px; background: #dfe6ee; border-radius: 10px; }
+.msg { max-width: 82%; align-self: flex-start; font-family: var(--doc); }
+.msg.mine { align-self: flex-end; text-align: right; }
+.msg-meta { display: flex; gap: 10px; font-size: 13px; color: #4b5568; }
+.msg.mine .msg-meta { justify-content: flex-end; }
+.msg-from { font-weight: 700; }
+.msg-bubble { display: inline-block; margin-top: 3px; padding: 9px 13px; font-size: 17px; line-height: 1.55; text-align: left; word-break: keep-all; background: #fff; border-radius: 4px 14px 14px 14px; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12); }
+.msg.mine .msg-bubble { background: #ffe680; border-radius: 14px 4px 14px 14px; }
+.msg-note { margin-top: 3px; font-size: 13px; color: #6b5f4a; }
+/* frames: a clip or footage, frame by frame */
+.evview-frames { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.evview-frames .frame { display: grid; grid-template-columns: auto 8.5em 1fr; align-items: center; gap: 12px; padding: 6px 8px; font-family: var(--doc); background: rgba(46, 58, 115, 0.06); border-left: 4px solid var(--cover); }
+.frame-pic { width: 160px; height: 90px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #1d2338; border-radius: 2px; }
+.frame-pic .ev-pic, .frame-pic .ev-plate { width: 100%; height: 100%; object-fit: cover; }
+.frame-at { font-weight: 700; color: var(--cover); font-variant-numeric: tabular-nums; }
+.frame-text { font-size: 17px; line-height: 1.5; word-break: keep-all; }
+.evview-frames .frame:not(:has(.frame-pic)) { grid-template-columns: 8.5em 1fr; }
+/* document: a sheet of paper */
+.evview-paper { max-width: 900px; margin: 0 auto; padding: 18px 24px; background: #fffdf6; border: 1px solid #d8cfb6; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1); }
+.evview-adds { margin-top: 16px; padding-top: 8px; border-top: 1px dashed #9c937e; }
+.evview-adds-head { font-size: 14px; font-weight: 700; color: #2e5aac; }
+.evview-adds .addendum { margin-top: 8px; padding: 8px 10px; font-family: var(--doc); font-size: 16px; line-height: 1.55; white-space: pre-line; word-break: keep-all; background: rgba(46, 90, 172, 0.08); border-left: 4px solid #2e5aac; }
+.evview-adds .addendum.unread { box-shadow: 0 0 0 2px var(--daon); }
+.evview-foot { display: flex; align-items: center; gap: 12px; }
+.evview-nav { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
+.evview-tab {
+  flex: none;
+  position: relative;
+  padding: 6px 12px;
+  font-family: var(--doc);
+  font-size: 14px;
+  color: rgba(244, 240, 230, 0.8);
+  background: var(--cover-dark);
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.evview-tab.on { color: var(--ink); background: var(--paper); border-color: var(--ochre); }
+.evview-tab.unread::after { content: ''; position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--daon); }
+.evview-present[hidden], .evview-nav[hidden] { display: none; }
+.evview-present { flex: none; }
+
+.touch-layout .evview { padding: 14px 20px 12px; }
+.touch-layout .evview-name { font-size: 36px; }
+.touch-layout .evview-label { font-size: 20px; }
+.touch-layout .evview-page { font-size: 24px; }
+.touch-layout .evview-count { font-size: 21px; }
+.touch-layout .evview-main { grid-template-columns: 72px 1fr 72px; }
+.touch-layout .evview-arrow { height: 160px; font-size: 60px; }
+.touch-layout .evview-caption, .touch-layout .evview-lines .row, .touch-layout .evview-lines .row-text,
+.touch-layout .msg-bubble, .touch-layout .frame-text, .touch-layout .evview-adds .addendum,
+.touch-layout .evview-body .sheet-table { font-size: 25px; }
+.touch-layout .msg-meta, .touch-layout .msg-note, .touch-layout .evview-adds-head, .touch-layout .frame-at { font-size: 20px; }
+.touch-layout .evview-tab { padding: 10px 18px; font-size: 21px; }
+.touch-layout .evview-photo { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+.touch-layout .evview-lines .row.timed { grid-template-columns: 6em 1fr; }
+.touch-layout .evview-frames .frame { grid-template-columns: auto 6.5em 1fr; }
+.touch-layout .evview-frames .frame:not(:has(.frame-pic)) { grid-template-columns: 6.5em 1fr; }
+.touch-layout .ev-cover { max-height: 200px; }
+.touch-layout .ev-pages-count { font-size: 20px; }
+
+/* A page picture full stage, read-only over the detail. */
+.evview-pic.zoomable, .frame-pic.zoomable { position: relative; cursor: zoom-in; }
+.evview-zoombtn { position: absolute; right: 8px; bottom: 8px; opacity: 0.9; }
+.frame-pic .evview-zoombtn { display: none; }
+.evview-zoom { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: rgba(6, 9, 18, 0.96); cursor: zoom-out; }
+.evview-zoom-pic { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
+.evview-zoom-pic .ev-pic, .evview-zoom-pic .ev-plate { width: 100%; height: 100%; object-fit: contain; display: block; }
+.evview-zoom-hint { margin: 0; font-size: 15px; color: rgba(244, 240, 230, 0.75); }
+.touch-layout .evview-zoombtn { font-size: 20px; }
+.touch-layout .evview-zoom-hint { font-size: 22px; }
+
+/* ---------------------------------------------------------------- choices made by looking (2화 clip frames) */
+
+.ask.visual { width: 1120px; bottom: 40px; }
+.ask.visual .ask-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 12px; }
+.ask.visual .ask-option { flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; padding: 8px; text-align: center; }
+.ask-pic { display: block; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #1d2338; border-radius: 3px; }
+.ask-pic svg { width: 100%; height: 100%; display: block; }
+.ask.visual .ask-option .ask-key { align-self: flex-start; margin-bottom: -28px; z-index: 1; padding: 0 6px; background: rgba(6, 16, 24, 0.8); border-radius: 3px; }
+.ask-zoom[hidden] { display: none; }
+
+.gallery {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 24px 12px;
+  background: rgba(6, 9, 18, 0.97);
+}
+.gallery-head { display: flex; align-items: center; gap: 16px; color: var(--paper); }
+.gallery-title { flex: 1; font-family: var(--display); font-size: 26px; }
+.gallery-count { font-family: var(--doc); font-size: 16px; color: rgba(244, 240, 230, 0.7); }
+.gallery-main { flex: 1; min-height: 0; display: grid; grid-template-columns: 52px 1fr 52px; gap: 10px; margin: 10px 0; }
+.gallery-pic { min-height: 0; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+.gallery-pic svg { width: 100%; height: 100%; display: block; }
+.gallery-strip { display: flex; justify-content: center; gap: 10px; }
+.gallery-strip[hidden] { display: none; }
+.gallery-thumb { width: 150px; padding: 4px; display: flex; flex-direction: column; gap: 3px; color: rgba(244, 240, 230, 0.8); font-size: 13px; background: var(--cover-dark); border: 2px solid transparent; border-radius: 4px; cursor: pointer; }
+.gallery-thumb svg { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; }
+.gallery-thumb.on { border-color: var(--ochre); color: var(--paper); }
+.gallery .evview-arrow.gone { visibility: hidden; }
+
+/* The statement being contradicted stays in view in the detail. */
+.evview-pin { margin: 8px 0 0; }
+
+.touch-layout .ask.visual { width: 1220px; }
+.touch-layout .gallery-title { font-size: 32px; }
+.touch-layout .gallery-count { font-size: 22px; }
+.touch-layout .gallery-main { grid-template-columns: 72px 1fr 72px; }
+.touch-layout .gallery-thumb { width: 190px; font-size: 18px; }
+.touch-layout .evview-pin .pin-label { font-size: 18px; }
+.touch-layout .evview-pin .pin-text { font-size: 22px; }

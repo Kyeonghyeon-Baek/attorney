@@ -1,8 +1,8 @@
 import { guideDayOne } from './investigation-flow';
 import type { Location, Script } from '../../engine/types';
 import {
-  addEvidence, addProfile, ambience, annotate, app, bgm, board, boardOff, cg, fadeIn, fadeOut, field, flag, goto,
-  investigate, memo, note, place, row, say, sayAs, sfx, shake, think, tint, wait, when,
+  addEvidence, addProfile, ambience, annotate, app, bgm, board, boardOff, cg, fadeIn, fadeOut, field, flag,
+  goto, investigate, memo, note, place, revise, row, say, sayAs, sfx, shake, think, tint, wait, when,
 } from '../script';
 
 // 1일차 조사 (6/16). 여덟 곳, 증거 E01~E08. docs/ep2/play-flow.md §5.
@@ -143,6 +143,16 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
       say('gu', '여기가 피해자가 떨어진 자리임다. 이제부턴 진지하게 모시겠슴다.', 'serious'),
       addEvidence('roofScene'),
       say('dan', '현장 사진 묶음부터 챙겨 주셨네요. 고마워요, 형사님.', 'normal'),
+      cg('photoAlleyW3'),
+      say('gu', '떨어진 건 서쪽 세 번째 칸, W3 패널임다. 다른 칸보다 밝은 회색 철판이고요.', 'serious'),
+      say('gu', '바깥면엔 골목에서 건물 찾으라고 단 「행복하우스」 표지판이 붙어 있슴다.', 'serious'),
+      cg('diagW3Back'),
+      say('gu', '옥상 쪽 뒷면엔 글씨가 없슴다. 그 표지판을 고정한 볼트 머리 네 개만 보이는 민무늬임다.', 'serious'),
+      cg('photoParapetW3'),
+      say('dan', '옥상 사진엔 W3 자리에 너트 없는 앵커 볼트 네 개…', 'point'),
+      cg('photoFloorW3'),
+      say('dan', '그 앞 바닥엔 걷힌 방수포랑 풀린 끈. 올라가서 직접 볼게요.', 'point'),
+      cg(null),
     ],
     hotspots: [
       { id: 'spot', label: '추락 지점', x: 450, y: 570, w: 290, h: 100,
@@ -155,8 +165,8 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
         script: [
           note('사진 속 패널은 다른 칸보다 밝은 회색이다. 바깥면엔 표지판 「행복하우스 · 달빛로12길 7」, 뒷면엔 볼트 머리 넷.'),
           say('gu', '골목에서 건물 찾으라고 난간 바깥에 달아 놨던 검다. 택배 기사님들 생명줄이었죠.', 'serious'),
-          say('dan', '다른 난간 칸은 쇠창살인데, 이 W3 칸만 막힌 철판이네요.', 'point'),
-          say('narae', '표지판이 바깥을 보고 있었으니까… 옥상 안에선 볼트 네 개 박힌 민무늬 철판만 보였겠네.', 'normal'),
+          say('dan', '다른 난간 칸은 쇠창살인데, 아까 사진처럼 이 W3 칸만 막힌 철판이네요.', 'point'),
+          say('narae', '그러게. 표지판은 골목 쪽에만 달렸으니까, 옥상 안에선 볼트 머리 네 개 박힌 뒷면만 보였겠어.', 'normal'),
           say('gu', '맞슴다. 실물은 과학수사팀이 수거해 갔슴다.', 'serious'),
           flag('d1:signSeen'),
         ] },
@@ -168,7 +178,8 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
           say('dan', '"일치율 78% · 2% 부족"… 재개발 감정 앱 화면이네요.', 'point'),
           say('gu', '본체는 포렌식실에 잠금 해제 맡겼슴다. 사흘은 족히 걸림다.', 'serious'),
           say('narae', '액정이 거미줄처럼 다 나갔네. …근데 맨 위 구석에 저 초록 불은 뭐야?', 'surprised'),
-          think('(작은 배지에 "원격 지원 중"이라고 적혀 있다. 형사님께 따로 물어보자.)'),
+          say('gu', '「원격 지원 중」 배지 말임까? 관리소장님이 그때 앱 화면을 원격으로 봐 드리고 있었답니다.', 'serious'),
+          think('(화살표 ← ↑, "일치율 78% · 2% 부족", 그리고 원격 지원. 자세한 건 더 물어보자.)'),
         ] },
       { id: 'truck', label: '골목 아래 사다리차', x: 335, y: 190, w: 210, h: 310,
         script: [
@@ -200,13 +211,16 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
         addEvidence('postmortem'),
         say('dan', '가슴이나 어깨 앞쪽은요? 정면에서 세게 밀쳤다면 잡힌 자국이 남았을 텐데요.', 'point'),
         say('gu', '몸 앞쪽은 깨끗함다. 밀친 자국이나 멱살 잡힌 흔적 같은 건 없었슴다.', 'serious'),
+        say('gu', '다만 점퍼 오른 소매 솔기가 뜯어져 있었슴다. 어느 쪽으로 당겨졌는지는 국과수에 감식 맡겨 뒀고요.', 'serious'),
       ] },
       { id: 'witness', label: '목격자', script: [
         say('gu', '길 건너 정숙세탁 배정숙 사장님임다. 4층 창에서 봤답니다. 그날 지구대가 받아 적은 거 드리죠.', 'serious'),
         addEvidence('firstStatement'),
-        say('narae', '경찰 수첩이네. 손글씨가 급하게 날아갔어.', 'surprised'),
-        say('narae', '근데 동네 소문은 다 여자가 밀었다고만 하던데. 이 메모도 그렇게 써 있으려나?', 'angry'),
-        say('dan', '그날 밤 바로 받아 적은 말이야. 나중에 차분히 읽어 보자.', 'normal'),
+        say('narae', '경찰 수첩이네. 저녁 여덟 시 삼 분이면 사건 직후잖아. 뭐라고 적혀 있어?', 'surprised'),
+        say('dan', '번호를 매겨서 적어 뒀어. "① 남자가 두 손 들고 뒷걸음질, ② 난간 휘청."', 'point'),
+        say('dan', '"③ 여자가 튀어나와 팔 뻗음, ④ 남자 없어짐 · 여자가 \"떨어져\"."', 'normal'),
+        say('narae', '동네 소문은 다 여자가 밀었다고만 하던데. 사장님 말은 이 순서였구나.', 'normal'),
+        say('dan', '그날 밤 바로 받아 적은 첫 진술이야. 적힌 순서 그대로 기억해 두자.', 'normal'),
       ] },
       { id: 'map', label: '동네 지도', script: [
         say('gu', '이 동네 처음이시면 백 프로 길 잃슴다. 축대랑 계단이 미로임다.', 'serious'),
@@ -290,16 +304,18 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
         addEvidence('appraisal'),
         say('narae', '어디 보자… 추정 시세 20억 3천? 조망 가산만 1억 6천이 붙었네!', 'surprised'),
         say('narae', '옥상에서 남산이 훤히 보인대. 진짜 그렇게 잘 보이나?', 'normal'),
-        say('dan', '빌라 옥상 조망권 값치곤 꽤 후하게 매겨졌네.', 'point'),
+        say('dan', '조망 사진엔 맑은 하늘에 남산 타워, 맨 아래엔 난간 윗부분이랑 건물 표지판이 같이 찍혀 있어.', 'point'),
+        say('dan', '세대 사진은 201호랑 302호 거실·주방. 빌라 옥상 조망권 값치곤 꽤 후하게 매겨졌네.', 'normal'),
+        say('gu', '…지나가다 슬쩍 봤는데 변호사님, 이 302호 소화기는 러시아 직수입임까? 스티커 글씨가 꼬부랑거림다.', 'normal'),
+        say('narae', '으악, 형사님 언제 뒤에 계셨어요?! …근데 글씨가 좀 이상하긴 하네. 사진이 흐려서 그런가?', 'surprised'),
+        say('eungyeol', '…그러게요. 복도에 놓을 때 같이 샀는데, 우리 집 건 그냥 반듯하게 "소화기"였거든요.', 'worried'),
+        memo('감정 리포트 302호 사진: 소화기 스티커 글씨가 이상하다(구만두 "러시아어임까?").'),
       ] },
     ],
     presents: {
       appraisal: [
         say('dan', '소윤 씨가 리포트 속 302호 사진이 어딘가 위화감이 든다고 하던데요.', 'normal'),
-        say('gu', '…지나가다 슬쩍 봤는데 변호사님, 이 집 소화기는 러시아 직수입임까? 스티커 글씨가 꼬부랑거림다.', 'normal'),
-        say('narae', '으악, 형사님 언제 뒤에 계셨어요?! …근데 글씨가 좀 이상하긴 하네. 사진이 흐려서 그런가?', 'surprised'),
-        say('eungyeol', '…그러게요. 복도에 놓을 때 같이 샀는데, 우리 집 건 그냥 반듯하게 "소화기"였거든요.', 'worried'),
-        memo('감정 리포트 302호 사진: 소화기 스티커 글씨가 이상하다(구만두 "러시아어임까?").'),
+        say('eungyeol', '소화기 스티커 말고는 저도 잘 모르겠어요. 언니 입주 사진이 있으면 나란히 놓고 볼 수 있을 텐데…', 'worried'),
       ],
     },
     presentDefault: [
@@ -353,7 +369,17 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
         script: [
           say('gu', '도면에 옥상 실측 배치를 그려 드릴까요? 철제 줄자는 형사의 기본임다.', 'serious'),
           say('dan', '역시 구 형사님. 거리 기록 부탁드릴게요.', 'normal'),
+          // The facts the optional spots give, said here only if the player skipped that spot.
+          when('seen:d1roof:bolts',
+            [say('dan', '아까 본 너트 없는 볼트 네 자리부터 표시해 둘게요.', 'normal')],
+            [say('gu', 'W3 빈자리 턱엔 너트 없는 앵커 볼트 네 개가 솟아 있슴다.', 'serious')]),
+          when('seen:d1roof:tie', [], [say('gu', '옆 W2 기둥 끝엔 잘린 노란 케이블타이 토막도 남았슴다.', 'serious')]),
+          when('seen:d1roof:tarp',
+            [say('dan', '걷힌 방수포랑 풀린 끈 자리도 같이 재 주세요.', 'normal')],
+            [say('dan', 'W3 앞 바닥엔 걷힌 파란 방수포랑 넘어진 「방수 양생 중」 팻말. 래칫 끈 한쪽은 빨래대 기둥에 묶인 채네요.', 'point')]),
+          say('gu', 'W3 앞에서 빨래대 기둥까지 약 이 점 오 미터임다. 풀린 끈은 그 사이 바닥에 있슴다.', 'serious'),
           annotate('dalbitMap', '[옥상 · 6/16 구만두 실측] W3 앞에서 빨래대 기둥까지 약 2.5m. 끈은 그 사이 바닥에 풀려 있었다.'),
+          revise('dalbitMap', '동네 지도와 옥상 실측 도면. W3에서 빨래대 기둥까지 약 2.5m, 그 사이에 끈이 풀려 있었다.'),
           flag('d1:roofTab'),
         ] },
       { id: 'chili', label: '고추 채반', x: 1070, y: 480, w: 180, h: 90,
@@ -429,6 +455,7 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
             think('(창, 앞에 선 사람, 난간. 셋이 거의 한 줄로 겹쳐서 뒷사람은 보이지도 않아.)'),
             think('(저 둘 사이에서 뻗은 손이 밀었는지 잡으려 했는지는, 이 창가에선 구분할 수 없어.)'),
             annotate('dalbitMap', '[창에서 본 옥상 · 6/16 재현] 4층 창 → 앞에 선 사람 → W3가 거의 한 줄. 앞사람 실루엣에 뒷사람이 거의 다 가려진다. 6/14 19:46 해는 서북서, 고도 4°(역광).'),
+            revise('dalbitMap', '옥상 실측·시야 재현 도면. 4층 창 → 앞사람 → W3가 거의 한 줄, 역광에 뒷사람이 거의 가려진다.'),
             flag('d1:windowShot'),
           ], [
             note('4층 살림집 창가. 길 건너 조금 낮은 곳에 행복하우스 옥상이 보인다.'),
@@ -557,6 +584,10 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
           say('narae', '에이, 할머니 눈이 나빠서 못 본 거 아냐?', 'normal'),
           say('okbun', '이년아, 눈 나쁜 사람한테도 산은 보여. 안 보이는 건 안 보이는 거여.', 'stern'),
           say('dan', '삼십 년 동안 맑은 날마다 올라가신 분의 말씀이네요.', 'point'),
+          when('talked:d1shrine:yellow', [], [
+            say('okbun', '목요일 아침에도 갔지. 그땐 서쪽 난간에 노란 줄이 팽팽했는디, 토요일 아침엔 파란 천이 덮여 있더라.', 'normal'),
+            say('okbun', '바닥 공사하나 싶어서 고추는 남쪽에만 널었어.', 'normal'),
+          ]),
           memo('신옥분: "그 옥상에 삼십 년 고추를 널었어도 남산은 꿈에서나 봤다."'),
           flag('d1:namsanTalk'),
           ...okbunCheck,
@@ -629,6 +660,10 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
           say('byeon', '원래 인터넷 타면 화질이 푹 삶아지는 법이여! 데이터 절약인가 그거 때문이여!', 'flustered'),
           say('dan', '메신저 자동 압축 때문이겠네요. 금요일 아침 풍경이니 참고용으로 공유 부탁드릴게요.', 'normal'),
           addEvidence('groupVideo'),
+          when('d1:programSeen', [], [
+            say('dan', '게시판에 토요일 설명회 식순도 있네요. 일곱 시 사십 분부터 십 분간 다과 휴식…', 'point'),
+            say('elder', '안 소장이 넣어 둔 쉬는 시간이여. 정작 본인은 전화기 들고 강당 옆 복도로 나가더구먼.'),
+          ]),
         ] },
       { id: 'cctv', label: '복도의 CCTV', x: 930, y: 50, w: 110, h: 90,
         script: [
@@ -708,7 +743,12 @@ export const DAY1_LOCATIONS: Record<string, Location> = {
           say('ahn', '아, 옥상 출입 기록 찾으시죠? 경찰에도 뽑아 드렸는데 변호사님도 한 부 더 드릴게요.', 'normal'),
           say('ahn', '관리 대행이 원래 이런 심부름 하라고 있는 자리잖아요.', 'explain'),
           addEvidence('roofDoorLog'),
-          think('(요청하기도 전에 척척 챙겨 주신다. 일 처리가 빈틈없이 빠르네.)'),
+          say('dan', '고맙습니다. …5월 24일 관리 마스터 카드, 6월 11일 오후 2시 52분엔 "임시 코드 #7"이 찍혀 있네요.', 'point'),
+          say('narae', '13일엔 오전 10시 14분 관리 마스터 카드, 오후 2시 58분 세입자 공용 코드. 14일 저녁엔 7시 38분이랑 44분이고.', 'normal'),
+          when('talked:d1realty:tarp', [], [
+            say('ahn', '금요일 아침엔 제가 방수 작업하러 올라갔어요. 양생 중이라 천을 덮고 끈으로 묶어 뒀죠.', 'explain'),
+          ]),
+          think('(바닥글은 6월 14일 20시 21분 출력. 요청하기도 전에 척척 챙겨 주신다. 일 처리가 빈틈없이 빠르네.)'),
         ] },
       { id: 'watch', label: '손목시계', x: 580, y: 385, w: 110, h: 90,
         script: [
@@ -791,6 +831,7 @@ export const DAY1_SCENES: Record<string, Script> = {
     // The date card sits on the visiting room, not the empty courtroom (and without the court HUD).
     field('visit'),
     place('6월 16일 월요일', '오전 10시', '서울구치소'),
+    fadeIn,
     investigate('d1visit', DAY1_GOALS, [goto('day1night')], '조사를 마친다'),
   ],
 

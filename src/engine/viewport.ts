@@ -25,6 +25,11 @@ export function bindViewport(root: HTMLElement, viewport: HTMLElement, stage: HT
     viewport.inert = portrait;
   };
   fit();
+  // The stage clips (overflow: hidden) but can still be scrolled by focus moves or scrollIntoView
+  // (keyboard Tab, automation clicks), which hides its top rows (place name, HUD). Keep it put.
+  stage.addEventListener('scroll', () => {
+    if (stage.scrollTop || stage.scrollLeft) stage.scrollTo(0, 0);
+  });
   new ResizeObserver(fit).observe(viewport);
   mobile.addEventListener('change', fit);
   addEventListener('resize', fit);

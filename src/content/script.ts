@@ -54,12 +54,14 @@ export const end: Cmd = { t: 'end' };
 /** Opens the 질문 재구성 menu with the camera on the one being asked. */
 export const ask = (note: string, options: AskOption[], who: CharId = 'daon', title?: string): Cmd => ({ t: 'ask', who, note, options, title });
 /** A plain choice (not an AI question) with its own heading, e.g. what to ask the defendant. */
-export const choose = (title: string, note: string, options: AskOption[], who: CharId = 'dan', opts?: StepOpts): Cmd =>
-  ({ t: 'ask', who, note, options, title, opts });
+export const choose = (
+  title: string, note: string, options: AskOption[], who: CharId = 'dan', opts?: StepOpts, gallery?: string[],
+): Cmd => ({ t: 'ask', who, note, options, title, opts, ...(gallery ? { gallery } : {}) });
 /** Point at the answer on a map; `answer` is one of the map's region ids. */
 export const pinpoint = (map: string, prompt: string, answer: string, then: Script, wrong?: Script, opts?: StepOpts): Cmd =>
   ({ t: 'pinpoint', map, prompt, answer, then, wrong, opts });
-export const option = (label: string, then: Script, correct = false): AskOption => ({ label, then, correct });
+export const option = (label: string, then: Script, correct = false, plate?: string): AskOption =>
+  ({ label, then, correct, ...(plate ? { plate } : {}) });
 
 export const present = (
   prompt: string, answer: string | string[], then: Script, wrong?: Script, nearMiss?: Record<string, Script>, opts?: StepOpts,

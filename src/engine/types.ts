@@ -98,6 +98,44 @@ export interface Evidence {
   tabs?: EvidenceTab[];
   /** In-world photos shown under the summary (plate ids, engine/plates.ts); a click enlarges one. */
   plates?: string[];
+  /**
+   * Opt-in compact card (2화): the sheet shows only the cover, the summary (two or three lines) and a
+   * "자세히 보기" button; the source material lives in these full-screen pages (engine/evidence-view.ts).
+   */
+  pages?: EvidencePage[];
+  /** The picture on the compact card; defaults to the first page's picture, then the item art. */
+  cover?: EvidenceVisual;
+}
+
+/** A picture: an in-world plate, a painted photo (assets/photos), an event CG or a drawn figure. */
+export interface EvidenceVisual {
+  plate?: string;
+  image?: string;
+  cg?: string;
+  figure?: string;
+}
+
+export type EvidencePageKind = 'photo' | 'messages' | 'table' | 'frames' | 'document' | 'figure' | 'map';
+
+/** One page of an evidence's full-screen detail, laid out for what it is. */
+export interface EvidencePage extends EvidenceVisual {
+  id: string;
+  kind: EvidencePageKind;
+  title: string;
+  /** The presentable part (EvidenceTab id) this page shows; presenting from the page names it. */
+  tab?: string;
+  /** Flag or evidence that must be held before the page exists; defaults to its tab's `requires`. */
+  requires?: string;
+  /** Opens this map full screen (engine/maps.ts). */
+  map?: string;
+  caption?: string;
+  /** Body text, with the same line grammar as `Evidence.detail` (timed rows, ※ notes, ▷ opinions). */
+  lines?: string[];
+  messages?: { at: string; from: string; text: string; mine?: boolean; note?: string }[];
+  table?: { head: string[]; rows: string[][]; quiet?: number[] };
+  frames?: { at: string; text: string; plate?: string; image?: string }[];
+  /** Later findings (annotate) that belong here, by their opening "[…" prefix. */
+  addenda?: string[];
 }
 
 export interface EvidenceTab {
@@ -130,6 +168,8 @@ export interface AskOption {
   label: string;
   then: Script;
   correct?: boolean;
+  /** A picture for this answer (plate id, engine/plates.ts): the choice is then made by looking. */
+  plate?: string;
 }
 
 /** A plain summary of the stretch of trial in progress (1화), opened from the court record on request. */
@@ -183,7 +223,8 @@ export type Cmd =
     t: 'present'; prompt: string; answer: string | string[]; then: Script; wrong?: Script;
     nearMiss?: Record<string, Script>; opts?: StepOpts;
   }
-  | { t: 'ask'; who: CharId; note: string; options: AskOption[]; title?: string; opts?: StepOpts }
+  /** `gallery`: plates "크게 보기" pages through when the options have pictures (defaults to theirs). */
+  | { t: 'ask'; who: CharId; note: string; options: AskOption[]; title?: string; opts?: StepOpts; gallery?: string[] }
   /** The player points at a spot on a map (e.g. the store's floor plan); `answer` is a region id. */
   | { t: 'pinpoint'; map: string; prompt: string; answer: string; then: Script; wrong?: Script; opts?: StepOpts }
   | { t: 'reveal'; statements: string[] }

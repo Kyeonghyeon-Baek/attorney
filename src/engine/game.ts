@@ -440,6 +440,7 @@ export class Game {
     this.record.onMap = (mapId) => new MapView().open(this.stage, mapId, 'view');
     this.record.onPhotos = (setId) => new PhotoView().open(this.stage, setId, this.flags.has(`photomark:${setId}`));
     this.record.photoMarked = (setId) => this.flags.has(`photomark:${setId}`);
+    this.record.canSee = (id) => this.has(id);
     this.record.onSeen = (id, n) => {
       for (const f of [...this.flags]) if (f.startsWith(`seen:${id}|`)) this.flags.delete(f);
       this.flags.add(`seen:${id}|${n}`);
@@ -1090,15 +1091,16 @@ export class Game {
 
         // present / record: open the case file and pick evidence
         this.record.onHint = manual ? () => void this.openHintWindow() : null;
-        const raw = await this.record.open('present', '', true, {
+        const picked = await this.record.open('present', '', true, {
           label: `반박할 증언 · ${tm.title} ${i + 1}/${list.length}`, text: st.text,
         });
         this.record.onHint = null;
-        if (!raw) {
+        if (!picked) {
           instant = true;
           continue;
         }
-        const id = await this.pickTab(raw, [...(st.accept ?? []), ...Object.keys(st.nearMiss ?? {})]);
+        const [raw, part] = picked.split('#');
+        const id = await this.pickTab(raw, [...(st.accept ?? []), ...Object.keys(st.nearMiss ?? {})], part);
         if (!id) {
           instant = true;
           continue;
@@ -1239,12 +1241,14 @@ export class Game {
   /** "Point at it" on a map. A wrong spot costs like wrong evidence. */
   /**
    * Presenting a record with parts (2화): when an answer or near miss names a part (`id#tab`),
-   * ask which part is meant. Returns `id#tab`, or the plain id when no part matters here.
+   * ask which part is meant. Returns `id#tab`, or the plain id when no part matters here. A part the
+   * player already chose (presenting from that page of the full-screen detail) is used as it is.
    */
-  private async pickTab(id: string, keys: string[]): Promise<string | null> {
+  private async pickTab(id: string, keys: string[], part?: string): Promise<string | null> {
     const ev = this.record.get(id);
     const tabs = ev?.tabs?.filter((t) => !t.requires || this.has(t.requires));
     if (!ev || !tabs?.length || !keys.some((k) => k.startsWith(`${id}#`))) return id;
+    if (part && tabs.some((t) => t.id === part)) return `${id}#${part}`;
     if (tabs.length === 1) return `${id}#${tabs[0].id}`;
     this.box.hide();
     this.ask.onHint = null;
@@ -1295,10 +1299,10 @@ export class Game {
       for (;;) {
         this.box.hide();
         this.record.onHint = this.hintCtx ? () => void this.openHintWindow() : null;
-        const raw = (await this.record.open('present', cmd.prompt, false))!;
+        const [raw, part] = (await this.record.open('present', cmd.prompt, false))!.split('#');
         this.record.onHint = null;
         const answers = ([] as string[]).concat(cmd.answer);
-        const id = await this.pickTab(raw, [...answers, ...Object.keys(cmd.nearMiss ?? {})]);
+        const id = await this.pickTab(raw, [...answers, ...Object.keys(cmd.nearMiss ?? {})], part);
         if (!id) continue;
         const hit = answers.includes(id) || answers.includes(raw);
         this.presented = id;
@@ -1343,7 +1347,8 @@ export class Game {
         this.ask.onHint = this.hintCtx ? () => void this.openHintWindow() : null;
         this.ask.onRecord = () => this.record.open('view');
         // Without a right answer it is only a "where next" menu: one click is enough.
-        const idx = await this.ask.open(cmd.note, cmd.options.map((o) => o.label), used, cmd.title, !hasCorrect);
+        const pics = cmd.options.some((o) => o.plate) ? cmd.options.map((o) => o.plate) : undefined;
+        const idx = await this.ask.open(cmd.note, cmd.options.map((o) => o.label), used, cmd.title, !hasCorrect, pics, cmd.gallery);
         this.ask.onHint = null;
         used.add(idx);
         const opt = cmd.options[idx];
@@ -1475,10 +1480,17 @@ export class Game {
             this.autosave(`조사: ${loc.name}`, { loc: here });
           }
         } else if (action === 'move') {
-          const dest = await this.inv.list('어디로 갈까?', loc.connects.filter((id) => {
+          const open = loc.connects.filter((id) => {
             const req = this.data.locations[id].requires;
             return !req || this.has(req) || this.flags.has(`visited:${id}`);
-          }).map((id) => {
+          });
+          if (!open.length) {
+            // Nowhere opened yet: say so instead of an empty list.
+            r = await this.run([{ t: 'think', text: '(아직 갈 만한 곳이 떠오르지 않아. 이곳에서 확인할 이야기가 남았어.)' }]);
+            if (r === STOP) return STOP;
+            continue;
+          }
+          const dest = await this.inv.list('어디로 갈까?', open.map((id) => {
             const destination = this.data.locations[id];
             const known = this.flags.has(`visited:${id}`) ||
               !!destination.knownFrom && this.flags.has(`visited:${destination.knownFrom}`);
@@ -1510,7 +1522,8 @@ export class Game {
             this.autosave(`조사: ${loc.name}`, { loc: here });
           }
         } else if (action === 'present' && loc.person) {
-          const id = await this.record.open('present', `${CHARACTERS[loc.person].name}에게 무엇을 보여줄까?`);
+          // Talking to someone in the field only ever reacts to the whole record, not one part of it.
+          const id = (await this.record.open('present', `${CHARACTERS[loc.person].name}에게 무엇을 보여줄까?`))?.split('#')[0];
           if (id) {
             await this.exec({ t: 'shout', who: 'dan', kind: 'takethat' });
             this.scene.showPlace(loc.person);
