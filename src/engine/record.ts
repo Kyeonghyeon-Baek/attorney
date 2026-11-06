@@ -3,6 +3,7 @@ import { el, replay, scrollWithin, setLabel } from './dom';
 import { fromSpace, push } from './input';
 import { touchLayout } from './viewport';
 import { FIGURES, paintFigure } from './figures';
+import { PLATES, plateSvg } from './plates';
 import { paintCompare } from './photos';
 import { paintFace, paintItem } from './portrait';
 import type { Evidence, Profile, Recap } from './types';
@@ -303,6 +304,19 @@ export class CourtRecord {
     setTimeout(() => n.remove(), 1600);
   }
 
+  /** One in-world photo full screen over the record; any key or click closes it. */
+  private enlargePlate(id: string): void {
+    const box = el('div', 'plate-full', this.root);
+    box.innerHTML = plateSvg(id);
+    el('p', 'plate-full-title', box, `${PLATES[id]?.title ?? id} · 닫기 Esc`);
+    const close = () => {
+      pop();
+      box.remove();
+    };
+    const pop = push(() => close());
+    box.addEventListener('click', close);
+  }
+
   /** Space (and Enter in view mode) opens the selected evidence's map or photos, if it has one. */
   private openExtra(): void {
     const ev = this.tab === 'evidence' ? this.held[this.sel] : undefined;
@@ -488,6 +502,15 @@ export class CourtRecord {
         const fig = el('figure', 'sheet-figure', this.sheet);
         paintFigure(fig, ev.figure);
         if (FIGURES[ev.figure].caption) el('figcaption', '', fig, FIGURES[ev.figure].caption!);
+      }
+      if (ev.plates?.length) {
+        const strip = el('div', 'sheet-plates', this.sheet);
+        for (const id of ev.plates) {
+          const b = el('button', 'sheet-plate', strip);
+          b.innerHTML = plateSvg(id);
+          el('span', '', b, PLATES[id]?.title ?? id);
+          b.addEventListener('click', () => this.enlargePlate(id));
+        }
       }
       if (ev.source || ev.proves || ev.limits) {
         const scope = el('dl', 'sheet-scope', this.sheet);

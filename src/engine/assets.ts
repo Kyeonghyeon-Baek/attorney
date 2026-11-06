@@ -25,6 +25,24 @@ const photos = import.meta.glob('../assets/photos/*.png', {
   eager: true, query: '?url', import: 'default',
 }) as Record<string, string>;
 
+// Art for an episode still in development lives in assets/ep<n>/ with the same folders
+// (assets/ep2/chars/ahn/normal.png). The glob is lazy and only development builds keep it, so
+// the public build neither ships nor preloads those files (an eager glob would still emit them).
+// Releasing the episode = moving its files up into the shared folders.
+const devOnly = (import.meta.env.DEV
+  ? import.meta.glob('../assets/ep2/**/*.png', { query: '?url', import: 'default' })
+  : {}) as Record<string, () => Promise<unknown>>;
+
+/** Development builds: resolves the unreleased episodes' art into the lookups above. Call before the game starts. */
+export async function loadDevArt(): Promise<void> {
+  const maps: Record<string, Record<string, string>> = { chars, bg: backgrounds, items, portraits, cg: cgs, photos };
+  await Promise.all(Object.entries(devOnly).map(async ([path, load]) => {
+    const shared = path.replace(/^\.\.\/assets\/ep\d+\//, '../assets/');
+    const map = maps[shared.split('/')[2]];
+    if (map && !(shared in map)) map[shared] = String(await load());
+  }));
+}
+
 // Recorded music is fetched when a track first plays, not preloaded with the images.
 const music = import.meta.glob('../assets/music/*.{m4a,mp3,ogg}', {
   eager: true, query: '?url', import: 'default',

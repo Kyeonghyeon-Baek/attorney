@@ -1,7 +1,7 @@
 export type Action =
   | 'advance' | 'left' | 'right' | 'up' | 'down'
   | 'press' | 'present' | 'record' | 'back' | 'tab' | 'hint' | 'restart'
-  | 'n1' | 'n2' | 'n3' | 'n4';
+  | 'n1' | 'n2' | 'n3' | 'n4' | 'n5' | 'n6' | 'n7' | 'n8' | 'n9';
 
 type Handler = (a: Action) => void;
 
@@ -93,7 +93,8 @@ const KEYS: Record<string, Action> = {
   ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
   KeyQ: 'press', KeyE: 'present', KeyR: 'record',
   Escape: 'back', Backspace: 'back', Tab: 'tab',
-  Digit1: 'n1', Digit2: 'n2', Digit3: 'n3', Digit4: 'n4',
+  Digit1: 'n1', Digit2: 'n2', Digit3: 'n3', Digit4: 'n4', Digit5: 'n5',
+  Digit6: 'n6', Digit7: 'n7', Digit8: 'n8', Digit9: 'n9',
 };
 
 /**

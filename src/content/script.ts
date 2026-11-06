@@ -1,8 +1,9 @@
 import type { FigureMark } from '../engine/figures';
 import type {
-  AmbienceName, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, GuideLine, Hotspot, PanelCard,
-  PlanRoute, Recap, Script, SfxName, ShoutKind, StepOpts,
+  AmbienceName, AppView, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, GuideLine, Hotspot, PanelCard,
+  PlanRoute, Recap, Script, SfxName, ShoutKind, StepOpts, TintMode,
 } from '../engine/types';
+import type { CompareTask } from '../engine/compare';
 import type { MatchTask } from '../engine/match';
 import type { PhotoTask } from '../engine/photos';
 
@@ -43,6 +44,8 @@ export const match = (task: MatchTask, opts?: StepOpts): Cmd => ({ t: 'match', t
 export const photoTask = (set: string, task: PhotoTask, opts?: StepOpts): Cmd => ({ t: 'photoTask', set, task, opts });
 export const evidence = (id: string | null): Cmd => ({ t: 'evidence', id });
 export const cross = (id: string): Cmd => ({ t: 'cross', id });
+/** Back into a testimony already heard (its statements revised by `reveal`), without hearing it again. */
+export const crossAgain = (id: string): Cmd => ({ t: 'cross', id, again: true });
 export const reveal = (...statements: string[]): Cmd => ({ t: 'reveal', statements });
 export const daon = (mode: DaonMode): Cmd => ({ t: 'daon', mode });
 export const goto = (scene: string): Cmd => ({ t: 'goto', scene });
@@ -155,7 +158,11 @@ export const recap = (r: Recap | null): Cmd => ({ t: 'recap', recap: r });
 export const recapFlag = (r: Recap): string => `recap|${JSON.stringify(r)}`;
 /** Fades the HUD back (true) or brings it forward again (false). */
 export const dimHud = (on: boolean): Cmd => ({ t: 'dimHud', on });
-/** Night lighting over backgrounds and people; `tint(null)` restores daylight. */
-export const tint = (mode: 'night' | null): Cmd => ({ t: 'tint', mode });
+/** Night or sunset lighting over backgrounds and people; `tint(null)` restores daylight. */
+export const tint = (mode: TintMode | null): Cmd => ({ t: 'tint', mode });
+/** The 2화 appraisal app on a phone over the scene (ghost photo, arrows, score); `app(null)` puts it away. */
+export const app = (view: AppView | null): Cmd => ({ t: 'app', view });
+/** Two photos laid over each other; the player marks where they differ (2화 「겹쳐 보기」). */
+export const compare = (task: CompareTask, opts?: StepOpts): Cmd => ({ t: 'compare', task, opts });
 /** The episode's title card. */
 export const episode = (no: string, title: string): Cmd => ({ t: 'episode', no, title });

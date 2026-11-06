@@ -114,6 +114,71 @@ const OROT_SVG = `
   </g>
 `;
 
+
+// 2화 달빛마을: 남산 서남서쪽 비탈. 동쪽(오른쪽)이 오르막. 정숙세탁 4층 창에서 행복하우스 옥상으로 시선.
+const VILLAGE_SVG = `
+  <rect x="0" y="0" width="1000" height="640" fill="#1d2a3a"/>
+  <g stroke="#2c3d52" stroke-width="1">
+    ${Array.from({ length: 23 }, (_, i) => `<line x1="${i * 45}" y1="0" x2="${i * 45}" y2="640"/>`).join('')}
+    ${Array.from({ length: 15 }, (_, i) => `<line x1="0" y1="${i * 45}" x2="1000" y2="${i * 45}"/>`).join('')}
+  </g>
+  <path d="M40 600 L960 60" stroke="#3a5470" stroke-width="40" stroke-linecap="round" opacity="0.5"/>
+  <text class="mp-out" x="930" y="40" style="text-anchor:end">오르막 · 남산 방향 (동북동 약 2.3km) ↗</text>
+  <path d="M60 330 L940 330" stroke="#6b7f96" stroke-width="18"/>
+  <text class="mp-small" x="80" y="320" style="text-anchor:start">달빛로</text>
+  <rect class="mp-thing" x="360" y="350" width="120" height="110"/><text class="mp-label mp-strong" x="420" y="410">행복하우스</text>
+  <rect class="mp-shelf" x="336" y="350" width="20" height="150"/><text class="mp-small" x="300" y="520">서쪽 계단 골목</text>
+  <rect class="mp-thing" x="560" y="210" width="130" height="100"/><text class="mp-label" x="625" y="265">정숙세탁 (5층)</text>
+  <path d="M575 290 L478 380" stroke="#ffd166" stroke-width="3" stroke-dasharray="8 6"/>
+  <text class="mp-small" x="520" y="318">4층 창 → 옥상 (약 30m)</text>
+  <rect class="mp-thing" x="720" y="110" width="110" height="80"/><text class="mp-label" x="775" y="155">변복만 댁 텃밭</text>
+  <rect class="mp-thing" x="420" y="120" width="110" height="80"/><text class="mp-label" x="475" y="165">달빛 신당</text>
+  <rect class="mp-thing" x="440" y="520" width="140" height="80"/><text class="mp-label" x="510" y="565">경로당 (남쪽 200m)</text>
+  <rect class="mp-thing" x="90" y="380" width="130" height="80"/><text class="mp-label" x="155" y="425">달빛공인중개사</text>
+  <rect class="mp-thing" x="120" y="520" width="150" height="80"/><text class="mp-label" x="195" y="565">철거 구역 · 고철 컨테이너</text>`;
+
+// 2화 행복하우스 옥상 평면 (동서 9m × 남북 12m, 1m = 40). 서쪽 난간 W1~W4, W3만 보수 패널.
+const ROOF_SVG = `
+  <rect x="0" y="0" width="800" height="600" fill="#1d2a3a"/>
+  <rect x="220" y="60" width="360" height="480" fill="#2c3b4e" stroke="#f4f0e6" stroke-width="4"/>
+  <text class="mp-out" x="400" y="40">북</text><text class="mp-out" x="400" y="585">남</text>
+  <text class="mp-out" x="120" y="300">서 · 계단 골목</text><text class="mp-out" x="690" y="300">동</text>
+  <g stroke-width="10">
+    <line x1="220" y1="60" x2="220" y2="160" stroke="#9aa3ad"/><line x1="220" y1="160" x2="220" y2="300" stroke="#9aa3ad"/>
+    <line x1="220" y1="324" x2="220" y2="420" stroke="#d6dde4"/><line x1="220" y1="420" x2="220" y2="540" stroke="#9aa3ad"/>
+  </g>
+  <text class="mp-small" x="200" y="115" style="text-anchor:end">W1</text><text class="mp-small" x="200" y="235" style="text-anchor:end">W2</text>
+  <text class="mp-label mp-strong" x="200" y="378" style="text-anchor:end">W3</text><text class="mp-small" x="200" y="485" style="text-anchor:end">W4</text>
+  <text class="mp-small" x="200" y="396" style="text-anchor:end">(보수 패널·표지판)</text>
+  <rect class="mp-shelf" x="452" y="60" width="128" height="120"/><text class="mp-onshelf" x="516" y="125">옥탑 · 물탱크</text>
+  <rect x="446" y="100" width="8" height="40" fill="#ffd166"/><text class="mp-small" x="440" y="160" style="text-anchor:end">옥상 문</text>
+  <circle cx="320" cy="372" r="9" fill="#f4f0e6"/><text class="mp-small" x="334" y="364" style="text-anchor:start">빨래대 기둥</text>
+  <line x1="224" y1="372" x2="312" y2="372" stroke="#e08a2c" stroke-width="4" stroke-dasharray="8 5"/>
+  <rect x="580" y="250" width="10" height="140" fill="#c94c3a"/><text class="mp-small" x="570" y="410" style="text-anchor:end">현수막 (검은 타이)</text>
+  <rect class="mp-thing" x="300" y="470" width="200" height="50" rx="6"/><text class="mp-small" x="400" y="500">고추 채반</text>
+  <g class="mp-found"><circle cx="228" cy="372" r="8"/><text x="240" y="352" style="text-anchor:start">피해자</text></g>
+  <circle cx="296" cy="340" r="7" fill="#ffb4a8"/><text class="mp-small" x="304" y="330" style="text-anchor:start">소윤 (약 2m 앞)</text>`;
+
+// 2화 행복하우스 옥상 단면 (서→동, 1m = 25, 지면 생략). 정한이 그은 선: 정숙세탁 간판틀 윗선을 스쳐 남산 전망대로.
+const SECTION_SVG = `
+  <defs><linearGradient id="sec-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#253a5a"/><stop offset="1" stop-color="#3e5878"/></linearGradient></defs>
+  <rect x="0" y="0" width="1100" height="600" fill="url(#sec-sky)"/>
+  <rect x="200" y="420" width="225" height="180" fill="#6b625a"/>
+  <text class="mp-label" x="312" y="520">행복하우스 (옥상 = 지상 +12.6m)</text>
+  <rect x="0" y="590" width="200" height="10" fill="#4a4440"/><text class="mp-small" x="100" y="580">계단 골목</text>
+  <rect x="198" y="392" width="8" height="28" fill="#d6dde4"/><text class="mp-small" x="214" y="398" style="text-anchor:start">W3 (+1.1m)</text>
+  <rect x="345" y="355" width="80" height="65" fill="#8f8a83"/><rect x="352" y="322" width="66" height="33" rx="6" fill="#3f8f8c"/>
+  <text class="mp-small" x="385" y="314">물탱크 +3.9m</text>
+  <rect x="1000" y="228" width="80" height="372" fill="#6b4a3e"/>
+  <rect x="992" y="222" width="96" height="10" fill="#2b2626"/>
+  <text class="mp-small" x="1040" y="214">간판틀 +7.7m</text>
+  <text class="mp-small" x="1040" y="590">정숙세탁 (34m 앞)</text>
+  <path d="M1088 210 L200 336" stroke="#ffd166" stroke-width="3" stroke-dasharray="10 6"/>
+  <text class="mp-small" x="700" y="262">이 선보다 위에서만 남산 전망대가 보인다</text>
+  <text class="mp-out" x="1090" y="190" style="text-anchor:end">→ 남산 (2.3km)</text>
+  <g class="mp-cam"><circle cx="212" cy="380" r="6"/></g><text class="mp-small" x="240" y="374" style="text-anchor:start">서서 든 휴대폰 +1.6m</text>
+  <g class="mp-cam"><circle cx="210" cy="365" r="6"/></g><text class="mp-small" x="240" y="356" style="text-anchor:start">기대고 젖혀 +2.2m</text>`;
+
 export const MAPS: Record<string, MapDef> = {
   orot: {
     title: '오롯24 평면도 · 카메라 배치와 현장 표시',
@@ -140,6 +205,56 @@ export const MAPS: Record<string, MapDef> = {
       { id: 'fridge', label: '냉장 진열대', x: 895, y: 326, w: 40, h: 178 },
       { id: 'counter', label: '무인 계산대', x: 636, y: 512, w: 148, h: 58 },
       { id: 'entrance', label: '정문 · 셔터', x: 412, y: 586, w: 176, h: 30 },
+    ],
+  },
+  village: {
+    title: '달빛마을 · 사건 주변',
+    width: 1000,
+    height: 640,
+    svg: VILLAGE_SVG,
+    legend: ['노란 점선 = 정숙세탁 4층 창에서 행복하우스 옥상을 보는 선', '동쪽(오른쪽)으로 갈수록 오르막'],
+    regions: [
+      { id: 'happy', label: '행복하우스', x: 356, y: 346, w: 128, h: 118 },
+      { id: 'alley', label: '서쪽 계단 골목', x: 300, y: 346, w: 56, h: 180 },
+      { id: 'laundry', label: '정숙세탁', x: 556, y: 206, w: 138, h: 108 },
+      { id: 'byeon', label: '변복만 댁 텃밭', x: 716, y: 106, w: 118, h: 88 },
+      { id: 'shrine', label: '달빛 신당', x: 416, y: 116, w: 118, h: 88 },
+      { id: 'senior', label: '경로당', x: 436, y: 516, w: 148, h: 88 },
+      { id: 'realty', label: '달빛공인중개사', x: 86, y: 376, w: 138, h: 88 },
+      { id: 'scrap', label: '고철 컨테이너', x: 116, y: 516, w: 158, h: 88 },
+    ],
+  },
+  happyRoof: {
+    title: '행복하우스 옥상 평면도',
+    width: 800,
+    height: 600,
+    svg: ROOF_SVG,
+    legend: ['W3만 2019년에 끼운 보수 패널(밝은 회색). 바깥면에 건물 표지판', '주황 점선 = 6/14 밤 W3 앞 바닥에 풀려 있던 래칫 끈 (한쪽은 빨래대 기둥에)'],
+    regions: [
+      { id: 'w1', label: 'W1', x: 196, y: 60, w: 40, h: 100 },
+      { id: 'w2', label: 'W2', x: 196, y: 160, w: 40, h: 140 },
+      { id: 'w3', label: 'W3 (보수 패널)', x: 196, y: 316, w: 40, h: 108 },
+      { id: 'w4', label: 'W4', x: 196, y: 424, w: 40, h: 116 },
+      { id: 'pole', label: '빨래대 기둥', x: 304, y: 356, w: 34, h: 34 },
+      { id: 'hut', label: '옥탑 · 물탱크', x: 448, y: 60, w: 132, h: 124 },
+      { id: 'banner', label: '현수막', x: 570, y: 246, w: 30, h: 148 },
+      { id: 'chili', label: '고추 채반', x: 296, y: 466, w: 208, h: 58 },
+    ],
+  },
+  happySection: {
+    title: '행복하우스 옥상 단면 · 남산이 보이는 높이',
+    width: 1100,
+    height: 600,
+    svg: SECTION_SVG,
+    legend: ['노란 점선 = 정숙세탁 간판틀 윗선과 남산 전망대를 잇는 선 (정한)', '왼쪽이 서쪽(골목), 오른쪽이 동북동'],
+    regions: [
+      { id: 'alley', label: '골목 바닥', x: 0, y: 560, w: 196, h: 40 },
+      { id: 'stand', label: '옥상에 서서 (+1.6m)', x: 206, y: 368, w: 120, h: 24 },
+      { id: 'lean', label: 'W3에 기대고 젖혀 (+2.2m)', x: 206, y: 344, w: 120, h: 24 },
+      { id: 'tank', label: '물탱크 위 (+3.9m)', x: 345, y: 290, w: 80, h: 32 },
+      { id: 'basket', label: '난간 바깥 허공, 선보다 위', x: 110, y: 260, w: 86, h: 70 },
+      { id: 'below', label: '난간 바깥, 선보다 아래', x: 110, y: 340, w: 86, h: 80 },
+      { id: 'laundryTop', label: '정숙세탁 간판틀 위', x: 990, y: 180, w: 100, h: 44 },
     ],
   },
 };
@@ -239,7 +354,9 @@ export class MapView {
         busy = true;
         sfx('evidence');
         spots[sel].classList.add('picked');
-        setTimeout(() => finish(map.regions[sel].id), 350);
+        // The answer is fixed now: a stray click during the beat must not change it.
+        const chosen = map.regions[sel].id;
+        setTimeout(() => finish(chosen), 350);
       };
       const pop = push((a) => {
         if (busy) return;

@@ -10,9 +10,18 @@ export interface ListItem {
   label: string;
   thumb?: string;
   done?: boolean;
+  /** Something new to see or ask here since the last visit. */
+  fresh?: boolean;
 }
 
-const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3 };
+/**
+ * How a spot looks in the examine view: 'done' (✓ nothing left), 'fresh' (looked at before, and
+ * now there is more to find), 'wait' (looked at, but something has to happen first), '' (not yet).
+ */
+export type SpotState = 'done' | 'fresh' | 'wait' | '';
+
+/** Number keys pick list items (the action menu has four, so 5~9 simply find nothing there). */
+const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3, n5: 4, n6: 5, n7: 6, n8: 7, n9: 8 };
 
 const ACTIONS: { id: InvestAction; label: string }[] = [
   { id: 'examine', label: '조사하기' },
@@ -97,7 +106,7 @@ export class InvestigateUi {
    * Lets the player pick a spot on the background. Resolves null on 돌아가기. With a `prompt`
    * (a single screen to look over, not a location), the bar asks that instead and there is no way back.
    */
-  examine(spots: Hotspot[], seen: (s: Hotspot) => boolean, prompt?: string): Promise<Hotspot | null> {
+  examine(spots: Hotspot[], state: (s: Hotspot) => SpotState, prompt?: string): Promise<Hotspot | null> {
     this.examineEl.replaceChildren();
     this.examineEl.hidden = false;
     this.stage.classList.add('examining');
@@ -112,7 +121,9 @@ export class InvestigateUi {
       b.setAttribute('aria-label', s.label);
       el('span', 'spot-label', b, s.label);
       if (s.y < 44) b.classList.add('label-below');
-      if (seen(s)) b.classList.add('seen');
+      const st = state(s);
+      if (st === 'done') b.classList.add('seen');
+      else if (st) b.classList.add(st);
       return b;
     });
     // Clicking empty space is a miss, like poking at a wall.
@@ -169,6 +180,9 @@ export class InvestigateUi {
       if (it.done) {
         b.classList.add('done');
         el('span', 'inv-check', b, '✓');
+      } else if (it.fresh) {
+        b.classList.add('fresh');
+        el('span', 'inv-fresh', b, '새로 볼 것');
       }
       return b;
     });

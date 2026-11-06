@@ -1,8 +1,9 @@
 import { bgImage, charImage } from './assets';
+import { PLATES, plateSvg } from './plates';
 import { el, replay } from './dom';
 import { paintFace, paintItem } from './portrait';
 import type { HeldItem } from './record';
-import type { CharId, DaonMode, Position } from './types';
+import type { CharId, DaonMode, Position, TintMode } from './types';
 import { CHARACTERS } from '../content/characters';
 
 const BG_FOR: Record<Position, string> = {
@@ -61,6 +62,11 @@ export class Stage {
    * Investigation mode: everyone appears in front of the location background,
    * and the player's side (강단비, 신나래) stays off screen as first-person voices.
    */
+  /** The location background on screen outside the courtroom, if any. */
+  get field(): string | null {
+    return this.fieldBg;
+  }
+
   setField(bg: string | null, everyone = false): void {
     this.fieldBg = bg;
     this.firstPerson = !everyone;
@@ -106,9 +112,15 @@ export class Stage {
     this.root.dataset.who = who ?? '';
     const bgId = pos === 'field' ? this.fieldBg ?? '' : BG_FOR[pos];
     const bgUrl = bgImage(bgId);
+    const plate = !!PLATES[bgId];
     this.bg.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : '';
-    this.bg.classList.toggle('has-img', !!bgUrl);
-    this.bg.dataset.label = bgUrl ? '' : bgId;
+    this.bg.classList.toggle('has-img', !!bgUrl || plate);
+    this.bg.dataset.label = bgUrl || plate ? '' : bgId;
+    // A code-drawn plate (engine/plates.ts) stands in for a painted background.
+    if (this.bg.dataset.plate !== (plate ? bgId : '')) {
+      this.bg.dataset.plate = plate ? bgId : '';
+      this.bg.innerHTML = plate ? plateSvg(bgId) : '';
+    }
 
     const onMonitor = (pos === 'witness' || pos === 'field') && (who === 'daon' || who === 'operator');
     this.daon.hidden = !onMonitor;
@@ -127,7 +139,7 @@ export class Stage {
     }
   }
 
-  setTint(mode: 'night' | null): void {
+  setTint(mode: TintMode | null): void {
     if (mode) this.root.dataset.tint = mode;
     else delete this.root.dataset.tint;
   }

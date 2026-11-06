@@ -1,9 +1,10 @@
-import { cgImage, itemImage } from './assets';
+import { bgImage, cgImage, itemImage } from './assets';
 import { sfx } from './audio';
 import { el, replay, sleep } from './dom';
 import { FIGURES, figureSvg, paintFigure, type FigureMark } from './figures';
 import { MAPS } from './maps';
-import type { BoardRow, DetectBox, PanelCard, PlanRoute } from './types';
+import { plateSvg } from './plates';
+import type { AppView, BoardRow, DetectBox, PanelCard, PlanRoute } from './types';
 
 const BARS = 56;
 
@@ -38,6 +39,7 @@ export class Cinema {
   private plan: HTMLElement;
   private panel: HTMLElement;
   private figure: HTMLElement;
+  private app: HTMLElement | null = null;
   /** Draws a card's picture ('profile:…', 'item:…'); set by the game, which knows the case's people and records. */
   paintCard: ((box: HTMLElement, img: string) => void) | null = null;
 
@@ -256,8 +258,10 @@ export class Cinema {
     } else {
       this.cg.hidden = false;
       this.cg.classList.remove('out');
-      this.cg.style.backgroundImage = url ? `url("${url}")` : '';
-      this.cg.dataset.label = url ? '' : id;
+      const plate = plateSvg(id);
+      this.cg.style.backgroundImage = url && !plate ? `url("${url}")` : '';
+      this.cg.innerHTML = plate;
+      this.cg.dataset.label = url || plate ? '' : id;
       replay(this.cg, 'in');
     }
     // Hide the HUD only while a picture is actually up.
@@ -369,8 +373,47 @@ export class Cinema {
     this.waveTimer = window.setInterval(() => paint(0.85), 90);
   }
 
+  /**
+   * The appraisal app (2화 집값닷AI) on a phone: the live camera view with the reference photo
+   * ghosted over it, guidance arrows, the match score. No voice: only arrows and a beep.
+   */
+  setApp(view: AppView | null): void {
+    if (!view) {
+      this.app?.remove();
+      this.app = null;
+      return;
+    }
+    if (!this.app) this.app = el('div', 'appview', this.stage);
+    const root = this.app;
+    root.replaceChildren();
+    root.classList.toggle('cracked', !!view.cracked);
+    const phone = el('div', 'app-phone', root);
+    const screen = el('div', 'app-screen', phone);
+    const live = bgImage(view.live ?? 'happyRoof');
+    if (live) screen.style.backgroundImage = `url("${live}")`;
+    if (view.plate) el('div', 'app-ghost', screen).innerHTML = plateSvg(view.plate);
+    const bar = el('div', 'app-bar', screen);
+    el('span', 'app-name', bar, '집값닷AI · 현장 재인증');
+    if (view.remote) el('span', 'app-remote', screen, '● 원격 지원 중');
+    if (view.arrows?.length) {
+      const arrows = el('div', 'app-arrows', screen);
+      for (const a of view.arrows) el('b', '', arrows, a);
+    }
+    if (view.score !== undefined) {
+      const score = el('div', 'app-score', screen);
+      el('strong', '', score, `일치율 ${view.score}%`);
+      if (view.note) el('span', '', score, view.note);
+    } else if (view.note) el('div', 'app-score', screen, view.note);
+    if (view.cracked) {
+      el('div', 'app-crack', screen).innerHTML =
+        '<svg viewBox="0 0 100 180" preserveAspectRatio="none"><path d="M62 120 L40 100 L20 112 M62 120 L80 92 L96 98 M62 120 L58 150 L70 178 M62 120 L30 140 L4 136 M40 100 L36 70 L18 40 M80 92 L72 60 L84 20" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="0.8"/></svg>';
+    }
+    replay(root, 'in');
+  }
+
   /** Everything off at once, e.g. when a scene ends. */
   clear(): void {
+    this.setApp(null);
     this.setCctv(null);
     this.setTape(null);
     this.setBoard('', null);

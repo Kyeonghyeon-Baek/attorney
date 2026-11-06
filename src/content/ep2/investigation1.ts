@@ -1,0 +1,834 @@
+import type { Location, Script } from '../../engine/types';
+import {
+  addEvidence, addProfile, ambience, annotate, app, bgm, board, boardOff, cg, fadeIn, fadeOut, field, flag, goto,
+  investigate, memo, note, place, row, say, sayAs, sfx, shake, think, tint, wait, when,
+} from '../script';
+
+// 1일차 조사 (6/16). 여덟 곳, 증거 E01~E08. docs/ep2/play-flow.md §5.
+// 목표: 증거 여덟(감정 리포트·도면 포함) + [창에서 본 옥상] 재현 + 소윤의 「그날 옥상」 + 할머니 이야기(S01·S03) + 안태수 만남(S16·S23).
+// 떡밥은 농담·생활로 위장한다. 동료는 정답 증거를 먼저 말하지 않는다. 이 날은 아무도 결론을 내리지 않는다.
+
+const ALL = ['d1visit', 'd1alley', 'd1entrance', 'd1roof', 'd1laundry', 'd1shrine', 'd1senior', 'd1realty'];
+const others = (id: string) => ALL.filter((x) => x !== id);
+
+export const DAY1_GOALS = [
+  'roofScene', 'postmortem', 'phoneScreen', 'firstStatement', 'dalbitMap', 'roofDoorLog', 'appraisal', 'groupVideo',
+  'd1:windowShot', 'd1:soyoonRoof', 'd1:okbunTalk', 'd1:ahnMet',
+];
+
+/** Both of 신옥분's must-hear stories (the app's arrows, the view she never saw) count as one goal. */
+const okbunCheck: Script = [
+  when('d1:appFail', [when('d1:namsanTalk', [flag('d1:okbunTalk')])]),
+];
+
+export const DAY1_LOCATIONS: Record<string, Location> = {
+  // ---------------------------------------------------------------- 서울구치소 접견실 — 한소윤
+  d1visit: {
+    id: 'd1visit', name: '서울구치소 접견실', bg: 'visit', bgm: 'soyoon', ambience: 'lounge', arrive: 'door',
+    person: 'soyoon', connects: others('d1visit'),
+    enter: [
+      say('soyoon', '국선이요?', 'cold'),
+      say('dan', '국선전담변호사 강단비예요. 이쪽은 법률 사무 보조 신나래 씨고요.', 'normal'),
+      say('soyoon', '위로 같은 거 됐으니까 피해자 모임 서류부터 챙겨 주세요.', 'cold'),
+      say('soyoon', '다음 달 12일에 경매 넘어가요. 우리 건물 일곱 집 전부요.', 'cold'),
+      say('narae', '…저기요, 지금 본인 살인 혐의로 구속된 거 아시죠?', 'surprised'),
+      say('soyoon', '갇혀 있으니까 부탁하는 거예요. 밖에 있었으면 제가 등기소 뛰었죠.', 'cold'),
+      say('dan', '경매 기일도 챙길게요. 대신 그날 옥상 일부터 저한테 주셔야 해요.', 'point'),
+      say('soyoon', '동정하는 표정 짓지 마세요. 우는 건 돈 찾고 울게요.', 'cold'),
+      think('(날이 바짝 서 있어. 무서워서 선 날이 아니라, 지쳐서 닳아빠진 날이야.)'),
+    ],
+    hotspots: [
+      { id: 'divider', label: '칸막이', x: 130, y: 80, w: 950, h: 370,
+        script: [
+          think('(아크릴 칸막이에 손바닥 자국이 잔뜩 찍혀 있다.)'),
+          say('narae', '유리가 뿌옇네. 다들 답답해서 한 번씩 쳤나 봐.', 'sad'),
+          say('dan', '치기보단 짚었겠지. 내 말 좀 믿어 달라고.', 'normal'),
+          think('(소윤 씨는 손끝 하나 대지 않고 팔짱만 단단히 끼고 있다.)'),
+        ] },
+      { id: 'watch', label: '소윤의 시계', x: 550, y: 455, w: 160, h: 90,
+        script: [
+          think('(싸구려 검은 전자시계. 초 단위 숫자까지 쉼 없이 뛴다.)'),
+          say('narae', '요즘도 저런 시계를 차네. 수능 시험장 갈 때나 쓰던 건데.', 'normal'),
+          say('soyoon', '세무 기장 일 하다 보면 분 단위로 끊어 살게 돼요.', 'normal'),
+          say('soyoon', '사람이 날짜랑 시간을 흐리게 기억하면, 꼭 그 틈으로 돈이 잊혀요.', 'cold'),
+          think('(직업병이 몸에 배었어. 이 사람이 대는 시각은 허투루 넘기면 안 되겠네.)'),
+        ] },
+    ],
+    talks: [
+      { id: 'roof', label: '그날 옥상', script: [
+        say('soyoon', '토요일 저녁 일곱 시 삼십구 분에 은결이가 단톡을 올렸어요. "최봉구 방금 들어감".', 'normal'),
+        say('soyoon', '석 달 내내 전화 한 통 안 받던 인간이 빈집에 몰래 들어온 거예요.', 'angry'),
+        say('soyoon', '숨이 턱까지 차서 옥상 문을 열었더니 일곱 시 사십사 분이었어요.', 'normal'),
+        say('soyoon', '근데 그 사람, 저를 보지도 않고 휴대폰만 머리 위로 쳐들고 있더라고요.', 'normal'),
+        say('soyoon', '스피커로 "뒤로", "팔 쭉" 하고 안내 소리가 새어 나오더라고요. 앱이 시키는 소리인 줄 알았죠.', 'normal'),
+        say('narae', '사람을 코앞에 두고 사진만 찍고 있었다고요?', 'surprised'),
+        say('soyoon', '네. 이게 지금 사진 찍을 때냐고, 우리 보증금은 어쩔 거냐고 따졌어요.', 'angry'),
+        say('soyoon', '그 와중에도 뒤로 물러나더니, 등 뒤 난간이 갑자기…', 'shaken'),
+        say('soyoon', '…전 안 밀었어요. 넘어지길래 손 뻗어서 잡으려고 했어요.', 'shaken'),
+        think('(목소리 끝이 처음으로 떨렸어. 허공에 손 뻗던 감각이 아직 남은 얼굴이야.)'),
+        memo('소윤: 피해자는 휴대폰을 머리 위로 든 채 뒤로. "앱이 뒤로 가라, 팔 쭉" 하는 기계 소리를 들었다고.'),
+        flag('d1:soyoonRoof'),
+      ] },
+      { id: 'shout', label: '"떨어져"', requires: 'd1:soyoonRoof', script: [
+        say('dan', '목격자는 옥상에서 "떨어져!"라고 외치는 여자 목소리를 들었대요.', 'point'),
+        say('soyoon', '…그 말은 하기 싫어요.', 'cold'),
+        say('dan', '법정에서 검사가 제일 먼저 물어요. 저한테라도 미리 말해 두셔야—', 'normal'),
+        say('soyoon', '하기 싫다고 했잖아요.', 'angry'),
+        say('narae', '언니, 봐. 저 사람 저 얘기만 나오면 조개처럼 입을 딱 다물어.', 'angry'),
+        think('(안 했다고 잡아떼진 않아. 왜 그 말을 입에 올리기조차 싫어하는 걸까.)'),
+      ] },
+      { id: 'sns', label: 'SNS 글', script: [
+        say('dan', '사건 나흘 전에 비공개 계정에 "죽여 버리고 싶다"고 쓰셨죠.', 'normal'),
+        say('soyoon', '썼어요. 야근하고 빈방에 들어갔더니 독촉장만 와 있던 밤이라 진심이었어요.', 'cold'),
+        say('soyoon', '그래서요? 전세 사는 사람 중에 집주인 두고 그런 생각 안 해 본 사람 있어요?', 'angry'),
+        say('narae', '…솔직히 없진 않겠다. 나도 알바비 사흘만 밀려도 일기장에 온갖 저주를 다 쓰는데.', 'sad'),
+        say('dan', '나래야, 거기다 비할 건 아니고.', 'sweat'),
+        think('(새벽 한 시의 푸념이 오전 열 시의 법정에선 살인 예고장으로 읽히곤 하지.)'),
+      ] },
+      { id: 'appraisal', label: '감정 리포트', script: [
+        say('soyoon', '행복하우스 감정가가 20억 3천이에요. 새빨간 거품이에요.', 'angry'),
+        say('soyoon', '비교 사례에 이미 해제된 거래가 들어가 있었어요. 제가 등기 떼서 찾았어요.', 'normal'),
+        say('dan', '세무 일을 하시니까 서류 빈틈을 바로 보셨군요.', 'point'),
+        say('soyoon', '사진도 이상해요. 302호 사진, 분명 우리 집 같은데… 볼 때마다 뭔가 달라요.', 'normal'),
+        say('soyoon', '실물은 은결이한테 받으세요. 401호예요. "302호 보일러"라고 하면 알 거예요.', 'normal'),
+        say('narae', '무슨 첩보 영화처럼 암호도 있어요?', 'surprised'),
+        say('soyoon', '기자랑 업자들이 하도 현관을 기웃거려서 만든 규칙이에요.', 'cold'),
+        flag('d1:boilerCode'),
+        memo('노은결(401호)에게 감정 리포트. 암호 "302호 보일러".'),
+      ] },
+      { id: 'after', label: '그 뒤에 한 일', requires: 'd1:soyoonRoof', script: [
+        say('dan', '추락 직후엔 어떻게 움직이셨어요?', 'normal'),
+        say('soyoon', '그 자리에서 119 불렀고, 계단으로 내려갔고… 그게 다예요.', 'cold'),
+        say('dan', '내려가시는 길에 다른 곳에 잠깐 들르진 않으셨고요?', 'point'),
+        say('soyoon', '…정신없는 사람한테 뭘 자꾸 캐물어요. 그게 다라니까요.', 'shaken'),
+        think('(시선이 왼쪽 아래로 뚝 떨어졌어. "그게 다"가 아닌 사람의 얼굴이야.)'),
+      ] },
+      { id: 'ahn', label: '안태수', script: [
+        say('dan', '건물 관리를 맡은 달빛공인 안태수 소장님과는 어떤 사이였나요?', 'normal'),
+        say('soyoon', '소장님 소리 마세요. 그 사람도 최봉구랑 똑같은 한패예요.', 'angry'),
+        say('narae', '잠깐만요! 안 아저씨가 얼마나 좋은 사람인데요!', 'angry'),
+        say('narae', '우리 할머니 새 신당 자리도 발품 팔아 알아봐 주셨단 말이에요!', 'angry'),
+        say('soyoon', '그쪽 할머니한테나 천사겠죠. 우리 일곱 집 계약서엔 다 그 사람 도장이 찍혀 있어요.', 'cold'),
+        say('soyoon', '원래 사기는 인상 험한 사람이 아니라 커피 타 주는 사람이 쳐요.', 'cold'),
+        say('narae', '뭐라고요…?! 언니, 나 저 사람 진짜 안 맞아!', 'angry'),
+        say('dan', '진정해, 조수님. 접견실에서 의뢰인이랑 기싸움하면 안 돼.', 'sweat'),
+      ] },
+    ],
+    presents: {
+      phoneScreen: [
+        say('soyoon', '…맞아요, 그 화면이에요. 그 사람 그거 쳐다보면서 뒤로 갔어요.', 'shaken'),
+        say('dan', '화면 맨 위 구석에 초록색 배지가 떠 있는데, 혹시 보셨어요?', 'normal'),
+        say('soyoon', '왼쪽 위 초록 불까지는 몰라요. 그런 거 읽을 정신이 어딨어요.', 'cold'),
+      ],
+      appraisal: [
+        say('soyoon', '은결이한테 받아 오셨군요. 봐요, 여기 302호 실내 사진.', 'normal'),
+        say('soyoon', '우리 집 같은데 이상하잖아요. 뭐가 이상한지는… 아직 모르겠어요.', 'shaken'),
+      ],
+    },
+    presentDefault: [
+      say('soyoon', '그건 제가 할 말 없어요. 시간 아끼시죠, 변호사님.', 'cold'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- 서쪽 계단 골목 — 구만두
+  d1alley: {
+    id: 'd1alley', name: '서쪽 계단 골목', bg: 'alley', bgm: 'dalbit', ambience: 'village',
+    person: 'gu', connects: others('d1alley'),
+    enter: [
+      say('gu', '변호사님! 우물우물… 아니, 또 뵙슴다!', 'eat'),
+      say('narae', '형사님, 입가에 부추 한 가닥 붙었어요.', 'happy'),
+      think('(방금 주머니에 뜨끈한 만두 봉지를 쑤셔 넣으셨다. 못 본 척해 드리자.)'),
+      say('gu', '크흠! 잠복 중 비상식량이었슴다.', 'panic'),
+      say('gu', '여기가 피해자가 떨어진 자리임다. 이제부턴 진지하게 모시겠슴다.', 'serious'),
+      addEvidence('roofScene'),
+      say('dan', '현장 사진 묶음부터 챙겨 주셨네요. 고마워요, 형사님.', 'normal'),
+    ],
+    hotspots: [
+      { id: 'spot', label: '추락 지점', x: 450, y: 570, w: 290, h: 100,
+        script: [
+          say('gu', '피해자는 4층 옥상에서 등부터 떨어졌슴다. 난간 한 칸이 같이요.', 'serious'),
+          say('dan', '골목 계단이 워낙 좁네요. 지나가던 행인이 없었던 게 다행일 정도로요.', 'normal'),
+          think('(시멘트 바닥 위 하얀 분필 자국. 누군가 여기서 마지막 숨을 쉬었어.)'),
+        ] },
+      { id: 'panel', label: '떨어진 W3 패널', x: 530, y: 465, w: 110, h: 95,
+        script: [
+          note('사진 속 패널은 다른 칸보다 밝은 회색이다. 바깥면엔 표지판 「행복하우스 · 달빛로12길 7」, 뒷면엔 볼트 머리 넷.'),
+          say('gu', '골목에서 건물 찾으라고 난간 바깥에 달아 놨던 검다. 택배 기사님들 생명줄이었죠.', 'serious'),
+          say('dan', '다른 난간 칸은 쇠창살인데, 이 W3 칸만 막힌 철판이네요.', 'point'),
+          say('narae', '표지판이 바깥을 보고 있었으니까… 옥상 안에선 볼트 네 개 박힌 민무늬 철판만 보였겠네.', 'normal'),
+          say('gu', '맞슴다. 실물은 과학수사팀이 수거해 갔슴다.', 'serious'),
+          flag('d1:signSeen'),
+        ] },
+      { id: 'phone', label: '계단 위 휴대폰 자리', x: 780, y: 625, w: 140, h: 90,
+        script: [
+          say('gu', '추락 지점보다 세 계단 위에 피해자 휴대폰이 떨어져 있었슴다.', 'serious'),
+          say('gu', '지구대가 집어 들 때 아직 화면이 켜져 있어서 그대로 찍어 놨고요.', 'serious'),
+          addEvidence('phoneScreen'),
+          say('dan', '"일치율 78% · 2% 부족"… 재개발 감정 앱 화면이네요.', 'point'),
+          say('gu', '본체는 포렌식실에 잠금 해제 맡겼슴다. 사흘은 족히 걸림다.', 'serious'),
+          say('narae', '액정이 거미줄처럼 다 나갔네. …근데 맨 위 구석에 저 초록 불은 뭐야?', 'surprised'),
+          think('(작은 배지에 "원격 지원 중"이라고 적혀 있다. 형사님께 따로 물어보자.)'),
+        ] },
+      { id: 'truck', label: '골목 아래 사다리차', x: 335, y: 190, w: 210, h: 310,
+        script: [
+          note('노란 이삿짐 사다리차가 붐을 접은 채 서 있다. 차 옆구리에 귀여운 글씨로 「하늘이」.'),
+          sayAs('haneul', '멀리서 누군가', '하늘아, 오늘은 3층 장롱 세 개다! 기름 많이 먹었으니까 힘내자!'),
+          say('dan', '…방금 트럭한테 말 건 거죠?', 'sweat'),
+          say('narae', '도하늘 언니다! 이 동네 이사 대장이거든. 우리 할머니 이사 날 나 불러, 언니!', 'happy'),
+          sayAs('haneul', '멀리서 누군가', '오, 나래야! 걱정 마라, 할머니 장독대는 내가 우리 하늘이로 모신다!'),
+          say('narae', '든든하다, 진짜. 저 언니 사다리차 운전 실력은 달빛마을 일등이야.', 'happy'),
+        ] },
+      { id: 'mirror', label: '반사경', x: 90, y: 55, w: 210, h: 300,
+        script: [
+          think('(주황색 볼록 반사경. 꺾인 계단 골목은 이 거울 없인 코앞에서 마주 오는 사람도 안 보여.)'),
+          say('narae', '언니, 저 볼록 거울에 구 형사님 비치는 거 봐. 왕만두처럼 동그래졌어!', 'happy'),
+          say('dan', '쉿, 형사님 귀 밝으셔.', 'sweat'),
+        ] },
+    ],
+    talks: [
+      { id: 'outline', label: '수사 개요', script: [
+        say('gu', '노후 난간, 채무 다툼, 맞은편 목격. 경찰 결론은 "피고인이 밀었다"임다.', 'serious'),
+        say('dan', '난간 노후는 사고 사정이고, 다툼은 정황이고, 목격은 해 질 녘 역광이잖아요.', 'point'),
+        say('dan', '세 개 다 "그랬을 수도"지, "밀었다"는 아니네요.', 'normal'),
+        say('gu', '…그래서 제가 폴리스 라인 안 걷고 변호사님 오시길 기다렸슴다.', 'serious'),
+        say('narae', '오, 구 형사님 오늘 좀 형사 같은데?', 'happy'),
+        say('gu', '원래 강력계 형사임다.', 'serious'),
+      ] },
+      { id: 'body', label: '사망 소견', script: [
+        say('gu', '사인은 추락사임다. 등 아래쪽에 가로로 긴 멍이 남았는데, 난간에 기대고 있던 자리임다.', 'serious'),
+        addEvidence('postmortem'),
+        say('dan', '가슴이나 어깨 앞쪽은요? 정면에서 세게 밀쳤다면 잡힌 자국이 남았을 텐데요.', 'point'),
+        say('gu', '몸 앞쪽은 깨끗함다. 밀친 자국이나 멱살 잡힌 흔적 같은 건 없었슴다.', 'serious'),
+      ] },
+      { id: 'witness', label: '목격자', script: [
+        say('gu', '길 건너 정숙세탁 배정숙 사장님임다. 4층 창에서 봤답니다. 그날 지구대가 받아 적은 거 드리죠.', 'serious'),
+        addEvidence('firstStatement'),
+        say('narae', '경찰 수첩이네. 손글씨가 급하게 날아갔어.', 'surprised'),
+        say('narae', '근데 동네 소문은 다 여자가 밀었다고만 하던데. 이 메모도 그렇게 써 있으려나?', 'angry'),
+        say('dan', '그날 밤 바로 받아 적은 말이야. 나중에 차분히 읽어 보자.', 'normal'),
+      ] },
+      { id: 'map', label: '동네 지도', script: [
+        say('gu', '이 동네 처음이시면 백 프로 길 잃슴다. 축대랑 계단이 미로임다.', 'serious'),
+        addEvidence('dalbitMap'),
+        say('narae', '맞아, 내비게이션도 울면서 돌아가는 골목이야. 나만 따라와, 언니!', 'happy'),
+        flag('d1:roofOpen'),
+        say('gu', '행복하우스 옥상 문도 열어 뒀슴다. 보시겠슴까? 아직 테이프는 안 떼었슴다.', 'serious'),
+      ] },
+      { id: 'badge', label: '휴대폰의 배지', requires: 'phoneScreen', script: [
+        say('dan', '휴대폰 화면 구석의 "원격 지원 중" 배지는 누구랑 연결돼 있던 건가요?', 'normal'),
+        say('gu', '아, 관리소장 맡고 계신 안태수 씨한테 물어봤슴다.', 'serious'),
+        say('gu', '그날 소장님이 화면을 봐 드리고 있었답니다. 앱 사진 찍는 거 도와준다고요.', 'serious'),
+        say('gu', '자세한 건 달빛공인에 가서 소장님께 직접 들어 보십쇼. 그때 화면을 본 사람은 그분뿐임다.', 'serious'),
+        say('narae', '아하, 안 아저씨가 어르신들 스마트폰 쓰는 거 늘 도와주시거든.', 'normal'),
+        memo('휴대폰 배지 「원격 지원 중」: 관리소장 안태수가 화면을 보고 있었다(화면만, 말은 못 한다고).'),
+      ] },
+    ],
+    presents: {
+      firstStatement: [
+        say('gu', '사건 직후 배 사장님이 덜덜 떨면서 한 첫마디임다.', 'serious'),
+        say('gu', '형사 경험상, 생각 정리하기 전의 그 말이 제일 정확하지 않겠슴까.', 'serious'),
+      ],
+    },
+    presentDefault: [
+      say('gu', '그건 제 담당이 아님다. …만두피 두께 감별이라면 몰라도요.', 'normal'),
+      say('dan', '재판 끝나면 따끈한 걸로 한 판 살게요, 형사님.', 'normal'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- 행복하우스 1층 현관 — 노은결
+  d1entrance: {
+    id: 'd1entrance', name: '행복하우스 1층 현관', bg: 'happyEntrance', bgm: 'dalbit', ambience: 'village',
+    person: 'eungyeol', connects: others('d1entrance'),
+    enter: [
+      say('eungyeol', '…누, 누구세요? 기자분이면 저 아무 말도 안 해요. 가 주세요.', 'worried'),
+      say('dan', '기자 아니에요. 한소윤 씨 변호를 맡은 강단비 변호사입니다.', 'normal'),
+      say('narae', '카메라 같은 거 없어요. 수첩이랑 볼펜뿐인걸요.', 'normal'),
+      say('eungyeol', '변호사님이요…? 그, 그래도 모르는 분한테는 함부로 말 못 해요.', 'worried'),
+      addProfile('eungyeol'),
+      think('(현관 구석에 우편물을 꼭 껴안고 서 있다. 경계심이 머리끝까지 차올랐어.)'),
+    ],
+    hotspots: [
+      { id: 'office', label: '관리사무실 문', x: 880, y: 65, w: 380, h: 505,
+        script: [
+          note('폴리스 테이프가 X자로 붙은 유리문. 안쪽에 문이 열린 빈 금고가 보인다.'),
+          say('narae', '일 층 현관 옆에 조그만 관리실도 있네. 근데 안에 금고 문이 활짝 열려 있어.', 'surprised'),
+          think('(금고 속이 텅 비어 있어. 경찰이 압수해 간 걸까, 아니면 처음부터…)'),
+        ] },
+      { id: 'mail', label: '우편함', x: 10, y: 95, w: 420, h: 460,
+        script: [
+          think('(우편함 일곱 칸. 302호 칸에 법원 등기 안내문이 삐죽 꽂혀 있다.)'),
+          say('narae', '언니, 101호부터 402호까지… 일곱 칸에 똑같은 딱지가 다 꽂혀 있네.', 'sad'),
+          say('dan', '경매 개시 결정 정본 안내문이야. 퇴근길마다 현관 보기가 겁났겠어.', 'normal'),
+          say('narae', '…할머니 이사 늦어진다고 미워만 했는데, 이 집 사람들도 속이 다 탔겠다.', 'sad'),
+        ] },
+    ],
+    talks: [
+      { id: 'code', label: '302호 보일러', requires: 'd1:boilerCode', script: [
+        say('dan', '은결 씨, 소윤 씨가 이 말을 전해 달래요. "302호 보일러."', 'normal'),
+        say('eungyeol', '…! 소윤 언니가 진짜로 보냈네요. 의심해서 죄송해요.', 'firm'),
+        say('narae', '근데 왜 하필 암호가 보일러예요?', 'normal'),
+        say('eungyeol', '겨울에 302호 보일러 터졌을 때 집주인이 잠수타서, 그때부터 우리 모임이 시작됐거든요.', 'normal'),
+        say('eungyeol', '언니가 허락한 사람한테만 자료 주기로 했어요. 그게 우리 일곱 집 규칙이에요.', 'firm'),
+        flag('d1:eungyeolTrust'),
+      ] },
+      { id: 'group', label: '피해자 모임', requires: 'd1:eungyeolTrust', script: [
+        say('eungyeol', '일곱 세대 다 묶여 있어요. 보증금만 합치면 딱 13억 1천이요.', 'worried'),
+        say('eungyeol', '다들 어쩔 줄 몰라 울기만 할 때, 언니가 등기부 뒤져서 제일 먼저 이상한 걸 찾았어요.', 'normal'),
+        say('narae', '접견실에선 찔러도 피 한 방울 안 나올 것처럼 차갑게 굴던데…', 'normal'),
+        say('eungyeol', '언니는 무서운 사람 아니에요. 자기가 약해 보이면 우리까지 무너질까 봐 무서운 척하는 사람이에요.', 'worried'),
+        think('(스물여섯 총무 눈에는 그 가시 돋친 말투 뒤에 숨은 게 보였구나.)'),
+      ] },
+      { id: 'chat', label: '그날 단톡', requires: 'd1:eungyeolTrust', script: [
+        say('eungyeol', '토요일 저녁에 편의점 다녀오다 보고 제가 "최봉구 방금 들어감!!" 올렸어요. 일곱 시 삼십구 분에.', 'worried'),
+        say('eungyeol', '제가 그 단톡만 안 올렸으면… 언니가 옥상에 안 올라갔을 텐데.', 'tears'),
+        say('dan', '은결 씨 탓 아니에요. 연락 두절이던 집주인을 봤으니 알리는 게 당연하잖아요.', 'normal'),
+        think('(그 단톡이 없었으면 소윤 씨는 그 자리에 없었어. 적어도 미리 짠 범행은 아니야.)'),
+      ] },
+      { id: 'report', label: '감정 리포트', requires: 'd1:eungyeolTrust', script: [
+        say('eungyeol', '전세 계약할 때 다들 받은 리포트예요. 이거 믿고 "안전한 집이네" 하고 도장 찍었어요.', 'worried'),
+        addEvidence('appraisal'),
+        say('narae', '어디 보자… 추정 시세 20억 3천? 조망 가산만 1억 6천이 붙었네!', 'surprised'),
+        say('narae', '옥상에서 남산이 훤히 보인대. 진짜 그렇게 잘 보이나?', 'normal'),
+        say('dan', '빌라 옥상 조망권 값치곤 꽤 후하게 매겨졌네.', 'point'),
+      ] },
+    ],
+    presents: {
+      appraisal: [
+        say('dan', '소윤 씨가 리포트 속 302호 사진이 어딘가 위화감이 든다고 하던데요.', 'normal'),
+        say('gu', '…지나가다 슬쩍 봤는데 변호사님, 이 집 소화기는 러시아 직수입임까? 스티커 글씨가 꼬부랑거림다.', 'normal'),
+        say('narae', '으악, 형사님 언제 뒤에 계셨어요?! …근데 글씨가 좀 이상하긴 하네. 사진이 흐려서 그런가?', 'surprised'),
+        say('eungyeol', '…그러게요. 복도에 놓을 때 같이 샀는데, 우리 집 건 그냥 반듯하게 "소화기"였거든요.', 'worried'),
+        memo('감정 리포트 302호 사진: 소화기 스티커 글씨가 이상하다(구만두 "러시아어임까?").'),
+      ],
+    },
+    presentDefault: [
+      say('eungyeol', '죄송해요, 그건 제가 몰라서… 소윤 언니한테 먼저 물어봐 주세요.', 'worried'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- 행복하우스 옥상 — 구만두 동행
+  d1roof: {
+    id: 'd1roof', name: '행복하우스 옥상', bg: 'happyRoofW', bgm: 'dalbit', ambience: 'village', arrive: 'door',
+    person: 'gu', requires: 'd1:roofOpen', connects: others('d1roof'),
+    enter: [
+      say('gu', '변호사님, 뒤로 가지 마십쇼! 거기 난간 없슴다!', 'panic'),
+      say('dan', '헉…! 네, 문고리 잡고 딱 붙어 있을게요.', 'shock'),
+      say('narae', '언니 방금 문 열면서 습관처럼 반 발짝 물러섰어. 심장 떨어질 뻔했네!', 'surprised'),
+      think('(…문 열자마자 한 발 물러섰다가 호되게 혼났다. 서쪽 끝이 허공으로 뻥 뚫려 있네.)'),
+    ],
+    hotspots: [
+      { id: 'bolts', label: 'W3 결손부', x: 290, y: 285, w: 695, h: 100,
+        script: [
+          note('파라펫 턱 위로 앵커 볼트 넷이 솟아 있다. 볼트 끝에 너트가 하나도 없다.'),
+          say('dan', '난간 기둥이 박혀 있던 시멘트 턱이네요. 볼트 네 개는 그대로 솟아 있는데…', 'point'),
+          say('narae', '위를 조여 주는 육각 너트가 네 개 다 감쪽같이 없네? 골목 바닥에도 없었잖아.', 'surprised'),
+          think('(세월 탓에 녹슬어 떨어져 나간 걸까. 일단 수첩에 남겨 두자.)'),
+          memo('[남은 질문] W3 자리의 앵커 볼트 넷엔 너트가 없다.'),
+        ] },
+      { id: 'tarp', label: '걷힌 방수포와 풀린 끈', x: 0, y: 390, w: 425, h: 240,
+        script: [
+          note('W3 자리 앞 바닥에 파란 방수포가 걷혀 있고, 주황 래칫 끈이 풀려 있다. 끈 한쪽은 빨래대 쇠기둥에 묶인 채, 버클은 열려 있다.'),
+          note('넘어진 팻말 「방수 양생 중 · 출입 금지」.'),
+          say('narae', '이 주황색 두꺼운 끈은 화물차에서 짐 동여맬 때 쓰는 끈 아니야?', 'normal'),
+          say('gu', '관리소장님이 파란 천 바람에 날리지 말라고 묶어 놓은 거라던데요. 경찰도 공사 자재로 봤슴다.', 'serious'),
+          think('(그랬구나. …그런데 천은 저쪽에 구겨져 있고, 끈은 빨래대 기둥에 매여 있어.)'),
+        ] },
+      { id: 'tie', label: 'W2 끝의 노란 끈', x: 235, y: 160, w: 110, h: 100,
+        script: [
+          say('dan', 'W3 바로 옆 칸 기둥 끝에 노란 케이블타이 토막이 잘린 채 매달려 있어요.', 'point'),
+          say('gu', '재개발 현수막 묶었던 끈 찌꺼기 아님까?', 'serious'),
+          say('narae', '에이, 현수막은 반대편 동쪽이잖아요. 그리고 아까 보니까 그쪽 끈은 다 까만색이던데요?', 'normal'),
+          say('gu', '…눈썰미가 형사 뺨침다. 강력계 특채 생각 없슴까?', 'normal'),
+          say('narae', '전 아침 잠이 많아서 사양할게요!', 'happy'),
+          memo('[남은 질문] 서쪽 난간 W2 끝의 노란 케이블타이는 뭘 묶었던 걸까?'),
+        ] },
+      { id: 'view', label: '동북동 전망', x: 465, y: 55, w: 500, h: 220,
+        script: [
+          note('왼쪽엔 옥탑, 앞엔 길 건너 세탁소 건물. 그 위로 커다란 간판틀이 하늘을 가린다.'),
+          say('narae', '어라? 이쪽이 남산 방향 맞지? 세탁소 간판 철골밖에 안 보이는데?', 'surprised'),
+          think('(하늘이 손바닥만 하다. 이 옥상의 풍경은… 저 간판틀 뒷면이 거의 다야.)'),
+        ] },
+      { id: 'floor', label: '옥상 바닥', x: 445, y: 590, w: 440, h: 125,
+        script: [
+          say('gu', '도면에 옥상 실측 배치를 그려 드릴까요? 철제 줄자는 형사의 기본임다.', 'serious'),
+          say('dan', '역시 구 형사님. 거리 기록 부탁드릴게요.', 'normal'),
+          annotate('dalbitMap', '[옥상 · 6/16 구만두 실측] W3 앞에서 빨래대 기둥까지 약 2.5m. 끈은 그 사이 바닥에 풀려 있었다.'),
+          flag('d1:roofTab'),
+        ] },
+      { id: 'chili', label: '고추 채반', x: 1070, y: 480, w: 180, h: 90,
+        script: [
+          say('narae', '앗, 이 채반 우리 할머니 거다! 이 옥상 남쪽은 삼십 년째 할머니 전용 고추 자리야.', 'happy'),
+          say('gu', '다행히 할머니 고추는 현장 보존 대상이 아님다. …끝에만 한 개 맛봐도 될까요?', 'eat'),
+          say('narae', '안 돼요! 우리 할머니 청양고추 씹으면 세 시간 동안 조서 못 써요!', 'angry'),
+          say('gu', '…공무 집행을 위해 참겠슴다.', 'panic'),
+        ] },
+    ],
+    talks: [
+      { id: 'window', label: '목격자의 창', script: [
+        say('dan', '목격자는 길 건너 정숙세탁 4층 창에서 이 옥상을 봤다고 했죠.', 'point'),
+        say('narae', '그럼 직접 서 보자! 내가 여기 W3 쪽 안전한 안쪽에 서 있을게.', 'normal'),
+        say('narae', '형사님은 내 앞 2미터쯤에 서 계시고, 언니가 세탁소 4층에서 내다봐!', 'happy'),
+        say('gu', '제가 앞에 버티고 서면 등판 때문에 나래 씨가 안 보일 텐데요.', 'normal'),
+        say('narae', '그러니까 안 보이는지 직접 보자는 거죠!', 'happy'),
+        say('dan', '좋은 생각이야. 절대 난간 빈자리 쪽으론 가지 말고 기다려.', 'normal'),
+        flag('d1:reenactReady'),
+      ] },
+    ],
+    presentDefault: [
+      say('gu', '옥상에선 증거보다 발밑이 먼저임다. 한눈팔면 안 됨다!', 'serious'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- 정숙세탁 — 배정숙
+  d1laundry: {
+    id: 'd1laundry', name: '정숙세탁', bg: 'laundry', bgm: 'dalbit', ambience: 'laundry', arrive: 'door',
+    person: 'jeongsuk', connects: others('d1laundry'),
+    enter: [
+      say('jeongsuk', '어서 와요! 겨울 코트 드라이? 아니면 바짓단 수선?', 'normal'),
+      say('narae', '정숙 이모, 안녕하세요! 신당집 나래예요.', 'happy'),
+      say('dan', '안녕하세요, 사장님. 강단비 변호사입니다. 한소윤 씨 사건으로 여쭐 게 있어서요.', 'normal'),
+      say('jeongsuk', '변호사님? 아이고 세상에, 그 아가씨 변호해? 어쩌나, 그날 내가 다 봤어.', 'confident'),
+      addProfile('jeongsuk'),
+      think('(벌써 확신에 찬 목소리다. 스팀다리미 김만큼이나 기세가 뜨겁네.)'),
+    ],
+    hotspots: [
+      { id: 'drawer', label: '봉투 서랍', x: 995, y: 65, w: 280, h: 370,
+        script: [
+          note('손님 이름이 붙은 작은 서랍이 줄지어 있다.'),
+          say('jeongsuk', '아이고, 남의 주머니 사생활을 왜 봐? 주머니 뒤집어 보면 그 사람 어제 뭐 했는지 다 나온다니까?', 'gossip'),
+          say('jeongsuk', '동전이고 영수증이고 나온 건 저렇게 봉투에 모아 뒀다 옷 찾아갈 때 돌려줘.', 'normal'),
+          say('narae', '어, 여기 구 형사님 이름 적힌 약봉투도 있네?', 'surprised'),
+          say('jeongsuk', '쉿! 구 형사 봉투에 고기만두 영수증만 열두 장 든 것도 극비인데… 아이고, 말해 버렸네!', 'gossip'),
+          say('dan', '열두 장이요… 혈관에 육즙이 흐르시겠네요.', 'sweat'),
+          say('jeongsuk', '안 사장 건 아직 안 찾아갔네. 지난번 맡긴 점퍼 안감에 녹물이 어찌나 들었던지 빼느라 혼났어.', 'gossip'),
+          memo('정숙세탁: 손님 주머니에서 나온 물건을 이름 쓴 봉투에 보관. "안 사장" 봉투가 아직 있다(점퍼 녹물).'),
+          flag('d1:drawerSeen'),
+        ],
+        again: [
+          say('jeongsuk', '남의 봉투를 왜 변호사님한테 보여 줘? 법원 사람이라도 주인이 허락해야지.', 'confident'),
+          think('(세탁소 주머니 보안이 웬만한 은행 금고보다 단단하다.)'),
+        ] },
+      { id: 'radio', label: '라디오', x: 805, y: 85, w: 170, h: 120,
+        script: [
+          sayAs('radio', '라디오', '…재개발 보상 협의가 막바지인 지역에선 이삿짐 사다리차가 하루 수십 대씩…'),
+          say('jeongsuk', '우리 골목 하늘이가 요새 쉴 틈이 없지. 사다리차도 이름이 있어. 귀엽지?', 'normal'),
+          say('narae', '하늘 언니한테 차 흉보면 큰일 나요. 애인보다 더 아낀단 말이에요.', 'happy'),
+        ] },
+      { id: 'upstairs', label: '4층 창으로', x: 475, y: 85, w: 190, h: 300, done: 'd1:windowShot', ready: 'd1:reenactReady',
+        script: [
+          when('d1:reenactReady', [
+            note('4층 살림집 창가. 길 건너 조금 낮은 곳에 행복하우스 옥상이 보인다. 서쪽 하늘이 밝아 사람은 검은 실루엣.'),
+            say('jeongsuk', '여기가 내가 수건 개던 자리야. 해 질 녘이면 서쪽이 눈부셔서 건너편 사람이 까맣게 보이거든.', 'normal'),
+            say('narae', '언니이—! 나 잘 보여?', 'happy'),
+            note('W3 자리에 선 나래의 몸이, 그 앞 2m의 구만두 실루엣에 거의 다 가려진다.'),
+            say('dan', '…목소리만 들리고 구 형사님 등판만 보여.', 'point'),
+            say('gu', '것 보십쇼! 제가 원래 덩치가 시야를 완벽히 가리는 체질임다!', 'normal'),
+            say('narae', '형사님, 그거 체질이 아니라 고기만두 열두 봉지의 힘이에요!', 'angry'),
+            say('gu', '…열두 봉진 줄 어떻게 알았슴까?!', 'panic'),
+            think('(창, 앞에 선 사람, 난간. 셋이 거의 한 줄로 겹쳐서 뒷사람은 보이지도 않아.)'),
+            think('(저 둘 사이에서 뻗은 손이 밀었는지 잡으려 했는지는, 이 창가에선 구분할 수 없어.)'),
+            annotate('dalbitMap', '[창에서 본 옥상 · 6/16 재현] 4층 창 → 앞에 선 사람 → W3가 거의 한 줄. 앞사람 실루엣에 뒷사람이 거의 다 가려진다. 6/14 19:46 해는 서북서, 고도 4°(역광).'),
+            flag('d1:windowShot'),
+          ], [
+            note('4층 살림집 창가. 길 건너 조금 낮은 곳에 행복하우스 옥상이 보인다.'),
+            say('jeongsuk', '바로 이 창문이야. 건너편 옥상이 한눈에 내려다보이지?', 'normal'),
+            think('(여기서 옥상을 보면… 저쪽에 누가 서 있어야 그날처럼 겹쳐 볼 수 있겠어.)'),
+            think('(행복하우스 옥상에 먼저 가서 사람들을 세워 두고 다시 보자.)'),
+          ]),
+        ] },
+    ],
+    talks: [
+      { id: 'saw', label: '그날 본 것', script: [
+        say('jeongsuk', '해 넘어가길래 4층 창가에서 빨래 개고 있었지. 남자가 두 손을 번쩍 들고 뒷걸음질 치더라고.', 'gossip'),
+        say('jeongsuk', '누가 봐도 겁먹어서 빌고 있는 꼴이지. 그러더니 그 아가씨가 "떨어져!" 하더니 확 밀었어.', 'confident'),
+        say('dan', '두 손이 들려 있었다면, 혹시 손에 휴대폰이 들려 있던 것도 보셨어요?', 'normal'),
+        say('jeongsuk', '어휴, 해가 등 뒤로 지는데 손가락에 뭘 쥐었는지까지야 안 보이지.', 'normal'),
+        think('(첫 진술 메모엔 분명 "난간 휘청"이 먼저 있었는데. 지금은 그 대목만 쏙 빠졌어.)'),
+      ] },
+      { id: 'ahn', label: '안태수', script: [
+        say('jeongsuk', '안 사장? 이 동네 일등 해결사지. 그 사람 없으면 노인네들 겨울에 보일러 하나 못 고쳐.', 'normal'),
+        say('narae', '그치? 내가 구치소에서도 똑같이 말했거든!', 'happy'),
+        say('jeongsuk', '어제 다른 옷 찾으러 와서 혀를 차더라. 그 아가씨가 평소에도 최 사장을 죽이네 살리네 했다고…', 'gossip'),
+        say('jeongsuk', '아이고, 또 남의 말 옮겨 버렸네!', 'sorry'),
+        think('(사건 다음 날 세탁소에 들러 남긴 말 한마디… 배 사장님 머릿속 빈칸에 그 말이 스며들었나 보네.)'),
+        memo('배정숙: 6/15 안태수가 "그 아가씨가 평소에도 최 사장을 죽이네 살리네 했다"고 말했다.'),
+      ] },
+      { id: 'town', label: '이 동네', script: [
+        say('jeongsuk', '우리 세탁소 옥상 간판이 이 동네에서 제일 높아. 그 집 옥상에선 우리 간판밖에 안 보일걸?', 'confident'),
+        say('narae', '잠깐만, 남의 집 전망 다 가려 놓고 그게 자랑이에요?', 'surprised'),
+        say('jeongsuk', '자랑이지 그럼! 크레인 불러 올리느라 광고비가 얼마가 들었는데!', 'confident'),
+        think('(감정 리포트의 남산 조망 가산 1억 6천이라… 세탁소 간판 조망권이었나 보네.)'),
+      ] },
+      { id: 'choi', label: '최 사장', script: [
+        say('dan', '숨진 최봉구 사장님은 평소에 어떤 분이었나요?', 'normal'),
+        say('jeongsuk', '꼼꼼하다마다. 철물점 할 때 오십 원짜리 못 두 개 외상 준 것도 날짜, 시간, 전화번호까지 공책에 적던 양반이여.', 'normal'),
+        say('narae', '오십 원에 전화번호요? 보이스피싱범도 그 정성은 안 들이겠다!', 'surprised'),
+        say('jeongsuk', '내 말이! 그 깐깐한 성격에 큰돈 굴리다 탈이 난 거지. 적긴 기가 막히게 다 적었을걸?', 'gossip'),
+        memo('배정숙: 최봉구는 못 두 개 외상도 날짜·전화번호까지 장부에 적던 사람.'),
+      ] },
+    ],
+    presents: {
+      firstStatement: [
+        say('dan', '사장님, 사건 직후 지구대에 하신 말씀엔 "난간이 먼저 휘청했다"고 적혀 있어요.', 'point'),
+        say('jeongsuk', '어머, 이게 내가 한 말이야? …"난간 휘청"? 내가 그날 밤에 그랬나?', 'shaken'),
+        say('jeongsuk', '그땐 다리가 풀려서 뭐라 했는지 몰라. 아, 아니야! 그래도 밀었다니까. 내가 봤어!', 'confident'),
+        when('d1:windowShot', [
+          think('(더 다그치면 고집만 세지겠어. 초동 기록과 창가 시야를 확인했으니 충분해.)'),
+        ], [
+          think('(더 다그치면 고집만 세지겠어. 그보다 그날 저 창에서 정말 무엇이 보였는지, 직접 확인해 봐야겠어.)'),
+        ]),
+      ],
+    },
+    presentDefault: [
+      say('jeongsuk', '글쎄다, 그건 삶아 빨아도 안 빠지는 얼룩 같은 소리네. 난 모르겠어.', 'normal'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- 달빛 신당 — 신옥분
+  d1shrine: {
+    id: 'd1shrine', name: '달빛 신당', bg: 'shrine', bgm: 'shrine', ambience: 'shrine',
+    person: 'okbun', connects: others('d1shrine'),
+    enter: [
+      say('narae', '할머니이! 막내 손녀 왔다!', 'happy'),
+      say('okbun', '시끄럽기는. 왔냐. 아침밥은?', 'normal'),
+      say('narae', '당연히 먹었지!', 'happy'),
+      say('okbun', '거짓말하는 입은 밥을 한 술 더 먹어야 혀.', 'stern'),
+      say('okbun', '…그 짝에 선 처자는 누구여. 얼굴에 밥 굶고 잠 설친 티가 나네.', 'normal'),
+      say('dan', '처음 뵙겠습니다, 어르신. 강단비 변호사입니다. 저… 아침은 커피로…', 'sweat'),
+      say('okbun', '콩물 태운 구정물이 뭔 밥이여. 커피는 밥이 아녀.', 'stern'),
+      addProfile('okbun'),
+      think('(판사님한테 호통 들을 때보다 등줄기가 더 서늘하다. 내일은 꼭 주먹밥이라도 물고 오자.)'),
+    ],
+    hotspots: [
+      { id: 'jar', label: '쌀독', x: 30, y: 335, w: 260, h: 310,
+        script: [
+          say('okbun', '그 오지단지는 손끝도 대지 마라. 신령님 밥이여.', 'stern'),
+          say('narae', '할머니, 저거 대문 밖 고수레 쌀독이잖아. 언제부터 신령님 밥통이 됐어?', 'surprised'),
+          say('okbun', '이 집 만신이 정하면 그때부터 신령님 밥인 거여.', 'stern'),
+          think('(뚜껑 가장자리 먼지만 반질하게 닦여 있네. 굳이 캐묻진 말자.)'),
+          flag('d1:jarSeen'),
+        ] },
+      { id: 'boxes', label: '이삿짐 상자', x: 1050, y: 325, w: 215, h: 210,
+        script: [
+          say('okbun', '새로 옮길 자리도 복덕방 안 소장이 알아봐 줬어. 고마운 사람이여.', 'normal'),
+          say('narae', '이주가 자꾸 밀려서 석 달째 짐도 못 풀고… 맨날 저 상자 위에서 밥 드시잖아.', 'sad'),
+          say('okbun', '상자는 밥상이 돼도, 그 위에 올린 밥은 밥이여. 인상 쓰지 마라.', 'normal'),
+        ] },
+      { id: 'tools', label: '무구', x: 415, y: 140, w: 265, h: 150,
+        script: [
+          note('방울과 부채, 오색 천. 손때가 반질반질하다.'),
+          say('narae', '언니, 저 방울 소리 엄청 맑다? 어릴 때 몰래 흔들다 혼날 뻔했어.', 'happy'),
+          say('okbun', '구경은 공짜여. 허락 없이 만지면 변호사라도 굿값 받는다.', 'stern'),
+          say('dan', '두 손 공손히 모으고 눈으로만 보겠습니다…!', 'sweat'),
+        ] },
+      { id: 'bench', label: '평상', x: 475, y: 495, w: 570, h: 220,
+        script: [
+          say('narae', '맞다! 할머니 신당도 보상 감정 받아야 되잖아. 집값닷AI 앱으로 내가 해 줄게!', 'happy'),
+          say('dan', '나래야, 마당 뒤쪽 살피면서 걸어.', 'normal'),
+          app({ live: 'shrine', arrows: ['←'], note: '기준 사진에 맞춰 주세요' }),
+          sfx('appChime'),
+          note('옛 건축물대장 사진이 반투명하게 겹친다. 화면엔 화살표 하나 「← 뒤로」.'),
+          sfx('appChime'),
+          say('narae', '어라, 뒤로? 뒤로 얼마나 가라는 거야? …또 삑. 또 뒤로.', 'normal'),
+          say('narae', '요즘 AI는 입도 없나? 말로 해 주면 좀 좋아? 화살표만 띡띡거리네—', 'angry'),
+          app(null),
+          cg('narae-bench'),
+          sfx('thud'),
+          shake,
+          say('narae', '어어억!', 'surprised'),
+          note('화면만 보고 뒷걸음질하던 나래가 평상에 털썩 주저앉았다.'),
+          say('okbun', '발밑 안 보고 뒷걸음질 치다간 평상이 아니라 허공을 밟는 법이여.', 'stern'),
+          cg(null),
+          say('narae', '…아우 꼬리뼈야! 할머니, 안 그래도 놀랐는데 무섭게 말하지 마!', 'angry'),
+          say('dan', '평상이었으니 망정이지 큰일 날 뻔했어. 괜찮아?', 'sweat'),
+          think('(화살표와 "삑" 알림음뿐. 정말 말 한마디 안 하는 앱이네.)'),
+          flag('d1:appFail'),
+          ...okbunCheck,
+        ],
+        again: [
+          say('narae', '그 불친절한 벙어리 앱 다시는 안 켜. 평상이 나를 미워해.', 'angry'),
+        ] },
+      { id: 'listing', label: '나래의 휴대폰 속 매물', x: 725, y: 390, w: 180, h: 100,
+        script: [
+          note('나래의 휴대폰에 행복하우스 매물 화면. 「옥상 남산 조망 +1억 6천」.'),
+          say('narae', '할머니, 행복하우스 옥상에서 남산이 보인다고 1억 6천이나 더 붙었대.', 'normal'),
+          say('okbun', '…그 옥상에 삼십 년 고추를 널었어도 남산은 꿈에서나 봤다.', 'normal'),
+          say('narae', '에이, 할머니 눈이 나빠서 못 본 거 아냐?', 'normal'),
+          say('okbun', '이년아, 눈 나쁜 사람한테도 산은 보여. 안 보이는 건 안 보이는 거여.', 'stern'),
+          say('dan', '삼십 년 동안 맑은 날마다 올라가신 분의 말씀이네요.', 'point'),
+          memo('신옥분: "그 옥상에 삼십 년 고추를 널었어도 남산은 꿈에서나 봤다."'),
+          flag('d1:namsanTalk'),
+          ...okbunCheck,
+        ] },
+    ],
+    talks: [
+      { id: 'yellow', label: '노란 줄', script: [
+        say('dan', '어르신, 지난주에도 행복하우스 옥상에 고추 널러 올라가셨어요?', 'normal'),
+        say('okbun', '갔지. 목요일 아침엔 서쪽 난간에 노란 줄이 팽팽히 쳐 있었는디, 토요일 아침엔 파란 천이 덮여 있더라.', 'normal'),
+        say('okbun', '바닥 공사하나 혔지. 남의 일터 밟으면 못써서 고추는 남쪽에만 널었어.', 'normal'),
+        think('(목요일엔 노란 줄이었다가 토요일 아침엔 파란 천… 옥상에서 본 노란 끈 토막과 이어질까.)'),
+        memo('신옥분: 6/12(목) 아침 서쪽 난간에 노란 줄 → 6/14(토) 아침엔 파란 천.'),
+      ] },
+      { id: 'soyoon', label: '소윤', script: [
+        say('okbun', '302호 그 아가씨는 눈자위가 늘 벌개. 남의 집 보증금까지 다 짊어진 눈이여.', 'normal'),
+        say('narae', '…할머니는 왜 그 사람 편을 들어? 그 사람들 때문에 할머니도 이사 못 가잖아.', 'sad'),
+        say('okbun', '편 같은 소리 하네. 속 타서 밥 굶는 사람은 다 내 편이여.', 'stern'),
+        say('narae', '…칫. 할머니는 맨날 밥 얘기만 해.', 'sad'),
+      ] },
+      { id: 'ahn', label: '안태수', script: [
+        say('okbun', '새 신당 자리도 마다 않고 알아봐 줬지. 어른한테 말을 참 곱게 혀. 고마운 일이여.', 'smile'),
+      ] },
+      { id: 'evening', label: '그날 저녁', script: [
+        say('okbun', '토요일 저녁엔 경로당 설명회 갔지. 안 소장이 단상 앞에서 계속 떠들었어.', 'normal'),
+        say('okbun', '어려운 숫자 얘긴 몰라서 나는 쑥떡만 두 개 먹고 왔다.', 'smile'),
+        say('narae', '내 몫으로 꿀떡도 하나 주머니에 넣어 오지!', 'happy'),
+        say('okbun', '식어 빠진 떡 넣었다가 세탁소 정숙이한테 혼나려고.', 'normal'),
+      ] },
+    ],
+    presentDefault: [
+      say('okbun', '깨알 같은 종이는 몰라. 글자는 몰라도 사람 낯빛은 알어.', 'normal'),
+      say('okbun', '안 보이는 건 안 보이는 거여. 발로 찾아봐.', 'stern'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- 경로당 — 변복만과 어르신들
+  d1senior: {
+    id: 'd1senior', name: '경로당', bg: 'senior', bgm: 'dalbit', ambience: 'lobby', arrive: 'door',
+    person: 'byeon', connects: others('d1senior'),
+    enter: [
+      say('byeon', '…그러니까 우리 조합이! 재개발이라는 대의를 위해서! 하나로 뭉쳐야 하는 것이여!', 'speech'),
+      say('elder', '아유 위원장, 목 쉬어. 물 마시고 떡이나 드셔.'),
+      say('narae', '경로당 문 열자마자 웅변 대회장인 줄 알았네.', 'surprised'),
+      say('byeon', '어허, 귀한 손님이 오셨구먼. 변호사 양반? 나 변복만이여. 추진위원장!', 'proud'),
+      say('dan', '안녕하세요, 위원장님. 강단비 변호사입니다.', 'normal'),
+      addProfile('byeon'),
+    ],
+    hotspots: [
+      { id: 'program', label: '게시판의 식순표', x: 70, y: 55, w: 165, h: 280,
+        script: [
+          note('「6/14 보상 설명회 — 19:00 개회 · 19:10 보상 기준 안내(달빛공인 안태수) · 19:40 다과 휴식(10분) · 19:50 질의응답 · 20:30 폐회」'),
+          say('dan', '일곱 시 사십 분부터 십 분 동안 다과 휴식 시간이 따로 있었네요.', 'point'),
+          say('elder', '그려. 안 소장이 다과 때 잠깐 전화 받으러 복도로 나갔지. 금방 돌아왔어.'),
+          say('narae', '천사 번호로 워낙 사방에서 전화가 오니까 쉬는 시간에도 바쁘셨나 보네.', 'normal'),
+          memo('경로당 식순: 19:40 다과 휴식(10분). 그때 안태수가 잠깐 전화 받으러 나갔다(어르신).'),
+          flag('d1:programSeen'),
+        ] },
+      { id: 'roll', label: '출석부', x: 300, y: 225, w: 110, h: 110,
+        script: [
+          note('출석부 맨 위 「안태수 18:50」, 그 아래 「신옥분」 외 22명.'),
+          say('narae', '오, 우리 할머니 성함도 적혀 있다. 스물세 분이나 오셨네.', 'normal'),
+          think('(안태수 소장이 여섯 시 오십 분에 제일 먼저 도착해 서명했구나.)'),
+        ] },
+      { id: 'tv', label: 'TV의 조합 단톡', x: 1090, y: 35, w: 180, h: 230,
+        script: [
+          say('byeon', '이거 봐, 지난 금요일 아침에 우리 관리소장님 수리하는 거! 내가 찍어 올렸지. 내 폰이 최신형 4K여!', 'proud'),
+          note('TV에 뭉개진 15초 영상. 남색 점퍼가 난간 앞에서 몸을 숙이고 파란 천을 펼친다.'),
+          say('narae', '…어르신, 화질이 모자이크인데요? 사람이 아니라 삶은 감자 같아요.', 'surprised'),
+          say('byeon', '아니, 내 폰에선 쨍한디 단톡방에 올리니까 왜 이렇게 깍두기가 되냐고!', 'flustered'),
+          say('byeon', '원래 인터넷 타면 화질이 푹 삶아지는 법이여! 데이터 절약인가 그거 때문이여!', 'flustered'),
+          say('dan', '메신저 자동 압축 때문이겠네요. 금요일 아침 풍경이니 참고용으로 공유 부탁드릴게요.', 'normal'),
+          addEvidence('groupVideo'),
+        ] },
+      { id: 'cctv', label: '복도의 CCTV', x: 930, y: 50, w: 110, h: 90,
+        script: [
+          say('narae', '강당 옆 복도로 나가는 문 위에 동그란 카메라가 달려 있네.', 'normal'),
+          think('(출입구 복도를 비추는 작은 CCTV다. 위치만 잘 기억해 두자.)'),
+        ] },
+      { id: 'snack', label: '다과 테이블', x: 0, y: 485, w: 455, h: 230,
+        script: [
+          say('elder', '변호사 양반도 절편 하나 들어. 안 소장이 설명회 때마다 사 와.'),
+          say('elder', '그 양반은 경로당 의자 나사도 직접 조여 줘. "겁내지 마시고 등 쭉 기대세요" 하면서.'),
+          say('narae', '맞아, 안 아저씨 특기야. 사람 마음 놓이게 해 주는 거!', 'happy'),
+        ] },
+    ],
+    talks: [
+      { id: 'evening', label: '그날 저녁', script: [
+        say('elder', '일곱 시부터 목이 쉬어라 설명하더니, 쉬는 시간엔 떡 좀 들랬더니만 전화기 들고 복도로 나가더구먼.'),
+        say('elder', '일곱 시 오십이 분쯤 누가 헐레벌떡 뛰어 들어왔지. 행복하우스에서 사람 떨어졌다고.'),
+        say('byeon', '안 소장이 제일 놀랐지. 얼굴이 하얘져서 마이크도 놓고 뛰어나가더라고.', 'normal'),
+        think('(다과 휴식 시간인 일곱 시 사십 분에서 오십 분 사이… 사고 시각과 겹치긴 하네.)'),
+      ] },
+      { id: 'group', label: '피해자 모임', script: [
+        say('byeon', '그 행복하우스 아가씨들 때문에 합의가 늦어져서 우리 이주가 석 달이나 밀렸어!', 'speech'),
+        say('elder', '그 젊은 사람들도 평생 모은 돈 떼였잖여. 위원장도 참.'),
+        say('byeon', '…그건 그렇지. 대의는 대의고 딱한 건 딱한 거여.', 'flustered'),
+        think('(목청은 크셔도 마음씨까지 모진 분은 아니시네.)'),
+      ] },
+      { id: 'app', label: '집값 앱', script: [
+        say('byeon', '그 앱이 사진 다시 찍으래서 나도 옥상 텃밭까지 찍어 올렸어. 14일까지라나.', 'normal'),
+        say('byeon', '근데 언제 찍으라는 말은 한마디도 안 하고 화살표만 띡띡 나오대. 뒷걸음질 치다 상추 밟을 뻔했어.', 'flustered'),
+        say('dan', '위원장님 휴대폰에서도 음성 안내는 전혀 안 나왔군요.', 'point'),
+        think('(나래 폰에서도, 위원장님 폰에서도 앱은 침묵했어. 소윤 씨가 들은 기계 소리는 뭘까.)'),
+      ] },
+    ],
+    presents: {
+      groupVideo: [
+        say('byeon', '단톡방이 흐려서 그렇지, 내 폰 사진첩엔 눈부신 4K 원본이 살아 있지!', 'proud'),
+        say('byeon', '물론 개인 소장품이니까 지금은 내 주머니에 있는 거고!', 'proud'),
+      ],
+    },
+    presentDefault: [
+      say('byeon', '음, 그건 우리 조합의 대의랑은 별 상관이 없는 것 같은데.', 'normal'),
+    ],
+  },
+
+  // ---------------------------------------------------------------- 달빛공인중개사 — 안태수
+  d1realty: {
+    id: 'd1realty', name: '달빛공인중개사', bg: 'realty', bgm: 'ahn', ambience: 'lobby', arrive: 'door',
+    person: 'ahn', connects: others('d1realty'),
+    enter: [
+      sayAs('elder', '노인 손님', '어이쿠…!'),
+      note('바퀴 의자에 앉으려던 노인 손님이 휘청한다. 남색 점퍼의 남자가 재빨리 등을 받친다.'),
+      say('ahn', '어르신, 겁내지 마시고 등 쭉 기대세요. 그 의자 제가 어제 다 조여 놨어요.', 'normal'),
+      say('ahn', '자, 제 손 잡고 반 걸음만 뒤로… 그렇죠! 아주 편안하죠?', 'normal'),
+      sayAs('elder', '노인 손님', '아이고, 안 소장 없으면 내가 어찌 살꼬.'),
+      say('narae', '역시 아저씨는 말투부터 사람 안심시킨다니까!', 'happy'),
+      say('ahn', '어라, 우리 나래 아니냐! 할머니 잘 계시지? 아유, 변호사님. 믹스 두 개 타 드릴까요?', 'normal'),
+      say('dan', '반갑습니다, 소장님. 강단비 변호사예요. 커피는 마음만 감사히 받을게요.', 'normal'),
+      addProfile('ahn'),
+      flag('d1:ahnChair'),
+    ],
+    hotspots: [
+      { id: 'frame', label: '벽 액자', x: 30, y: 0, w: 235, h: 285,
+        script: [
+          note('「달빛마을 최고 조망 — 행복하우스 옥상」 노을 속 남산 타워 사진.'),
+          say('narae', '우와, 이 액자 볼 때마다 예술이야. 노을 위로 남산 타워가 딱 보이네!', 'happy'),
+          say('ahn', '하하, 제가 직접 찍었어요. 미세먼지 없던 날 좋은 날, 운 좋게 건졌죠.', 'explain'),
+          say('dan', '구도가 사진작가 못지않으시네요.', 'normal'),
+        ] },
+      { id: 'monitor', label: '모니터', x: 375, y: 280, w: 195, h: 155,
+        script: [
+          say('ahn', '요즘은 AI가 실거래, 사진, 조망까지 다 계산해 봐요. 사람 손 안 타니까 깨끗하죠.', 'explain'),
+          say('ahn', '사람은 거짓말해도 숫자는 거짓말 안 하거든요.', 'explain'),
+          say('narae', '맞아, 내 통장 숫자도 너무 솔직해서 탈이야…', 'sad'),
+        ] },
+      { id: 'cabinet', label: '서류함', x: 1085, y: 170, w: 195, h: 335,
+        script: [
+          say('ahn', '아, 옥상 출입 기록 찾으시죠? 경찰에도 뽑아 드렸는데 변호사님도 한 부 더 드릴게요.', 'normal'),
+          say('ahn', '관리 대행이 원래 이런 심부름 하라고 있는 자리잖아요.', 'explain'),
+          addEvidence('roofDoorLog'),
+          think('(요청하기도 전에 척척 챙겨 주신다. 일 처리가 빈틈없이 빠르네.)'),
+        ] },
+      { id: 'watch', label: '손목시계', x: 580, y: 385, w: 110, h: 90,
+        script: [
+          say('narae', '(언니, 저 아저씨 얘기하면서 시계 계속 만지는 거 봤어? 가죽줄을 엄청 아끼나 봐.)', 'normal'),
+          say('dan', '(쉿, 다 들리겠다.)', 'sweat'),
+          think('(말씀하시는 내내 손목시계를 내려다보신다. 동네 온갖 일을 챙기는 바쁜 분의 버릇이겠지.)'),
+        ] },
+      { id: 'card', label: '명함', x: 690, y: 370, w: 110, h: 90,
+        script: [
+          say('ahn', '참, 제 명함도 한 장 받아 두세요. 끝자리 일공공사, 동네에선 "천사 번호"예요.', 'explain'),
+          say('ahn', '어르신들 보일러 터지면 새벽 두 시에도 공구함 들고 달려간다고 붙은 별명입니다.', 'normal'),
+          say('narae', '우와, 010-2030-1004! 번호 한 번 절대 못 잊어버리겠네.', 'happy'),
+          say('dan', '…번호 값 하시려면 믹스커피 값만 일 년에 꽤 나가시겠어요.', 'normal'),
+          say('ahn', '하하! 변호사님 말씀 재밌게 하시네. 그게 다 동네 영업이죠.', 'normal'),
+          memo('안태수 명함: 010-2030-1004 ("천사 번호").'),
+          flag('d1:ahnCard'),
+        ] },
+    ],
+    talks: [
+      { id: 'remote', label: '원격 지원', script: [
+        say('ahn', '사실 경찰에도 말씀드렸는데… 그날 제가 최 사장님 화면을 봐 드리고 있었어요.', 'explain'),
+        say('dan', '재인증 구도 맞추는 걸 도와주셨다고 들었어요.', 'normal'),
+        say('ahn', '네. 그 원격 기능은 화면만 보이고 말은 전혀 못 해요. 앱 안내대로 움직이시던데…', 'explain'),
+        say('ahn', '화면이 갑자기 휙 돌더니 끊겨서, 전 그냥 실수로 폰만 떨어뜨리신 줄 알았죠.', 'sweat'),
+        say('ahn', '그게 십 년 인연의 마지막일 줄은 꿈에도 몰랐습니다.', 'sweat'),
+        say('narae', '아저씨… 너무 마음 쓰지 마세요.', 'sad'),
+        think('(목소리가 금세 젖었어. 십 년 단골이었다니까 충격이 크셨겠지.)'),
+        flag('d1:ahnRemote'),
+      ] },
+      { id: 'fee', label: '관리 대행', script: [
+        say('dan', '중개업 하시면서 행복하우스 건물 관리 대행도 맡고 계셨죠?', 'normal'),
+        say('ahn', '행복하우스 관리요? 에이, 그건 돈 보고 하는 일 아니에요.', 'normal'),
+        say('ahn', '한 달에 삼십오만 원 받고 전구 갈아 끼워 드리는 건데, 최 사장님 십 년 단골 의리로 해 드린 거죠.', 'explain'),
+        say('narae', '한 달 내내 불려 다니는데 삼십오만 원이요? 남는 게 없겠는데요?', 'surprised'),
+        think('(일곱 세대 건물 관리비치곤 확실히 박하네. 평판으로 장사하시는 스타일인가 봐.)'),
+        memo('안태수: 행복하우스 관리 대행비는 월 35만 원("의리로").'),
+      ] },
+      { id: 'rail', label: '난간', script: [
+        say('ahn', '옥상 난간이 세월이 있어 낡긴 했죠. 그래도 사람이 기댄다고 넘어갈 정도는 아니었어요.', 'explain'),
+        say('ahn', '안 그래도 정식 안전 점검은 다음 주에 받기로 돼 있었거든요.', 'sweat'),
+      ] },
+      { id: 'tarp', label: '방수포', script: [
+        say('ahn', '금요일에 바닥 방수 작업을 해 놨거든요. 바람에 파란 천 날리지 말라고 끈으로 묶어 뒀고요.', 'explain'),
+      ] },
+      { id: 'log', label: '출입 기록', requires: 'roofDoorLog', script: [
+        say('dan', '옥상 출입 기록에 있는 6월 11일 오후 "임시 코드 #7"은 누군가요?', 'point'),
+        say('ahn', '아, 11일 오후요? 반년마다 부르는 물탱크 청소 업체 기사님들이요.', 'normal'),
+        say('dan', '그럼 6월 13일 금요일 아침 열 시 십사 분의 관리 마스터는요?', 'normal'),
+        say('ahn', '그건 저죠. 방금 말씀드린 방수 작업하러 올라갔을 때입니다.', 'explain'),
+        memo('출입 기록: 6/11 임시 코드 #7 = "물탱크 청소 업체"(안태수). 6/13 10:14 마스터 = 안태수(방수 작업).'),
+      ] },
+    ],
+    presents: {
+      appraisal: [
+        say('ahn', '본사 AI가 데이터로 감정한 거예요. 저는 현장 사진만 대행해서 올렸고요.', 'explain'),
+        say('ahn', '숫자는 거짓말 안 한다고 믿었는데 세입자분들 볼 면목이 없네요.', 'sweat'),
+      ],
+      groupVideo: [
+        say('ahn', '아유, 금요일 아침 방수 작업이요. 우리 변 위원장님이 또 저를 찍으셨네. 하하.', 'normal'),
+      ],
+      phoneScreen: [
+        say('ahn', '…그 깨진 화면이네요. 다과 시간 복도에서 제가 마지막으로 본.', 'sweat'),
+      ],
+    },
+    presentDefault: [
+      say('ahn', '아유, 그건 부동산 쪽이 아니라 제가 잘 모르는 거네요. 믹스 한 잔 타 드릴까요?', 'normal'),
+    ],
+  },
+};
+
+// ------------------------------------------------------------------ scenes
+
+const ahnMet: Script = [when('d1:ahnRemote', [when('d1:ahnCard', [flag('d1:ahnMet')])])];
+// 안태수를 만났다는 목표는 원격 지원 이야기와 명함, 둘 다 들었을 때.
+DAY1_LOCATIONS.d1realty.talks![0].script.push(...ahnMet);
+DAY1_LOCATIONS.d1realty.hotspots.find((h) => h.id === 'card')!.script.push(...ahnMet);
+
+export const DAY1_SCENES: Record<string, Script> = {
+  day1: [
+    place('6월 16일 월요일', '오전 10시', '서울구치소'),
+    investigate('d1visit', DAY1_GOALS, [goto('day1night')]),
+  ],
+
+  day1night: [
+    fadeOut,
+    place('6월 16일 월요일', '저녁 7시 30분', '달빛 신당 마당'),
+    field('shrine', true),
+    tint('dusk'),
+    ambience('shrine'),
+    bgm('dusk'),
+    fadeIn,
+    say('okbun', '국 식는다, 어여 먹어. 법정에서 싸우려면 먹어야 혀.', 'normal'),
+    say('dan', '잘 먹겠습니다, 어르신… 와, 냉이 된장찌개 향이 장난 아니에요.', 'shock'),
+    say('narae', '거봐, 할머니 된장찌개는 진짜 반칙이라니까! 커피 백 잔 마셔 봐라, 이 맛이 나나.', 'happy'),
+    think('(따뜻한 보리밥 한 술에 하루 종일 얼어 있던 어깨가 풀린다. 오늘 확인한 걸 짚어 보자.)'),
+    board('1일차에 확인한 것', [
+      row('기록', '피해자는 등을 난간에 댄 채 뒤로 넘어갔다 (검시)', 'key', '기록'),
+      row('기록', '목격자의 첫 진술: 두 손 듦 → 난간 휘청 → 여자 튀어나옴', 'key', '기록'),
+      row('주장', '피고인이 "떨어지라"고 했다 (경찰)', 'claim', '주장'),
+      row('남은 질문', '휴대폰을 머리 위로 든 채 뒤로 간 이유', undefined, '질문'),
+      row('남은 질문', '서쪽 난간의 노란 끈 · 너트 없는 볼트', undefined, '질문'),
+    ]),
+    say('narae', '…언니, 솔직히 나 그 302호 여자 아직도 엄청 미워.', 'sad'),
+    say('dan', '알아. 접견실 나올 때부터 입이 댓 발 나와 있었잖아.', 'normal'),
+    say('narae', '근데 밥 먹으면서 생각할수록 좀 이상하지 않아?', 'sad'),
+    say('narae', '옥상에서 앱이 말로 시키더랬잖아. 내가 아까 마당에서 해 보니까—', 'normal'),
+    say('dan', '…말은 한마디도 안 하고 화살표만 나왔지.', 'normal'),
+    say('narae', '응. 띡띡. 경로당 위원장 할아버지도 벙어리 상자랬고.', 'normal'),
+    think('(둘 다 수저를 쥔 채 거기서 멈췄다. 아직은… 말로 꺼내기엔 이른 생각이야.)'),
+    boardOff,
+    sfx('phone'),
+    note('엄정한 검사의 문자 「내일 10시. 판관의 근거 항목도 함께 확인하겠습니다.」'),
+    say('narae', '으, 엄 검사님 문자다. 저 양반은 저녁도 안 먹나 봐.', 'surprised'),
+    say('dan', '판관의 예측 숫자가 어디서 나왔는지 정면으로 다퉈 보자는 예고장이네.', 'confident'),
+    say('okbun', '그 검사라는 짝도 내일 데려와. 밥 한 그릇 해 줄 테니까.', 'smile'),
+    say('narae', '할머니, 엄 검사님이 마당 평상에서 밥 먹는 상상 하니까 체할 것 같아!', 'surprised'),
+    fadeOut,
+    tint(null),
+    field(null),
+    ambience(null),
+    wait(300),
+    goto('lobby1'),
+  ],
+};

@@ -602,6 +602,35 @@ export function sfx(name: SfxName): void {
       hiss(t + 0.1, 0.9, 0.08, 'highpass', 5000, 0.5);
       break;
     }
+    case 'creak':
+      // Steel leaning on loose bolts: a low, slow groan sliding down.
+      {
+        const o = osc('sawtooth', 96, t, t + 1.4);
+        o.frequency.exponentialRampToValueAtTime(58, t + 1.3);
+        const g = sus(t, 0.25, 0.06, 0.9, 0.25);
+        o.connect(filter('bandpass', 420, 4)).connect(g);
+        out(g, sfxBus, 0.25);
+        hiss(t + 0.1, 1.1, 0.05, 'bandpass', 2400, 6, 0.1);
+      }
+      break;
+    case 'appChime':
+      // The appraisal app's beep: one short, friendly blip (no voice ever follows it).
+      tone(freqOf('B5'), t, 0.09, 'sine', 0.16, 0.12);
+      tone(freqOf('E6'), t + 0.08, 0.12, 'sine', 0.12, 0.2);
+      break;
+    case 'ratchet':
+      // A ratchet strap's lever: a quick run of clicks.
+      for (let i = 0; i < 7; i++) hiss(t + i * 0.05, 0.015, 0.35, 'bandpass', 3200, 4, 0.1);
+      break;
+    case 'phone':
+      // A phone buzzing on a desk.
+      [0, 0.5].forEach((d) => {
+        const buzz = osc('square', 170, t + d, t + d + 0.32);
+        const g = sus(t + d, 0.01, 0.02, 0.28, 0.03);
+        buzz.connect(filter('lowpass', 420, 1)).connect(g);
+        out(g, sfxBus, 0.6);
+      });
+      break;
     case 'thud':
       // A body against a steel shelf: a dull blow, then the shelf rings.
       tone(58, t, 0.45, 'sine', 0.85, 0.3, 32);
@@ -904,6 +933,58 @@ export function playAmbience(name: AmbienceName | null): void {
       bed('highpass', 4200, 0.03);
       bed('lowpass', 160, 0.04);
       break;
+    case 'village': {
+      // A hillside afternoon: a soft breeze, and now and then a ladder truck's boom far off.
+      bed('lowpass', 700, 0.035);
+      bed('bandpass', 2600, 0.006, 0.8);
+      const boom = (t0: number, dest: AudioNode) => {
+        const o = ctx!.createOscillator();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(140, t0);
+        o.frequency.linearRampToValueAtTime(190, t0 + 2.2);
+        const g = ctx!.createGain();
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.018, t0 + 0.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.4);
+        o.connect(filter('lowpass', 600, 0.7)).connect(g).connect(dest);
+        o.start(t0);
+        o.stop(t0 + 2.5);
+      };
+      a.every = { period: 17, next: t + 5, play: boom };
+      break;
+    }
+    case 'laundry': {
+      // Steam presses hissing and a radio under it.
+      bed('lowpass', 320, 0.05);
+      hum(180, 0.006);
+      const steam = (t0: number, dest: AudioNode) => {
+        const g = ctx!.createGain();
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.05, t0 + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.1);
+        noiseSrc(t0, t0 + 1.2).connect(filter('highpass', 3000, 0.7)).connect(g).connect(dest);
+      };
+      a.every = { period: 6, next: t + 2, play: steam };
+      break;
+    }
+    case 'shrine': {
+      // A small wind chime under the eaves.
+      bed('lowpass', 500, 0.03);
+      const ting = (t0: number, dest: AudioNode) => {
+        const f = 1800 + Math.random() * 900;
+        const o = ctx!.createOscillator();
+        o.frequency.value = f;
+        const g = ctx!.createGain();
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.02, t0 + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.6);
+        o.connect(g).connect(dest);
+        o.start(t0);
+        o.stop(t0 + 1.7);
+      };
+      a.every = { period: 4.5, next: t + 1.5, play: ting };
+      break;
+    }
   }
   amb = a;
 }

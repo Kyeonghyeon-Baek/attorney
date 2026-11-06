@@ -2508,3 +2508,86 @@ button { touch-action: manipulation; }
 .touch-layout .photoview-strip { gap: 8px; }
 .touch-layout .photo-thumb { width: 146px; padding: 4px; font-size: 17px; border-width: 3px; border-radius: 6px; }
 .touch-layout .photoview-foot, .touch-layout .matchview-foot { flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------- 2화: 노을 조명 · 코드로 그린 사진 · 앱 화면 · 겹쳐 보기 */
+
+.scene[data-tint='dusk'] .bg { filter: saturate(1.15) brightness(0.9) sepia(0.18); }
+.scene[data-tint='dusk'] .actor { filter: saturate(1.05) brightness(0.92) sepia(0.12); }
+.scene[data-tint='dusk']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 140, 70, 0.18) 0%, rgba(120, 50, 110, 0.12) 55%, rgba(20, 10, 40, 0.35) 100%);
+  mix-blend-mode: soft-light;
+}
+
+.bg > svg.photoplate, .cg > svg.photoplate { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.appview { position: absolute; inset: 0 0 200px 0; z-index: 14; display: grid; place-items: center; pointer-events: none; background: rgba(6, 10, 22, 0.55); }
+.appview.in { animation: cg-in 0.4s ease-out both; }
+.app-phone { width: 270px; height: 480px; padding: 14px 10px; border-radius: 34px; background: #111; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 0 0 2px #333; }
+.app-screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 24px; background: #40556a center / cover no-repeat; }
+.app-ghost { position: absolute; inset: 0; opacity: 0.42; }
+.app-ghost svg { width: 100%; height: 100%; }
+.app-bar { position: absolute; top: 0; left: 0; right: 0; padding: 10px 12px; font-size: 13px; color: #fff; background: rgba(0, 0, 0, 0.45); }
+.app-remote { position: absolute; top: 40px; left: 10px; padding: 3px 8px; font-size: 11px; color: #c9ffd8; background: rgba(20, 120, 60, 0.75); border-radius: 10px; }
+.app-arrows { position: absolute; top: 40%; left: 0; right: 0; display: flex; justify-content: center; gap: 28px; }
+.app-arrows b { font-size: 64px; line-height: 1; color: #fff; text-shadow: 0 0 12px rgba(43, 182, 201, 0.9); animation: app-blink 1s ease-in-out infinite; }
+@keyframes app-blink { 50% { opacity: 0.35; } }
+.app-score { position: absolute; bottom: 18px; left: 12px; right: 12px; display: grid; gap: 2px; padding: 10px; text-align: center; color: #fff; background: rgba(0, 0, 0, 0.55); border-radius: 12px; }
+.app-score strong { font-size: 26px; color: #7ff0ff; }
+.app-score span { font-size: 14px; color: #ffd38a; }
+.app-crack { position: absolute; inset: 0; }
+.app-crack svg { width: 100%; height: 100%; }
+.appview.cracked .app-screen { filter: brightness(0.8); }
+
+.compareview { position: absolute; inset: 0; z-index: 16; display: grid; place-items: center; background: rgba(8, 12, 26, 0.82); }
+.compareview-panel { width: 1040px; padding: 16px 20px 14px; color: var(--ink); background: var(--paper); border-radius: 6px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+.compareview-title { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; }
+.compareview-prompt { margin: 4px 0 8px; font-family: var(--doc); font-size: 16px; line-height: 1.5; word-break: keep-all; }
+.compare-view { position: relative; width: 820px; max-width: 100%; aspect-ratio: 16 / 9; margin: 0 auto; overflow: hidden; border-radius: 4px; cursor: crosshair; background: #000; }
+.compare-layer { position: absolute; inset: 0; }
+.compare-layer svg { width: 100%; height: 100%; display: block; }
+.compare-layer.top { transition: transform 0.5s ease; pointer-events: none; }
+.compare-layer.top.flipped { transform: scaleX(-1); }
+.compare-marks { position: absolute; inset: 0; pointer-events: none; }
+.compare-mark { position: absolute; border: 3px solid #e8a93b; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4); }
+.compare-mark span { position: absolute; left: 0; top: -24px; padding: 1px 6px; font-size: 13px; white-space: nowrap; color: #1a1a1a; background: #e8a93b; border-radius: 3px; }
+.compare-ctrl { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.compare-name { font-size: 14px; color: #2b3a73; }
+.compare-slider { flex: 1; accent-color: #2b3a73; }
+.compareview-say { min-height: 1.5em; margin: 8px 0 4px; font-family: var(--doc); font-size: 16px; word-break: keep-all; }
+.compareview-say.good { color: #1f6b3a; }
+.compareview-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.compareview-hint { margin-right: auto; font-size: 13px; color: #6a6a6a; }
+
+/* 2화: in-world photos on an evidence sheet, and one of them full screen. */
+.sheet-plates { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 8px 0 10px; }
+.sheet-plate { display: grid; gap: 4px; padding: 4px; text-align: left; font-size: 12px; color: var(--ink); background: rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 4px; cursor: zoom-in; }
+.sheet-plate svg { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border-radius: 3px; }
+.plate-full { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; align-content: center; gap: 8px; background: rgba(4, 6, 14, 0.92); cursor: zoom-out; }
+.plate-full svg { width: 92%; aspect-ratio: 16 / 9; height: auto; display: block; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); }
+.plate-full-title { margin: 0; font-size: 16px; color: #f4f0e6; }
+
+/* Hotspots that can only be finished later: waiting (dim ·) or newly worth another look (!). */
+.spot.wait::after, .spot.fresh::after {
+  position: absolute; top: -12px; right: -12px; width: 26px; height: 26px; display: flex;
+  align-items: center; justify-content: center; border-radius: 50%; font-weight: 700; font-size: 15px;
+}
+.spot.wait::after { content: '…'; color: #f4f0e6; background: rgba(60, 60, 70, 0.85); }
+.spot.fresh::after { content: '!'; color: #1a1a1a; background: var(--ochre); animation: app-blink 1.2s ease-in-out infinite; }
+.spot.wait .spot-label::after { content: ' · 확인 대기'; opacity: 0.8; }
+.spot.fresh .spot-label::after { content: ' · 새로 확인 가능'; }
+.inv-fresh { margin-left: auto; padding: 1px 8px; font-size: 13px; color: #1a1a1a; background: var(--ochre); border-radius: 10px; }
+.compareview-head { display: flex; align-items: baseline; gap: 14px; }
+.compare-count { font-size: 15px; font-weight: 700; color: #2b3a73; }
+.compare-inner { position: absolute; inset: 0; transition: transform 0.25s ease; }
+.compare-inner.zoomed { transform: scale(2); }
+.compare-cross { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none;
+  border: 2px solid #e8a93b; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5); }
+.compare-cross::before, .compare-cross::after { content: ''; position: absolute; background: #e8a93b; }
+.compare-cross::before { left: 11px; top: -8px; width: 2px; height: 40px; }
+.compare-cross::after { top: 11px; left: -8px; height: 2px; width: 40px; }
+.touch-layout .compare-cross { display: none; }

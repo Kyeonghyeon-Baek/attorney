@@ -36,6 +36,7 @@ npm run dev
 | 주소 뒤에 붙이기 | 하는 일 |
 |---|---|
 | `?ep=1` · `?ep=4` | 사건 기록부를 건너뛰고 그 화를 바로 열기 (저장은 평소처럼) |
+| `?ep=2&scene=day1` | 2화(개발 서버 전용). 장면: `prologue` `office` `day1` `day1night` `lobby1` `trial1` `witness2` `tape119` `homecam1` `recess1` `ahnStand` `lunch1` `afternoon1` `night1` `day2` `day2eve` `lobby2` `trial2` `ahnStand2` `clip` `ahnStand3` `sixLinks` `motive` `minus040` `breakdown` `verdict` `epilogue`. 체크포인트(CP1~CP11)는 `case.ts` |
 | `?ep=1&scene=trial` | 1화 개정부터 (저장 안 함). 셔터 사진만 가진 채 시작해서, 모두진술에서 나머지 기록을 받아요. 1화 장면: `prologue` `morning` `lobby` `trial` `cross0` `witness1` `cross1` `cross2` `recess` `grandma` `tape` `cross3` `watch` `lunch` `afternoon` `cross4` `outside` `callcross` `waiting` `result` `lastword` `breakdown` `verdict` `epilogue` `office`. 체크포인트 장면(`trial` `witness1` `grandma` `tape` `afternoon` `callcross` `result` `epilogue`)은 그때까지 모았을 증거·사실·판관 예측으로 시작하고, 그 밖의 장면은 바로 앞 체크포인트의 사실·예측에 증거를 전부 가진 채 시작해요 |
 | `?scene=intro` | 4화: 조사를 건너뛰고 법정부터 시작 (`?scene=`만 쓰면 그 장면이 있는 화를 찾아요. 1화에도 있는 장면 이름은 1화가 열리니 `?ep=4&`를 붙여요) |
 | `?ep=4&scene=cross1` | 첫 번째 반대신문부터 시작 |
@@ -229,6 +230,24 @@ examine('bagTable', '살펴볼 곳을 고르세요', [spot('bulge', '봉지 바�
 - `memo()`로 적은 줄은 법원기록의 "메모" 탭에 쌓여요(저장에도 남아요). 메모가 하나라도 생기면 탭이 나타나요.
 - 증언에 `hints: [[막연한 힌트], [구체적인 힌트]]`를 달면, 증언을 한 바퀴 돌 때마다 또는 H를 누를 때 차례로 나와요. 마지막 힌트는 반복돼요.
 - 반대신문 화면에는 "2 / 4" 같은 위치와 이미 흔들어 본 증언 표시가 떠요.
+
+## 2화에서 추가한 것
+
+```ts
+tint('dusk'),                                   // 노을 조명 (프롤로그, 2일차 저녁 옥상). tint(null)로 복구
+app({ plate: 'namsan', score: 78, note: '2% 부족', arrows: ['←', '↑'], remote: true, cracked: true }), app(null),
+                                                // 집값닷AI 앱 화면(휴대폰). 기준 사진 반투명 겹침·화살표·일치율. 앱은 말하지 않는다
+compare({ title, prompt, base: 'room302fakeBare', top: 'room302realBare', spots: [...], flip: {...} }, { hints }),
+                                                // 겹쳐 보기: 사진 두 장을 겹쳐 다른 곳을 표시하고, 필요하면 위 사진을 좌우로 뒤집는다(engine/compare.ts)
+crossAgain('x4'),                               // 이미 들은 증언으로 돌아가 반대신문만 다시 (reveal로 고친 증언과 함께)
+```
+
+- **증거의 부분(탭):** 증거에 `tabs: [{ id: 'notice', label: '[공지] 음성 안내 없음', requires? }]`를 달면, 정답이 `'phoneDump#notice'`처럼 부분을 가리킬 때 제시한 뒤 "어느 부분?"을 묻는다. 맞는 기록의 다른 부분을 고르면 감점 없이 한 줄로 알려 준다. `ifPresented('phoneDump')`는 그 기록의 어느 부분이든 맞는다. 나중에 생기는 부분은 `requires` 플래그로 연다.
+- **사진 판(`engine/plates.ts`):** 논증에 쓰이는 사진(남산 기준 사진, 201·302호, 인증 클립 프레임)은 `src/assets/photos/<이름>.png`(1536×1024, 배경처럼 위아래가 잘림)를 쓰고, 파일이 없으면 코드 그림으로 대신한다. `flip: true`면 좌우로 뒤집어 보여 준다(감정 리포트의 302호 = 201호 사진 반전). `cg('namsan')`, `examine('namsan', …)`, `compare`가 같은 판을 쓴다. 증거에 `plates: ['namsan', …]`를 달면 법원기록에 사진 칸이 생기고 눌러서 크게 본다. 좌표는 무대 기준(무대 y = 그림 y × 0.8333 − 66.7).
+- **도식·지도:** `figure('rail')`(W3 난간 단면), `maps.ts`의 `village`·`happyRoof`·`happySection`(단면, `pinpoint` 정답 `basket`).
+- **조사 장소의 `requires`:** 그 플래그가 생기기 전엔 이동 목록에 나오지 않는다(2화 검사실은 15시 전화 뒤에).
+- 2화 증거 카드는 그림 + 설명 1~2줄이다(`source`·`proves`·`limits` 없음). 증거를 받으면 알림에 설명 한 줄이 나온다.
+- 2화는 개발 서버(`npm run dev`)에서만 열린다(`?ep=2`). 공개 빌드에선 제작자 플레이테스트 전까지 "준비 중". 2화 그림은 `src/assets/ep2/`에 따로 있어서 공개 빌드에 들어가지 않는다(공개할 때 공용 폴더로 옮긴다).
 
 ## 판관 예측 · 재검토 기회 · 힌트 (1화)
 

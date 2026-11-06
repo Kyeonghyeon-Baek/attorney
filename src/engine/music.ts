@@ -483,4 +483,76 @@ export const TRACKS: Record<BgmName, Track> = {
       { inst: 'shaker', vol: 0.025, seq: 'x o x o x o x o' },
     ],
   },
+
+  // 2화 달빛마을 조사: 언덕 동네의 오후. 느슨한 셔플 피아노, 뜯는 현, 멀리서 흔들리는 셰이커.
+  dalbit: {
+    bpm: 94, div: 2,
+    parts: [
+      { inst: 'piano', vol: 0.09, rev: 0.35, seq: bars(
+        'G2 . D3+G3+B3 . G2 . D3+G3+B3 .', 'C3 . E3+G3+C4 . C3 . E3+G3+C4 .',
+        'A2 . E3+A3+C4 . A2 . E3+A3+C4 .', 'D3 . F#3+A3+C4 . D3 . F#3+A3+C4 .',
+        'E3 . G3+B3+D4 . E3 . G3+B3+D4 .', 'C3 . E3+G3+C4 . C3 . E3+G3+C4 .',
+        'A2 . C3+E3+A3 . D3 . F#3+A3+C4 .', 'G2 . D3+G3+B3 . G2 . . .') },
+      { inst: 'pluck', vol: 0.06, rev: 0.3, seq: bars(
+        'B4 - D5 - . B4 A4 G4', 'E4 - G4 - C5 - B4 A4', 'A4 - C5 - E5 - D5 C5', 'D5 - - - . . A4 B4',
+        'B4 - D5 - G5 - F#5 E5', 'E5 - G5 - E5 D5 C5 B4', 'A4 - C5 - D5 - C5 A4', 'G4 - - - - - . .') },
+      { inst: 'bass', vol: 0.11, seq: bars('G2 . . D2 . . . .', 'C2 . . G2 . . . .', 'A1 . . E2 . . . .', 'D2 . . A2 . . . .',
+        'E2 . . B2 . . . .', 'C2 . . G2 . . . .', 'A1 . . . D2 . . .', 'G1 . . . D2 . G2 .') },
+      { inst: 'shaker', vol: 0.025, seq: 'x . o x x . o x' },
+      { inst: 'rim', vol: 0.04, rev: 0.2, seq: '. . x . . . x .' },
+    ],
+  },
+  // 2화 한소윤: 짧게 끊는 단조 리듬. 날카롭지만 슬프다.
+  soyoon: {
+    bpm: 104, div: 4,
+    parts: [
+      { inst: 'pluck', vol: 0.07, rev: 0.25, seq: bars(
+        'D4 . D4 . F4 . . . A4 . . . G4 . F4 .', 'E4 . E4 . G4 . . . C5 . . . A4 . . .',
+        'D4 . D4 . F4 . . . A4 . . . D5 . C5 .', 'Bb4 . A4 . G4 . . . E4 . . . . . . .') },
+      { inst: 'strings', vol: 0.05, rev: 0.5, seq: holds(['D3+F3+A3', 'C3+E3+G3', 'Bb2+D3+F3', 'A2+C#3+E3'], 16) },
+      { inst: 'bass', vol: 0.12, seq: bars('D2 . . . . . D2 . . . . . D2 . . .', 'C2 . . . . . C2 . . . . . C2 . . .',
+        'Bb1 . . . . . Bb1 . . . . . Bb1 . . .', 'A1 . . . . . A1 . . . . . E2 . . .') },
+      { inst: 'hat', vol: 0.03, seq: 'x . o . x . o . x . o . x . o x' },
+      { inst: 'kick', vol: 0.16, seq: 'x . . . . . x . . . x . . . . .' },
+    ],
+  },
+  // 2화 안태수: 친절한 라운지풍 장조. 믹스커피처럼 달다.
+  ahn: {
+    bpm: 100, div: 2,
+    parts: [
+      { inst: 'piano', vol: 0.09, rev: 0.4, seq: bars(
+        'F3+A3+C4+E4 . . . . . A3+C4+E4 .', 'D3+F3+A3+C4 . . . . . F3+A3+C4 .',
+        'G3+Bb3+D4+F4 . . . . . Bb3+D4+F4 .', 'C3+E3+G3+Bb3 . . . . . E3+G3+Bb3 .') },
+      { inst: 'bell', vol: 0.05, rev: 0.5, seq: bars(
+        'A4 C5 F5 - E5 - C5 -', 'D5 - C5 A4 F4 - . .', 'Bb4 D5 F5 - G5 - F5 D5', 'E5 - - - C5 - . .',
+        'A4 C5 F5 - A5 - G5 F5', 'D5 - F5 - A5 - G5 -', 'G5 - F5 - D5 - Bb4 -', 'C5 - - - - - . .') },
+      { inst: 'bass', vol: 0.12, seq: bars('F2 . C3 . F2 . A2 .', 'D2 . A2 . D2 . F2 .', 'G1 . D2 . G2 . Bb2 .', 'C2 . G2 . C2 . E2 .') },
+      { inst: 'hat', vol: 0.025, seq: '. x . x . x . x' },
+      { inst: 'kick', vol: 0.15, seq: 'x . . . x . . .' },
+      { inst: 'snare', vol: 0.05, seq: '. . x . . . x .' },
+    ],
+  },
+  // 2화 달빛 신당: 장구 장단을 흉내 낸 타악(덩 · 기덕 쿵 더러러)과 오음계 선율. 신비 말고 생활의 소리.
+  shrine: {
+    bpm: 84, div: 4,
+    parts: [
+      { inst: 'kick', vol: 0.18, seq: 'X . . . . . x . x . . . . . . .' },
+      { inst: 'rim', vol: 0.08, rev: 0.25, seq: '. . x . x x . . . . x . x o x o' },
+      { inst: 'bell', vol: 0.05, rev: 0.6, seq: bars(
+        'A4 - - - C5 - D5 - E5 - - - D5 - C5 -', 'A4 - - - G4 - - - E4 - - - - - - -',
+        'D5 - - - E5 - G5 - E5 - - - D5 - C5 -', 'D5 - - - C5 - A4 - A4 - - - - - - -') },
+      { inst: 'pad', vol: 0.03, rev: 0.7, seq: holds(['A2+E3+A3', 'G2+D3+G3', 'D3+A3+D4', 'A2+E3+A3'], 16) },
+    ],
+  },
+  // 2화 노을: 거의 멈춘 듯한 화음. 프롤로그와 2일차 저녁 옥상.
+  dusk: {
+    bpm: 60, div: 2,
+    parts: [
+      { inst: 'pad', vol: 0.05, rev: 0.8, seq: holds(['E3+G#3+B3+D#4', 'C#3+E3+G#3+B3', 'A2+C#3+E3+G#3', 'B2+D#3+F#3+A3'], 16) },
+      { inst: 'bell', vol: 0.04, rev: 0.75, seq: bars(
+        'B4 - - - - - - - G#4 - - - - - - -', 'E5 - - - D#5 - - - C#5 - - - - - - -',
+        'C#5 - - - - - - - B4 - - - G#4 - - -', 'F#4 - - - - - - - - - - - . . . .') },
+      { inst: 'bass', vol: 0.08, seq: holds(['E2', 'C#2', 'A1', 'B1'], 16) },
+    ],
+  },
 };

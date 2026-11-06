@@ -1,6 +1,23 @@
 import type { FigureMark } from './figures';
 import type { MatchTask } from './match';
 import type { PhotoTask } from './photos';
+import type { CompareTask } from './compare';
+
+/** What the 2화 appraisal app shows: a ghost of the reference photo, guidance arrows and the score. */
+export interface AppView {
+  /** The reference photo ghosted over the camera view (a plate id, engine/plates.ts); none shows no ghost. */
+  plate?: string;
+  /** Background id seen through the camera (default: the 행복하우스 roof). */
+  live?: string;
+  score?: number;
+  /** e.g. ['←', '↑'] */
+  arrows?: string[];
+  note?: string;
+  /** The small 「원격 지원 중」 badge in the corner. */
+  remote?: boolean;
+  /** A cracked screen (the victim's phone on the stairs). */
+  cracked?: boolean;
+}
 /**
  * `operator` is the hidden human answering through Daon's monitor; `haeun` is her in person.
  * `bang`, `watch` and `iguard` are voices only (a victim heard in the prologue and on tape,
@@ -9,7 +26,10 @@ import type { PhotoTask } from './photos';
 export type CharId =
   | 'dan' | 'narae' | 'eom' | 'judge' | 'gu'
   | 'daon' | 'operator' | 'soonja' | 'haeun' | 'seo'
-  | 'taeo' | 'oh' | 'malsun' | 'bang' | 'watch' | 'iguard';
+  | 'taeo' | 'oh' | 'malsun' | 'bang' | 'watch' | 'iguard'
+  // 제2화
+  | 'soyoon' | 'ahn' | 'okbun' | 'jeongsuk' | 'cheolju' | 'haneul' | 'byeon' | 'eungyeol'
+  | 'foreman' | 'elder' | 'choi' | 'app' | 'radio';
 export type Position = 'defense' | 'prosecution' | 'witness' | 'judge' | 'counsel' | 'defendant' | 'field';
 export type ShoutKind = 'objection' | 'holdit' | 'takethat';
 export type Voice = 'high' | 'mid' | 'low' | 'deep' | 'ai' | 'soft' | 'warm' | 'gruff' | 'young' | 'slick' | 'granny' | 'device';
@@ -18,14 +38,18 @@ export type SfxName =
   | 'boot' | 'whoosh' | 'select' | 'open' | 'close' | 'evidence'
   | 'paper' | 'slam' | 'realize' | 'shock' | 'murmur' | 'step' | 'door' | 'typing' | 'heartbeat'
   | 'breakdown' | 'cheer'
-  | 'chime' | 'watch' | 'shutter' | 'detect' | 'tape' | 'thud';
+  | 'chime' | 'watch' | 'shutter' | 'detect' | 'tape' | 'thud'
+  | 'creak' | 'appChime' | 'ratchet' | 'phone';
 export type BgmName =
   | 'trial' | 'testimony' | 'cross' | 'pursuit' | 'suspense' | 'daon'
   | 'investigate' | 'emptyroom' | 'serverroom' | 'sorrow'
   | 'cornered' | 'victory' | 'ending'
   | 'title' | 'night' | 'oh' | 'jeong' | 'eom' | 'objection'
-  | 'crossTense' | 'testimonyTense' | 'climax' | 'pursuitTruth' | 'waitroom';
-export type AmbienceName = 'court' | 'lobby' | 'clock' | 'hum' | 'lounge' | 'store' | 'alley' | 'tape';
+  | 'crossTense' | 'testimonyTense' | 'climax' | 'pursuitTruth' | 'waitroom'
+  | 'dalbit' | 'soyoon' | 'ahn' | 'shrine' | 'dusk';
+export type AmbienceName = 'court' | 'lobby' | 'clock' | 'hum' | 'lounge' | 'store' | 'alley' | 'tape'
+  | 'village' | 'laundry' | 'shrine';
+export type TintMode = 'night' | 'dusk';
 export type DaonMode = 'normal' | 'glitch' | 'human';
 export type IconName = 'door' | 'autopsy' | 'card' | 'brochure' | 'log' | 'contract' | 'mic';
 
@@ -67,6 +91,20 @@ export interface Evidence {
   group?: string;
   /** A diagram drawn under the summary (see src/engine/figures.ts), e.g. the autopsy's injury chart. */
   figure?: string;
+  /**
+   * Parts of one record that can be presented on their own (2화: a phone dump's texts, notice,
+   * messenger reply). Presenting the card then asks which part; answers name it as `<id>#<tab>`.
+   */
+  tabs?: EvidenceTab[];
+  /** In-world photos shown under the summary (plate ids, engine/plates.ts); a click enlarges one. */
+  plates?: string[];
+}
+
+export interface EvidenceTab {
+  id: string;
+  label: string;
+  /** Flag or evidence id that must be held before this part exists (a later addendum). */
+  requires?: string;
 }
 
 export interface Profile {
@@ -138,7 +176,8 @@ export type Cmd =
   /** A step inside a photo set's viewer: point at a part, then pick two frames (see engine/photos.ts). */
   | { t: 'photoTask'; set: string; task: PhotoTask; opts?: StepOpts }
   | { t: 'evidence'; id: string | null }
-  | { t: 'cross'; id: string }
+  /** `again`: back to a testimony already heard (after a finding), straight into cross-examination. */
+  | { t: 'cross'; id: string; again?: boolean }
   /** `nearMiss`: evidence that is right but not enough yet. It plays with no penalty and the question stays open. */
   | {
     t: 'present'; prompt: string; answer: string | string[]; then: Script; wrong?: Script;
@@ -192,8 +231,12 @@ export type Cmd =
   | { t: 'memo'; text: string }
   /** Hides or restores the courtroom HUD (verdict gauge and buttons). */
   | { t: 'hud'; on: boolean }
-  /** Lighting over the scene: 'night' darkens it, null restores. */
-  | { t: 'tint'; mode: 'night' | null }
+  /** Lighting over the scene: 'night' darkens it, 'dusk' turns it to sunset, null restores. */
+  | { t: 'tint'; mode: TintMode | null }
+  /** A phone app screen over the scene (2화 집값닷AI): ghost photo, arrows, match score; null hides it. */
+  | { t: 'app'; view: AppView | null }
+  /** Two photos laid over each other: the player marks where they differ (see engine/compare.ts). */
+  | { t: 'compare'; task: CompareTask; opts?: StepOpts }
   | { t: 'goto'; scene: string }
   | { t: 'end' };
 
@@ -323,6 +366,13 @@ export interface Hotspot {
   script: Script;
   /** Plays on later visits instead of `script`. */
   again?: Script;
+  /**
+   * A spot that can only be finished later: held when it is done (shows ✓). Until then a spot
+   * already looked at shows "확인 대기", or "새로 확인 가능" once `ready` is held.
+   */
+  done?: string;
+  /** Flag or evidence id that makes an unfinished spot worth another look. */
+  ready?: string;
 }
 
 export interface Topic {
@@ -346,6 +396,8 @@ export interface Location {
   connects: string[];
   /** Plays the first time the player arrives. */
   enter?: Script;
+  /** Flag or evidence id needed before the place shows up in the move list. */
+  requires?: string;
   hotspots: Hotspot[];
   talks?: Topic[];
   presents?: Record<string, Script>;

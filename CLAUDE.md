@@ -75,6 +75,8 @@ The code splits into content and engine. `src/content` is plain data. `src/engin
 
 Diagrams that must line up with the logic (the autopsy's injury chart) are drawn in code in `engine/figures.ts`, not painted. Missing art falls back to a placeholder. Every image is preloaded on the title screen; `src/assets` is about 125 MB of PNG today.
 
+Art for an episode still in development goes in `src/assets/ep<n>/` with the same subfolders (2화: `src/assets/ep2/chars/ahn/normal.png`). `loadDevArt()` in `assets.ts` merges it into the same lookups, but only in development builds (a lazy glob behind `import.meta.env.DEV`; an eager glob would still emit the files), so the public build neither ships nor preloads it. To release the episode, move its files up into the shared folders and unlock it in `episodes.ts`.
+
 ## Writing content
 
 - `docs/series-bible.md` is the source of truth for world, characters, episode plots and tone (§9). If a story fact changes, edit the bible first. `docs/art-guide.md` has the art specs and prompts.

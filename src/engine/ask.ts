@@ -3,7 +3,7 @@ import { el, replay } from './dom';
 import { push, type Action } from './input';
 import { touchLayout } from './viewport';
 
-const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3 };
+const NUM: Partial<Record<Action, number>> = { n1: 0, n2: 1, n3: 2, n4: 3, n5: 4, n6: 5, n7: 6, n8: 7, n9: 8 };
 
 /**
  * "질문 재구성" (4화) and plain choices (1화). An answer opens with nothing chosen: arrows, number

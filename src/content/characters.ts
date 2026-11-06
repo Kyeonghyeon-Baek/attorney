@@ -20,4 +20,18 @@ export const CHARACTERS: Record<CharId, Character> = {
   bang: { id: 'bang', name: '방대식', pos: 'field', voice: 'gruff', color: '#7A6A5A', offscreen: true },
   watch: { id: 'watch', name: '스마트워치', pos: 'field', voice: 'device', color: '#2BB6C9', offscreen: true },
   iguard: { id: 'iguard', name: '아이가드', pos: 'field', voice: 'device', color: '#C8372D', offscreen: true },
+  // 제2화 (face crops are re-measured once the sprites exist)
+  soyoon: { id: 'soyoon', name: '한소윤', pos: 'defendant', voice: 'mid', color: '#B83A3A', face: [0.5, 0.25, 2.4] },
+  ahn: { id: 'ahn', name: '안태수', pos: 'witness', voice: 'warm', color: '#2E4A7A', face: [0.5, 0.25, 2.4] },
+  okbun: { id: 'okbun', name: '신옥분', pos: 'witness', voice: 'granny', color: '#4B4F8C', face: [0.5, 0.27, 2.3] },
+  jeongsuk: { id: 'jeongsuk', name: '배정숙', pos: 'witness', voice: 'high', color: '#A0577A', face: [0.5, 0.26, 2.4] },
+  cheolju: { id: 'cheolju', name: '윤철주', pos: 'witness', voice: 'gruff', color: '#6A6F73', face: [0.5, 0.27, 2.4] },
+  haneul: { id: 'haneul', name: '도하늘', pos: 'witness', voice: 'young', color: '#8DB33A', face: [0.5, 0.27, 2.4] },
+  byeon: { id: 'byeon', name: '변복만', pos: 'witness', voice: 'deep', color: '#8A6A3A', face: [0.5, 0.25, 2.4] },
+  eungyeol: { id: 'eungyeol', name: '노은결', pos: 'witness', voice: 'soft', color: '#C9A13A', face: [0.5, 0.26, 2.4] },
+  foreman: { id: 'foreman', name: '공사 반장', pos: 'field', voice: 'gruff', color: '#7A6A5A', offscreen: true },
+  elder: { id: 'elder', name: '어르신', pos: 'field', voice: 'granny', color: '#8A7A6A', offscreen: true },
+  choi: { id: 'choi', name: '최봉구', pos: 'field', voice: 'gruff', color: '#6B5A4A', offscreen: true },
+  app: { id: 'app', name: '집값닷AI', pos: 'field', voice: 'device', color: '#2BB6C9', offscreen: true },
+  radio: { id: 'radio', name: '라디오', pos: 'field', voice: 'device', color: '#9A8A6A', offscreen: true },
 };
