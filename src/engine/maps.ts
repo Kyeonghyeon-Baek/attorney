@@ -286,7 +286,9 @@ export class MapView {
     const head = el('header', 'mapview-head', panel);
     el('h2', 'mapview-title', head, map.title);
     if (prompt) el('p', 'mapview-prompt', head, prompt);
-    const plan = el('div', 'mapview-plan', panel);
+    const drawing = el('div', 'mapview-drawing', panel);
+    const plan = el('div', 'mapview-plan', drawing);
+    plan.style.setProperty('--map-ratio', String(map.width / map.height));
     plan.style.aspectRatio = `${map.width} / ${map.height}`;
     plan.innerHTML = `<svg viewBox="0 0 ${map.width} ${map.height}" aria-hidden="true">${map.svg}</svg>`;
     const tip = el('div', 'mapview-tip', plan);

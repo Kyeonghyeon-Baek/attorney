@@ -1564,6 +1564,9 @@ button { font: inherit; }
 }
 .mapview-panel {
   width: 1040px;
+  height: 680px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   padding: 18px 26px 16px;
   background: var(--cover-dark);
   border: 3px solid rgba(244, 240, 230, 0.85);
@@ -1575,9 +1578,10 @@ button { font: inherit; }
 .mapview-title { margin: 0; font-family: var(--display); font-weight: 400; font-size: 26px; }
 .mapview-prompt { margin: 0; font-size: 17px; color: var(--ochre); word-break: keep-all; }
 .mapview-pick .mapview-panel { border-color: var(--ochre); }
-/* A fixed width (height comes from the map's aspect ratio) keeps the spots on the drawing. */
-.mapview-plan { position: relative; width: 860px; margin: 0 auto; }
-.mapview-pick .mapview-plan { width: 760px; }
+/* Reserve the controls first, then fit the drawing and its spots at the same ratio. */
+.mapview-drawing { min-height: 0; container-type: size; display: grid; place-items: center; }
+.mapview-plan { position: relative; width: min(var(--map-max-width, 860px), 100cqw, calc(100cqh * var(--map-ratio))); }
+.mapview-pick .mapview-plan { --map-max-width: 760px; }
 .mapview-plan svg { display: block; width: 100%; height: 100%; font-family: var(--pixel); }
 .mapview-plan .mp-out { fill: rgba(244, 240, 230, 0.6); font-size: 18px; text-anchor: middle; }
 .mapview-plan .mp-label { fill: var(--paper); font-size: 17px; text-anchor: middle; }
@@ -2483,8 +2487,8 @@ button { touch-action: manipulation; }
 
 /* The large floor plan. A narrower drawing (spots are placed in percent) leaves room for the
    larger buttons inside the stage's height. */
-.touch-layout .mapview-plan { width: 800px; }
-.touch-layout .mapview-pick .mapview-plan { width: 690px; }
+.touch-layout .mapview-plan { --map-max-width: 800px; }
+.touch-layout .mapview-pick .mapview-plan { --map-max-width: 690px; }
 .touch-layout .mapview-title { font-size: 30px; }
 .touch-layout .mapview-prompt { font-size: 21px; }
 .touch-layout .mapview-legend { font-size: 16px; }
