@@ -20,7 +20,7 @@ import { clearSave, hasSave, isCleared, loadSave, markCleared, writeSave, type C
 import { Stage } from './stage';
 import { TextBox, type LineOptions } from './textbox';
 import { bindViewport, touchLayout } from './viewport';
-import type { BgmName, Cmd, Evidence, GuideLine, Hotspot, Location, Profile, Recap, Script, Statement, StepOpts, Testimony } from './types';
+import type { BgmName, Clock, Cmd, Evidence, GuideLine, Hotspot, Location, Profile, Recap, Script, Statement, StepOpts, Testimony, Topic } from './types';
 import { CHARACTERS } from '../content/characters';
 
 const STOP = Symbol('stop');
@@ -1428,7 +1428,29 @@ export class Game {
     const loc = this.data.locations[id];
     if (!loc || !this.flags.has(`visited:${id}`)) return false;
     if (loc.hotspots.some((s) => this.spotState(id, s) === 'fresh')) return true;
-    return !!loc.talks?.some((t) => t.requires && this.has(t.requires) && !this.flags.has(`talked:${id}:${t.id}`));
+    return !!loc.talks?.some((t) => (t.requires || t.after) && this.topicOpen(id, t) && !this.flags.has(`talked:${id}:${t.id}`));
+  }
+
+  private topicOpen(loc: string, t: Topic): boolean {
+    return (!t.requires || this.has(t.requires)) && (!t.after || this.flags.has(`talked:${loc}:${t.after}`));
+  }
+
+  /** The open topics, one per chain (the latest link), each in the row where its chain started. */
+  private visibleTopics(loc: string, talks: Topic[]): Topic[] {
+    const open = talks.filter((t) => this.topicOpen(loc, t));
+    const row = (t: Topic): number => {
+      let first = t;
+      for (let prev = talks.find((x) => x.id === first.after); prev; prev = talks.find((x) => x.id === first.after)) first = prev;
+      return talks.indexOf(first);
+    };
+    return open.filter((t) => !open.some((s) => s.after === t.id)).sort((a, b) => row(a) - row(b));
+  }
+
+  /** The clock reading for a first arrival at `id`, counting first visits so far (this one included). */
+  private clockTime(clock: Clock | undefined, id: string): string | undefined {
+    if (!clock || !clock.places.includes(id)) return undefined;
+    const n = clock.places.filter((p) => this.flags.has(`visited:${p}`)).length;
+    return clock.times[Math.min(n, clock.times.length) - 1];
   }
 
   private async runInvestigate(cmd: Extract<Cmd, { t: 'investigate' }>): Promise<Result> {
@@ -1445,7 +1467,16 @@ export class Game {
         playAmbience(loc.ambience ?? null);
         if (!this.flags.has(`visited:${here}`)) {
           this.flags.add(`visited:${here}`);
-          this.scene.showPlace(loc.person);
+          // With a clock, a first arrival opens on the empty place: whoever is there steps in when they first speak.
+          this.scene.showPlace(cmd.clock ? undefined : loc.person);
+          const time = this.clockTime(cmd.clock, here);
+          if (time) {
+            // The card sits where the location chip is; the chip comes back after it.
+            this.box.hide();
+            this.inv.setLocation(null);
+            await this.fx.place([cmd.clock!.date, time, loc.name]);
+            this.inv.setLocation(loc.name);
+          }
           if (loc.enter && (await this.run(loc.enter)) === STOP) return STOP;
         }
         if (loc.progress && (await this.run(loc.progress)) === STOP) return STOP;
@@ -1507,10 +1538,14 @@ export class Game {
         } else if (action === 'talk' && loc.talks) {
           // Same for talking: the topic list comes back after each conversation.
           for (;;) {
-            const topics = loc.talks.filter((t) => !t.requires || this.has(t.requires));
-            const pick = await this.inv.list(`${CHARACTERS[loc.person!].name}에게 무엇을 물어볼까?`, topics.map((t) => ({
-              id: t.id, label: t.label, done: this.flags.has(`talked:${here}:${t.id}`),
-            })));
+            const topics = this.visibleTopics(here, loc.talks);
+            const pick = await this.inv.list(`${CHARACTERS[loc.person!].name}에게 무엇을 물어볼까?`, topics.map((t) => {
+              // A follow-up shown for the first time flips over from the topic it replaces.
+              const key = `topicShown:${here}:${t.id}`;
+              const swapFrom = t.after && !this.flags.has(key) ? loc.talks!.find((x) => x.id === t.after)?.label : undefined;
+              if (t.after) this.flags.add(key);
+              return { id: t.id, label: t.label, done: this.flags.has(`talked:${here}:${t.id}`), swapFrom };
+            }));
             const topic = topics.find((t) => t.id === pick);
             if (!topic) break;
             this.flags.add(`talked:${here}:${topic.id}`);

@@ -239,7 +239,7 @@ export type Cmd =
   | { t: 'field'; bg: string | null; everyone?: boolean }
   | { t: 'flag'; name: string }
   | { t: 'if'; has: string; then: Script; else?: Script }
-  | { t: 'investigate'; start: string; until: string[]; then: Script; finishLabel?: string }
+  | { t: 'investigate'; start: string; until: string[]; then: Script; finishLabel?: string; clock?: Clock }
   | { t: 'cg'; id: string | null }
   | { t: 'cctv'; cam: string | null; time?: string; status?: string }
   | { t: 'detect'; boxes: DetectBox[] }
@@ -422,6 +422,22 @@ export interface Topic {
   script: Script;
   /** Flag or evidence id that must be held before this topic appears. */
   requires?: string;
+  /**
+   * Topic id this one follows. It opens once that topic has been talked through and then takes
+   * its place in the list (with a flip the first time), so a chain uses one row.
+   */
+  after?: string;
+}
+
+/**
+ * The date/time card shown on each first arrival during an investigation. The n-th place
+ * visited for the first time gets `times[n-1]`, so the clock only moves forward whatever
+ * order the player takes; a place outside `places` shows no card.
+ */
+export interface Clock {
+  date: string;
+  places: string[];
+  times: string[];
 }
 
 export interface Location {

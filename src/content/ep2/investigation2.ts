@@ -1,5 +1,5 @@
 import { guideDayTwo } from './investigation-flow';
-import type { Location, Script } from '../../engine/types';
+import type { Clock, Location, Script } from '../../engine/types';
 import {
   addEvidence, addProfile, ambience, annotate, app, bgm, cg, choose, examine, fadeIn, fadeOut, field, flag, goto,
   investigate, memo, note, option, place, revise, say, sayAs, sfx, shake, spot, think, tint, wait, when,
@@ -10,6 +10,17 @@ import {
 
 const MORNING = ['d2roof', 'd2mgmt', 'd2laundry', 'd2scrap', 'd2byeon', 'd2visit', 'd2shrine', 'd2ladder'];
 const others = (id: string) => [...MORNING.filter((x) => x !== id), 'd2prosecutor'];
+
+/**
+ * 2일차 시계(첫 방문 순서대로). 옥상 6:50 → 고철(15시 수거 전) → … 접견은 넷째나 다섯째라 10시 반 이후,
+ * 구치소에서 돌아오는 다음 칸은 1시간 20분 뒤. 마지막 칸 2시 30분, 3시에 검사 전화.
+ */
+export const DAY2_CLOCK: Clock = {
+  date: '6월 18일 수요일',
+  places: MORNING,
+  times: ['오전 6시 50분', '오전 8시 10분', '오전 9시 20분', '오전 10시 30분', '오전 11시 50분', '오후 1시 10분', '오후 1시 50분', '오후 2시 30분'],
+};
+const PROSECUTOR_CLOCK: Clock = { date: '6월 18일 수요일', places: ['d2prosecutor'], times: ['오후 3시 40분'] };
 
 export const DAY2_GOALS = [
   'd2:video4k', 'd2:laundryBag', 'd2:binBag', 'originals', 'ladderLog',
@@ -25,6 +36,8 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2roof', name: '행복하우스 옥상', bg: 'happyRoofW', bgm: 'dalbit', ambience: 'village', arrive: 'door',
     person: 'gu', connects: others('d2roof'),
     enter: [
+      think('(구 형사님 전화를 받고 알람이 울리기도 전에 튀어 나왔다. 새벽 공기가 목구멍까지 시리다.)'),
+      think('(어제 소윤 씨 앞에서 "보여 주지 못했어요"라고 했을 때의 쓴맛이 아직도 입안에 남아 있어.)'),
       sfx('creak'),
       sayAs('foreman', '공사 반장', '자, W4 끝은 잘라 냈고! 이제 저 회색 칸 남은 거랑 끈 걷어 내고…'),
       say('gu', '거기 절단기 코드 당장 뽑으십쇼!', 'serious'),
@@ -34,7 +47,11 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
       say('narae', '헉, 헉… 아침 여섯 시 반부터 절단기를 돌리면 어떡해요!', 'angry'),
       say('dan', '구 형사님, 연락 주셔서 다행이에요. 아직 중앙 칸 밑동은 그대로죠?', 'normal'),
       say('gu', '간발의 차였슴다. 봉인하겠슴다. W2, 잔존부, 저 끈까지 전부.', 'serious'),
+      say('gu', '후배가 어젯밤 연락 안 줬으면 오늘 현장 다 날아갈 뻔했슴다.', 'panic'),
+      say('narae', '형사님도 머리 다 뻗치셨네요. 밤새 여기 계셨어요?', 'surprised'),
+      say('gu', '새벽부터 골목 어귀에서 지켰슴다! 제 눈앞에서 현장을 날려 버리는 건 못 봄다!', 'serious'),
       think('(아슬아슬했어. 30분만 늦었으면 이 옥상의 증거는 고철 차에 실렸을 거야.)'),
+      think('(93.1%라는 숫자를 뒤집으려면, 여기 남은 쇳조각 하나도 놓치면 안 돼.)'),
       think('(해 뜨자마자 4층 계단을 뛰어올랐더니 모닝커피보다 잠이 확 깨네.)'),
     ],
     hotspots: [
@@ -94,12 +111,18 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2mgmt', name: '행복하우스 관리사무실', bg: 'mgmtOffice', bgm: 'dalbit', ambience: 'hum',
     person: 'eungyeol', connects: others('d2mgmt'),
     enter: [
+      think('(컨테이너에서 건진 봉투 무게가 아직 손끝에 묵직하다. 코끝에서 녹 냄새가 가시질 않네.)'),
+      think('(형광등이 웅웅거리는 1층 관리사무실. 첫날엔 닫혀 있던 문이 오늘은 활짝 열려 있다.)'),
       say('eungyeol', '세입자 총무로 입회할게요. 어제 방청석에서 듣다가 피가 거꾸로 솟을 뻔했어요!', 'firm'),
       say('eungyeol', '우린 동쪽 길가에 검은 타이로 현수막만 묶었지, 서쪽 난간엔 발끝도 안 댔거든요.', 'firm'),
       say('narae', '와, 은결 언니 목소리 큰 거 처음 봐. 어제 진짜 열받았나 보다.', 'surprised'),
       say('eungyeol', '당연하죠! 소윤 언니가 보증금 묶인 집들 등기부까지 밤새워 정리해 준 사람인데…', 'worried'),
-      say('dan', '총무님이 입회해 주셔서 든든해요. 사무실 안을 차근차근 살펴볼게요.', 'normal'),
+      say('eungyeol', '어젯밤엔 분해서 세입자 회의록만 세 번을 다시 읽었다니까요. 틀린 글자라도 있나 해서요.', 'firm'),
+      say('dan', '회의록을 세 번이나요? 총무님이 입회해 주셔서 정말 든든해요.', 'normal'),
+      say('eungyeol', '필요한 건 다 보세요. 어디에 뭐가 있었는지는 제 머릿속에 다 있으니까요.', 'normal'),
+      say('dan', '고맙습니다. 사무실 안을 차근차근 살펴볼게요.', 'normal'),
       think('(수줍던 은결 씨가 총무 수첩을 꽉 쥐고 있어. 규칙 지키는 사람이 화나면 무섭거든.)'),
+      think('(소윤 씨가 혼자 싸운 게 아니었구나. 이 건물에도 소윤 씨의 그날을 기억해 주는 사람이 있어.)'),
     ],
     hotspots: [
       { id: 'safe', label: '열린 금고', x: 635, y: 205, w: 280, h: 240,
@@ -154,11 +177,16 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2laundry', name: '정숙세탁', bg: 'laundry', bgm: 'dalbit', ambience: 'laundry', arrive: 'door',
     person: 'jeongsuk', connects: others('d2laundry'),
     enter: [
+      think('(세탁소 문을 열자 훅 끼치는 스팀 열기. 다림질 소리가 어쩐지 무겁게 들린다.)'),
+      think('(법정에서 자기 말을 뒤집는 게 얼마나 무서운 일인지 알아서, 문고리 잡는 손이 조심스럽네.)'),
       say('jeongsuk', '변호사님… 나 어제 집에 가서 한숨도 못 잤어.', 'sorry'),
       say('jeongsuk', '난간이 먼저 흔들린 걸 빼먹었더라. 그러고는 다 봤다고 우겼네.', 'sorry'),
       say('dan', '법정에서 바로잡는 게 쉬운 일이 아닌데, 솔직하게 말씀해 주셔서 고마웠어요.', 'normal'),
       say('narae', '정숙 이모, 눈 밑이 쑥 들어갔어. 어제 밤새 다리미만 붙잡고 계셨지?', 'normal'),
       say('jeongsuk', '속 시끄러울 땐 주름 펴는 게 약이여. 남의 인생 구길 뻔했으니 잠이 오나.', 'shaken'),
+      say('jeongsuk', '새벽까지 남의 와이셔츠 스무 장을 다려 놨더니 팔뚝에 파스 냄새가 다 배었어.', 'normal'),
+      say('dan', '덕분에 법정에서 가장 중요한 순서가 바로잡혔어요. 정말 큰 용기 내 주신 거예요.', 'normal'),
+      say('jeongsuk', '용기는 무슨… 늦게라도 생각나서 다행이지. 오늘은 또 뭘 물어보러 왔어?', 'normal'),
       think('(수다는 많아도 거짓말은 못 담는 분이야. 덕분에 중요한 실마리가 열렸어.)'),
     ],
     hotspots: [
@@ -225,9 +253,14 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2scrap', name: '철거 구역 고철 컨테이너', bg: 'scrapYard', bgm: 'dalbit', ambience: 'village',
     person: 'gu', connects: others('d2scrap'),
     enter: [
+      think('(철거 구역 쪽으로 들어서자마자 달궈진 쇠 냄새와 먼지가 훅 덮쳐 온다.)'),
+      think('(시계 바늘이 자꾸 신경 쓰인다. 고철 수거차가 오기 전에, 지난주에 버렸다는 봉투를 찾아야 해.)'),
       say('gu', '세 시에 고철 차 온담다. 집게 차가 한 번 퍼 올리면 끝이니 그 전에 뒤져야 함다.', 'serious'),
+      say('gu', '장갑 두 켤레씩 끼십쇼. 파상풍 주사 맞기 싫으면 발밑도 조심하시고요!', 'serious'),
       say('narae', '으… 녹 냄새 봐. 언니, 정장 소매 걷고 들어가야겠는데?', 'normal'),
       say('dan', '국선변호사 정장은 원래 먼지 털어가며 입는 거야. 위쪽부터 차례로 보자.', 'confident'),
+      say('narae', '언니 저 눈빛 나왔다. 저러면 오늘 구두 밑창 또 다 까질 텐데.', 'sad'),
+      think('(정장 한 벌 값보다 내일 법정에서 할 말이 없는 게 백 배는 더 무서우니까.)'),
       when('d2:scrapHint', [], [think('(이 컨테이너… 반장님 말대로라면 헌 난간이 여기 버려졌을 거야.)')]),
     ],
     hotspots: [
@@ -278,11 +311,15 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2byeon', name: '변복만 댁 옥상 텃밭', bg: 'byeonRoof', bgm: 'dalbit', ambience: 'village',
     person: 'byeon', connects: others('d2byeon'),
     enter: [
+      think('(가파른 외부 계단을 올라오니 흙냄새와 상추 잎 냄새가 바람에 실려 온다.)'),
+      think('(점퍼 속 너트에 컨테이너 부품까지 모였어. 이제 그날 아침에 찍힌 손을 내 눈으로 확인할 차례야.)'),
       say('byeon', '내 상추가 이 동네에서 제일 비싸. 조망 가산 받았거든!', 'proud'),
       say('narae', '상추에도 가산이 붙어요?', 'surprised'),
       say('byeon', '붙지! 상추가 아침저녁으로 남산을 보고 크는데 맛이 같겠어?', 'proud'),
       say('narae', '삼겹살 싸 먹을 때 풍경 값까지 내야겠네.', 'normal'),
-      say('dan', '위원장님 댁 옥상은 정말 탁 트였네요. 아래 골목이 한눈에 들어와요.', 'normal'),
+      say('byeon', '내가 아침마다 분무기로 이슬까지 맞춰 주는 몸이여. 아무나 주는 줄 알어?', 'speech'),
+      say('dan', '위원장님 정성이 대단하시네요. 옥상도 정말 탁 트여서 아래 골목이 한눈에 들어와요.', 'normal'),
+      think('(농담을 받아 줄 여유가 조금은 생겼네. 아니면 너무 지쳐서 헛웃음이 나오는 걸까.)'),
       think('(여기선 행복하우스 옥상이 비스듬히 내려다보여. 13일 아침 영상도 여기서 찍었겠지.)'),
     ],
     hotspots: [
@@ -351,13 +388,23 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2visit', name: '서울구치소 접견실', bg: 'visit', bgm: 'soyoon', ambience: 'lounge', arrive: 'door',
     person: 'soyoon', connects: others('d2visit'),
     enter: [
+      think('(하루 만에 다시 앉는 플라스틱 의자. 유리창 너머 공기가 어제 저녁보다 조금은 덜 날카롭다.)'),
+      think('(소윤 씨가 몰래 빼돌렸던 서류 얘기를 꺼내야 해. 다그치지 말고, 왜 그랬는지부터 듣자.)'),
       say('soyoon', '또 왔네요.', 'cold'),
+      think('(이젠 저 말투가 조금 익숙해졌어. 반갑다는 뜻까지는 아니겠지만.)'),
       say('dan', '내일이 두 번째 공판이니까요. 확인해야 할 게 몇 가지 있어요.', 'normal'),
       say('narae', '…저기. 할머니가 밥은 먹냐고 물어보래.', 'sad'),
       say('soyoon', '…먹어요. 맛없게.', 'cold'),
       say('soyoon', '할머니는요. 어제 마당에서 동네 사람들한테 시달리진 않으셨어요?', 'shaken'),
       say('narae', '우리 할머니가 누군데 시달려. 눈 한 번 부라리면 다들 뒷걸음질 치지.', 'normal'),
       think('(가시 돋친 두 사람이 서로 안부를 묻는 방식치고는 꽤 진전이네.)'),
+      say('soyoon', '변호사님은요?', 'normal'),
+      say('dan', '네?', 'normal'),
+      say('soyoon', '밥이요. 아까부터 배에서 소리 나는데.', 'cold'),
+      think('(이 칸막이는 대체 뭘 막아 주는 거야.)'),
+      say('dan', '…나가면서 먹을게요.', 'sweat'),
+      say('soyoon', '그러세요. 그러다 내일 법정에서 쓰러지면 곤란하니까.', 'normal'),
+      think('(걱정해 주신 거겠지. 이번엔 굳이 확인하지 말자.)'),
     ],
     hotspots: [],
     talks: [
@@ -399,12 +446,17 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2shrine', name: '달빛 신당', bg: 'shrine', bgm: 'shrine', ambience: 'shrine',
     person: 'okbun', connects: others('d2shrine'),
     enter: [
+      think('(소윤 씨가 맡긴 말을 되새기며 신당 골목을 올라왔다.)'),
+      think('(대문을 들어서자 은은한 향 냄새가 코끝을 스친다. 소윤 씨의 눈물을 전하러 온 발걸음이 무겁다.)'),
       say('okbun', '왔냐.'),
       say('narae', '할머니. 왜 나한테까지 말 안 했어?', 'sad'),
       say('okbun', '맡긴 걸 지키는 게 내 일이여.'),
       say('okbun', '손녀딸 이쁘다고 입 가볍게 놀리면 신당 문 닫아야지.', 'stern'),
+      say('narae', '그래도 그렇지… 난 할머니가 소윤 언니 편드는 줄도 모르고 막 미워했잖아.', 'sad'),
+      say('okbun', '편은 무슨 편. 남의 피눈물 담긴 종이뭉치, 비 안 맞게 덮어 둔 거지.', 'normal'),
       say('dan', '어르신, 아침부터 골목이 소란스러웠는데 별일 없으셨어요?', 'normal'),
       say('okbun', '산 사람이 시끄럽지 신령님이 시끄럽겄냐. 마루에 앉어.', 'normal'),
+      think('(상자 더미 사이에서도 어르신의 허리는 꼿꼿하다. 괜히 내 어깨까지 펴지네.)'),
     ],
     hotspots: [
       { id: 'jar', label: '쌀독', x: 30, y: 335, w: 260, h: 310, done: 'originals', ready: 'd2:soyoonConsent',
@@ -476,11 +528,16 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2ladder', name: '하늘사다리 차고', bg: 'ladderGarage', bgm: 'dalbit', ambience: 'village',
     person: 'haneul', connects: others('d2ladder'),
     enter: [
+      think('(신당 마당에서 본 앱 화면과 청구서 한 줄이 머릿속에서 맞물린다. "고소작업 차량 25만".)'),
+      think('(차고 앞까지 오니 기름 냄새 대신 시원한 물비누 냄새가 먼저 반긴다.)'),
       say('haneul', '나래야! 할머니 장독 옮길 이사 날짜 잡았어?', 'cheer'),
       say('narae', '아직! 근데 언니, 오늘 우리 변호사 언니랑 꼭 물어볼 게 있어서 왔어.'),
       say('haneul', '어머, 어제 법정에 서셨던 변호사님이시죠? 저랑 우리 하늘이가 도울 일이면 다 말씀하세요!', 'cheer'),
       say('dan', '반갑습니다, 도하늘 기사님. 트럭 광택이 거울처럼 반짝이네요.', 'normal'),
       say('haneul', '헤헤, 방금 세차 끝냈거든요! 하늘이는 제 밥줄이자 동생이니까요!', 'cheer'),
+      say('haneul', '사다리 한 번 뻗으면 오층 옥상도 십 초 컷이에요! 속 시끄러운 일 있으면 다 올려 보내 드릴까요?', 'cheer'),
+      say('dan', '하하, 마음만으로도 벌써 반은 올라간 기분이에요.', 'normal'),
+      think('(오늘 만난 사람들 중에 목소리가 제일 해맑다. 덩달아 숨통이 조금 트이네.)'),
       addProfile('haneul'),
     ],
     hotspots: [
@@ -524,15 +581,20 @@ export const DAY2_LOCATIONS: Record<string, Location> = {
     id: 'd2prosecutor', name: '서울중앙지검 검사실', bg: 'prosecutor', bgm: 'eom', ambience: 'clock', arrive: 'door',
     person: 'eom', requires: 'd2:call15', connects: MORNING,
     enter: [
+      think('(오후 세 시 정각에 울린 전화. 서초동으로 넘어오는 내내 심장이 쿵쾅거렸다.)'),
+      think('(똑딱거리는 시계 소리만 울리는 검사실. 어제 93.1%가 찍혔던 법정 공기만큼이나 서늘하다.)'),
       say('eom', '오셨군요. 피해자 휴대폰 분석이 나왔습니다. 변호인과 함께 보는 게 공정하겠죠.', 'normal'),
       say('dan', '바로 불러 주셔서 감사합니다, 엄 검사님. 숨기는 카드 없이 가시네요.', 'normal'),
       say('eom', '진실을 가리는 건 검찰의 직무가 아닙니다.', 'normal'),
+      say('narae', '와… 책상 위 줄 맞춰 놓은 것 좀 봐. 자 대고 정리하셨어요?', 'surprised'),
+      say('eom', '기록이 흐트러지면 판단도 흐려집니다.', 'normal'),
       say('narae', '어? 검사님, 저 벽에 걸린 금테 액자 뭐예요? "자문 위촉"?', 'normal'),
       say('eom', '자문일 뿐입니다.', 'normal'),
       addEvidence('phoneDump'),
       say('eom', '메신저 앱은 따로 잠겨 있어 추출되지 않았습니다.'),
       say('eom', '메신저 회사에 통화 기록을 요청했고, 내일 오전엔 옵니다. 앱 운영사 자료는 오후에 도착합니다.', 'normal'),
       think('(내일 재판 도중에 기록이 차례로 도착한다는 거구나. 시간 싸움이 되겠어.)'),
+      think('(그래도 엄 검사님이 기록을 바로 열어 준 덕분에, 깜깜한 터널에서 스위치 하나는 찾은 기분이야.)'),
     ],
     hotspots: [
       { id: 'frame', label: '액자', x: 1090, y: 45, w: 175, h: 205,
@@ -589,17 +651,16 @@ DAY2_LOCATIONS.d2prosecutor.talks![0].script.push(...prosecutorDone);
 DAY2_LOCATIONS.d2prosecutor.talks![1].script.push(...prosecutorDone);
 
 const prosecutorInvestigation: Script = [
-  investigate('d2prosecutor', ['d2:prosecutorDone'], [goto('day2eve')], '조사를 마친다'),
+  investigate('d2prosecutor', ['d2:prosecutorDone'], [goto('day2eve')], '조사를 마친다', PROSECUTOR_CLOCK),
 ];
 
 export const DAY2_SCENES: Record<string, Script> = {
   day2: [
     // Keep the saved phase even when the player revisits the village after the phone call.
     when('d2:call15', [fadeIn, ...prosecutorInvestigation], [
-      // The date card sits on the roof, not the empty courtroom (and without the court HUD).
+      // The clock shows the date card on the roof itself, then on every first arrival.
       field('happyRoofW'),
       fadeIn,
-      place('6월 18일 수요일', '오전 6시 50분', '행복하우스 옥상'),
       investigate('d2roof', DAY2_GOALS, [
         sfx('phone'),
         place('6월 18일 수요일', '오후 3시'),
@@ -608,7 +669,7 @@ export const DAY2_SCENES: Record<string, Script> = {
         say('narae', '언니, 가자! 최 사장님 폰 안에 뭐가 남았는지 직접 봐야겠어.', 'normal'),
         flag('d2:call15'),
         ...prosecutorInvestigation,
-      ], '조사를 마친다'),
+      ], '조사를 마친다', DAY2_CLOCK),
     ]),
   ],
 
@@ -624,7 +685,11 @@ export const DAY2_SCENES: Record<string, Script> = {
     say('narae', '사람 떨어지고 삼십 분도 안 됐는데… 뭘 찾는 거야, 저거?', 'surprised'),
     say('dan', '20시 14분, 들어오자마자 망설임 없이 금고랑 책상부터 열었어. 20시 21분에 프린터로 뭘 뽑은 뒤에도 31분까지 서랍, 휴지통, 소파 틈을 뒤지고 있고.', 'point'),
     say('narae', '동네 어르신들 놀라실까 봐 수습하러 다녔다면서… 다 거짓말이었어?', 'sad'),
+    say('narae', '밖에선 구급차 소리가 울리는데, 저 안에서 십칠 분이나 뭘 찾고 있었던 거야…?', 'angry'),
     think('(소윤 씨가 19시 51분에 봉투를 들고 나가지 않았다면, 저 서류 뭉치는 20시 14분에 영영 사라졌을 거야.)'),
+    think('(주먹이 저절로 쥐어진다. 출입 기록만 쏙 뽑아 경찰에 내고, 자기가 방을 뒤진 십칠 분은 입을 싹 닦았어.)'),
+    think('(…그래도 숨 고르자, 강단비. 이건 사무실에서 서류를 찾았다는 증거지, 아직 옥상 난간까지 이어지진 않아.)'),
+    say('dan', '나래야, 이건 안 소장님이 그 밤에 뭘 숨기려 했는지 보여 주는 영상이야. 옥상 일은 내일 증거로 하나씩 엮어야 해.', 'normal'),
     place('6월 18일 수요일', '저녁 7시 45분', '행복하우스 옥상'),
     field('happyRoof', true),
     tint('dusk'),
@@ -632,10 +697,21 @@ export const DAY2_SCENES: Record<string, Script> = {
     bgm('dusk'),
     fadeIn,
     note('봉인된 W3 자리 앞. 동북동으로 정숙세탁 간판틀이 노을을 가린다.'),
+    think('(새벽 6시 50분에 숨이 턱 끝까지 차올라 뛰어왔던 자리다. 노을이 지니 바람 소리가 어제와 다르게 들린다.)'),
+    say('narae', '언니, 우리 오늘 진짜 많이도 뛰어다녔다. 수첩이 새까매졌어.', 'normal'),
+    say('dan', '응. 오늘은 너트 풀린 볼트와 회색 페인트 묻은 끈을 봤고, 컨테이너와 세탁소에서 사라진 옥상 부품들을 찾았어.', 'point'),
+    say('dan', '4K 영상으로 13일 아침에 난간 밑동을 푼 손도 봤고, 쌀독의 원본 서류와 사다리차 배차 일지도 챙겼지.', 'point'),
+    say('dan', '그리고 음성 안내가 없다는 앱 공지와 7시 40분 원격 지원 문자, 방금 본 홈캠 원본까지.', 'normal'),
+    think('(오늘 하루 모은 조각들이 내일 법정에서 하나의 그림으로 맞춰지게 해야 한다.)'),
+    think('(동북동 쪽을 올려다본다. 간판틀 윗선은 옥상 바닥보다 7.7미터나 높아서 노을 진 하늘을 시커멓게 가리고 있다.)'),
     think('(이 옥상에서는… 남산이 안 보인다.)'),
     say('narae', '언니, 바람 차다. 할머니가 밥 먹고 싸우래.'),
     say('narae', '나 사람 보는 눈 진짜 없나 봐. 말투 다정하다고 동네에서 제일 좋은 어른인 줄 알았는데.', 'sad'),
+    say('narae', '아침까지만 해도 설마 그랬겠어, 무슨 사정이 있겠지… 혼자 열 번도 더 변명해 줬거든.', 'sad'),
     say('dan', '네 눈이 이상한 게 아니야. 원래 믿게 만드는 말투가 제일 무서운 법이거든.', 'normal'),
+    say('dan', '다정한 얼굴 뒤에 숨은 걸 찾아내는 건 내 일이지, 믿어 준 네 잘못이 아니야.', 'normal'),
+    think('(내일 두 번째 공판. 솔직히 두렵지 않다면 거짓말이다. 조금만 삐끗해도 한 사람의 진실이 영영 묻힐 테니까.)'),
+    think('(하지만 어제 접견실에서 소윤 씨한테 약속했어. 그 말을 현장에서 "확인된 사실"로 만들겠다고.)'),
     say('dan', '…내일은 지면 안 되겠다.'),
     say('narae', '그 여자 무죄 되면, 할머니 이사 더 늦어지려나.', 'sad'),
     say('dan', '그건 그거고.'),

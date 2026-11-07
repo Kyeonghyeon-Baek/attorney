@@ -1,6 +1,6 @@
 import type { FigureMark } from '../engine/figures';
 import type {
-  AmbienceName, AppView, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, GuideLine, Hotspot, PanelCard,
+  Clock, AmbienceName, AppView, AskOption, BgmName, BoardRow, CharId, Cmd, DaonMode, DetectBox, GuideFocus, GuideLine, Hotspot, PanelCard,
   PlanRoute, Recap, Script, SfxName, ShoutKind, StepOpts, TintMode,
 } from '../engine/types';
 import type { CompareTask } from '../engine/compare';
@@ -72,7 +72,8 @@ export const flag = (name: string): Cmd => ({ t: 'flag', name });
 /** Branches on a flag or a piece of evidence the player holds. */
 export const when = (has: string, then: Script, otherwise?: Script): Cmd => ({ t: 'if', has, then, else: otherwise });
 /** Goals either finish automatically or unlock a player-selected finish action. */
-export const investigate = (start: string, until: string[], then: Script, finishLabel?: string): Cmd => ({ t: 'investigate', start, until, then, finishLabel });
+export const investigate = (start: string, until: string[], then: Script, finishLabel?: string, clock?: Clock): Cmd =>
+  ({ t: 'investigate', start, until, then, finishLabel, clock });
 export const addProfile = (id: string): Cmd => ({ t: 'addProfile', id });
 /**
  * Leaves the courtroom for a location, or returns with null. The player's side stays

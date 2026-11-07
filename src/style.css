@@ -1065,6 +1065,15 @@ button { font: inherit; }
 .inv-item.on { border-color: var(--ochre); background: rgba(43, 58, 115, 0.95); }
 @media (hover: hover) { .inv-item:hover { border-color: var(--ochre); background: rgba(43, 58, 115, 0.95); } }
 .inv-item.done { color: rgba(244, 240, 230, 0.6); }
+/* A follow-up topic takes the row of the one it continues: the old label folds away, the new one unfolds. */
+.inv-item.swap { color: rgba(244, 240, 230, 0.6); animation: inv-swap 0.84s ease-in-out both; }
+.inv-item.swap.swapped { color: var(--paper); border-color: var(--ochre); }
+@keyframes inv-swap {
+  0% { transform: perspective(600px) rotateX(0); }
+  50% { transform: perspective(600px) rotateX(90deg); }
+  100% { transform: perspective(600px) rotateX(0); }
+}
+@media (prefers-reduced-motion: reduce) { .inv-item.swap { animation: none; } }
 .inv-item-label { flex: 1; }
 .inv-check { color: var(--daon); }
 .inv-thumb {

@@ -13,6 +13,8 @@ export interface ListItem {
   done?: boolean;
   /** Something new to see or ask here since the last visit. */
   fresh?: boolean;
+  /** The label this row showed before; it flips over to `label` as the list opens. */
+  swapFrom?: string;
 }
 
 /**
@@ -189,7 +191,15 @@ export class InvestigateUi {
       } else {
         el('span', 'inv-key', b, String(i + 1));
       }
-      el('span', 'inv-item-label', b, it.label);
+      const label = el('span', 'inv-item-label', b, it.swapFrom ?? it.label);
+      if (it.swapFrom) {
+        b.classList.add('swap');
+        setTimeout(() => {
+          label.textContent = it.label;
+          b.classList.add('swapped');
+          sfx('chime');
+        }, 420);
+      }
       if (it.done) {
         b.classList.add('done');
         el('span', 'inv-check', b, '✓');
