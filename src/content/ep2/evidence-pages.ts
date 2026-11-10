@@ -301,7 +301,7 @@ export const EVIDENCE_CARDS: Record<string, Card> = {
     ],
   },
   phoneDump: {
-    summary: '피해자 폰의 6/10·6/14 문자, 관리 앱 보고, 집값닷AI 공지(음성 없음)와 화면 보기 기록.',
+    summary: '피해자 폰의 6/10·6/14 문자, 관리 앱 보고, 집값닷AI 재인증 공지와 화면 보기 기록.',
     pages: [
       {
         id: 'texts0527', kind: 'messages', title: '[문자] 5월 27일',
@@ -333,7 +333,7 @@ export const EVIDENCE_CARDS: Record<string, Card> = {
         },
       },
       {
-        id: 'notice', kind: 'document', title: '[공지] 음성 안내 없음', tab: 'notice',
+        id: 'notice', kind: 'document', title: '[공지] 재인증 안내', tab: 'notice',
         lines: [
           '5/20 집값닷AI 재인증 공지',
           '6/14 24시까지 같은 구도로 다시 촬영, 일치율 80% 이상.',

@@ -2,7 +2,7 @@ import type { Script, Testimony } from '../../engine/types';
 import {
   addEvidence, addProfile, ambience, annotate, bgm, card, chapter, choose, compare, cross, crossAgain,
   fadeIn, fadeOut, field, flag, goto, guide, ifPresented, introduce, keys, memo, note, option, panel,
-  panelOff, place, predict, pulse, rec, recap, reveal, revise, say, sayAs, sfx, shake, tape, think, when,
+  panelOff, place, predict, present, pulse, rec, recap, reveal, revise, say, sayAs, sfx, shake, tape, think, when,
 } from '../script';
 import { RECAP_FALL, RECAP_PRICE, RECAP_SHOUT } from './recaps';
 
@@ -571,7 +571,6 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     say('narae', '등 아래쪽에 가로로 긴 멍이 남았고, 몸 앞쪽엔 밀친 흔적이 없었지!', 'normal'),
     say('dan', '그리고 세탁소 사장님의 첫 진술. 두 손 든 남자, 휘청이는 난간, 뛰어나온 여자. "떨어져"는 맨 마지막이야.', 'point'),
     say('narae', '맞아. 동네 소문이랑은 순서가 다르다고 언니가 꼭 기억하랬잖아.', 'surprised'),
-    think('(소윤 씨는 옥상에서 앱이 말로 자세를 지시했다고 했고, 나래가 본 앱엔 화살표만 떴지. 아직은 조각뿐이지만.)'),
     say('dan', '소윤 씨. 법정 들어가기 전에 물 한 모금 마셔 둘래요?', 'normal'),
     say('soyoon', '됐어요. 물 마시면 속만 더 울렁거려요.', 'cold'),
     say('soyoon', '…변호사님. 저 정말 안 밀었어요. 그 말만은 법정에서도 안 바꿔요.', 'shaken'),
@@ -871,12 +870,32 @@ export const TRIAL1_SCENES: Record<string, Script> = {
     say('judge', '확인된 사실이 아니라 "그랬을지 모른다"는 의심에 스물세 점을 얹는다고요…?', 'stern'),
     think('(재판장님이… 처음으로 판관의 숫자를 그대로 받아 적지 않고 "왜"를 물으셨어.)'),
     say('eom', '검찰은 AI의 억측으로 공소장을 바꾸지 않습니다. 불리한 정황만 오려 내서 유죄를 만들 생각도 없습니다.', 'normal'),
-    say('eom', '다만 확인은 끝까지 해야겠습니다. 재판부에 세 가지를 요청합니다.'),
-    say('eom', '첫째, 추락한 난간과 옥상 잔존부의 정밀 구조 감정. 둘째, 관리사무실 홈캠 원본 전체.'),
-    say('eom', '셋째, 집값닷AI 운영사의 서버 기록 보전과 제출입니다.'),
-    say('eom', '피해자의 휴대폰 화면엔 "원격 지원 중"과 "일치율"이 떠 있었습니다. 그 사 분이 무엇이었는지, 검찰도 알아야겠습니다.', 'normal'),
-    say('dan', '변호인도 세 가지 요청 모두에 동의합니다!', 'point'),
-    say('judge', '좋습니다. 모두 받아들이겠습니다. 내일 6월 18일은 감정과 조사를 위해 휴정하고, 19일 오전에 속행합니다.', 'normal'),
+    say('eom', '다만 확인은 끝까지 해야겠습니다. 재판부에 두 가지를 요청합니다.'),
+    say('eom', '첫째, 추락한 난간과 옥상 잔존부의 정밀 구조 감정. 둘째, 관리사무실 홈캠 원본 전체입니다.'),
+    think('(그걸로는 부족해. 그 4분 동안 옥상과 경로당을 이어 준 게 하나 더 있어.)'),
+    present('그 사 분 동안 무슨 일이 있었는지, 기록이 남아 있을 만한 곳은?', 'phoneScreen', [
+      say('dan', '변호인도 하나 요청하겠습니다. 피해자 휴대폰 화면엔 「원격 지원 중」과 일치율이 떠 있었어요.', 'point'),
+      say('dan', '집값닷AI 운영사 서버엔 그 사 분이 남아 있을 거예요. 지워지기 전에 보전해 주십시오!'),
+      say('eom', '…좋습니다. 검찰도 같은 생각이었습니다. 함께 요청하죠.', 'normal'),
+    ], undefined, {
+      roofDoorLog: [
+        say('dan', '옥상 출입 기록이에요.', 'sweat'),
+        think('(누가 문을 열었는지는 나와도, 그 사 분 동안 무슨 일이 있었는지는 알 수 없어. 피해자가 그때 들고 있던 걸 떠올리자.)'),
+      ],
+      appraisal: [
+        say('dan', '집값닷AI 감정 리포트예요.', 'sweat'),
+        think('(앱은 맞아. 그런데 이건 작년 감정서야. 필요한 건 그 사 분 동안 앱에 남은 흔적이야.)'),
+      ],
+    }, {
+      free: true,
+      hints: [
+        '그 사 분 동안 피해자는 휴대폰으로 뭘 하고 있었지?',
+        '떨어진 휴대폰 화면 구석에 누군가와 연결돼 있다는 표시가 있었어.',
+        '피해자 휴대폰 화면: 「원격 지원 중」 배지와 일치율.',
+      ],
+      hintKey: 'q07req',
+    }),
+    say('judge', '좋습니다. 세 가지 모두 받아들이겠습니다. 내일 6월 18일은 감정과 조사를 위해 휴정하고, 19일 오전에 속행합니다.', 'normal'),
     sfx('gavel'),
     goto('night1'),
   ],

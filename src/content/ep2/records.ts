@@ -216,7 +216,7 @@ const RECORDS: Evidence[] = [
       { id: 'texts0610', label: '[문자] 6월 10일 밤' },
       { id: 'texts0614', label: '[문자] 6월 14일 오후' },
       { id: 'mgmt', label: '[관리 앱] 보수 완료' },
-      { id: 'notice', label: '[공지] 음성 안내 없음' },
+      { id: 'notice', label: '[공지] 재인증 안내' },
       { id: 'fine', label: '[공지·작은 글씨] 촬영 조건·재심사' },
       { id: 'alerts', label: '[알림] 화면 보기 시작·종료' },
       { id: 'messenger', label: '[메신저 회신] 보이스톡 기록', requires: 't2:messengerIn' },

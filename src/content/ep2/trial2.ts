@@ -2,7 +2,7 @@ import type { Script, Testimony } from '../../engine/types';
 import {
   addEvidence, ambience, annotate, bgm, board, boardOff, card, cg, chapter, choose, cross, crossAgain, examine,
   fadeIn, fadeOut, field, figure, figureOff, flag, goto, guide, ifPresented, introduce, keys, memo, note,
-  option, panel, panelOff, pinpoint, place, predict, pulse, rec, recap, recNote, reveal, revise, row, say, sayAs,
+  option, panel, panelOff, pinpoint, place, predict, present, pulse, rec, recap, recNote, reveal, revise, row, say, sayAs,
   sfx, spot, tape, think, wait, when,
 } from '../script';
 import { RECAP_ARRIVED, RECAP_HAND, RECAP_REMOTE } from './recaps';
@@ -16,6 +16,12 @@ const ECHO_CHAIR: Script = [
   sayAs('ahn', '안태수 (1일차, 중개사무소)', '어르신, 겁내지 마시고 등 쭉 기대세요. 그 의자 제가 어제 다 조여 놨어요. 자, 반 걸음만 뒤로… 그렇죠!'),
   field(null),
 ];
+
+/**
+ * X6's last statement (the app as the voice) opens once both rail explanations are broken. A save made
+ * before that statement existed can hold both flags without it, so the loop-back opens it too.
+ */
+const X6_SHIELD_RESUME = when('t2:x6a', [when('t2:x6b', [reveal('x6-5')])]);
 
 export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
   // ---------------------------------------------------------------- X5 윤철주 「사라진 경고」
@@ -161,9 +167,9 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
       say('dan', '네. 방금 하신 말씀, 하나씩 따져 보겠습니다.', 'normal'),
     ],
     hintText: [
-      '안태수 씨의 설명엔 이미 확인된 기록과 부딪히는 곳이 셋 있어.',
-      '끈의 고리 자국, 6월 11일 그의 답장, 그리고 앱의 안내 방식.',
-      '구조 감정 · 점검표의 "제가 통제하겠습니다" · 휴대폰 분석의 [공지] "음성 안내 없음".',
+      '안태수 씨의 두 해명부터 기록과 대 보자. 그 끈은 무엇을 묶고 있었고, 위험한 줄 정말 몰랐을까?',
+      '구조 감정서의 끈 고리 자국, 그리고 점검표에 남은 "제가 통제하겠습니다"라는 답장.',
+      '안태수 씨가 말을 바꾸면, 앱이 실제로 어떻게 안내하는지 휴대폰 분석의 [공지]와 대 보자.',
     ],
     statements: [
       { id: 'x6-1', who: 'ahn', emo: 'explain', text: '13일엔 방수 작업을 했습니다. 너트는 녹슬어서 교체하려고 뺐고, 끈은 천 날리지 말라고 묶었죠.',
@@ -215,8 +221,15 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
           say('ahn', '사실이에요, 확인해 보세요. 화면 공유만 되는 기능이라 마이크 권한조차 없습니다.', 'explain'),
           say('eom', '그 점은 검찰도 확인했습니다. 원격 지원 세션 자체에는 음성 채널이 없습니다.', 'normal'),
           think('(…그 기능엔 정말 음성이 없다. 그래서 더 이상한 거야. 소윤 씨가 들은 목소리는 어디서 났지?)'),
-        ] },
-      { id: 'x6-5', who: 'ahn', emo: 'explain', text: '안내는 앱이 했습니다. 피고인이 들은 "뒤로, 팔 쭉"도 앱 소리죠.',
+        ],
+        nearMiss: {
+          'phoneDump#notice': [
+            say('dan', '집값닷AI 재인증 공지예요. 안내는 화면과 알림음뿐이라고 적혀 있죠.', 'point'),
+            say('ahn', '네, 원격 지원엔 음성이 없다니까요. 제 말이랑 똑같은데요?', 'explain'),
+            think('(원격 지원에 음성이 없다는 말과 앱 자체의 안내 방식은 별개야. 저쪽에서 앱 안내 얘기를 꺼낼 때까지 기다리자.)'),
+          ],
+        } },
+      { id: 'x6-5', who: 'ahn', emo: 'explain', hidden: true, text: '안내는 앱이 했습니다. 피고인이 들은 "뒤로, 팔 쭉"도 앱 소리죠.',
         accept: ['phoneDump#notice'],
         press: [
           say('dan', '피고인은 옥상에서 분명히 들었다고 했어요. 휴대폰에서 "뒤로", "팔 쭉" 하는 구령이 나왔다고요.'),
@@ -229,10 +242,11 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
     ],
     loop: [
       [
+        X6_SHIELD_RESUME,
         say('narae', '(언니… 저 아저씨 말이 오늘따라 너무 매끄러워서 오히려 무서워.)', 'sad'),
         think('(괜찮아, 나래야. 말은 매끄러워도 기록은 깎이지 않으니까.)'),
       ],
-      [think('(끈의 자국, 11일의 답장, 그리고 앱의 안내 방식. 셋 다 이미 기록 안에 있어.)')],
+      [X6_SHIELD_RESUME, think('(끈 자국, 그리고 11일의 답장. 저 사람이 말을 바꿀 때마다 기록과 대 보자.)')],
     ],
     contradiction: [
       ifPresented('railReport', [
@@ -255,6 +269,14 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
         flag('t2:x6b'),
         reveal('x6-2a'),
       ]),
+      // Both rail explanations broken: he falls back on the app as the voice (x6-5), the cross's last stand.
+      when('t2:x6a', [when('t2:x6b', [when('t2:x6c', [], [when('t2:x6shield', [], [
+        say('ahn', '…좋습니다. 난간 일은 제 불찰이라 칩시다.', 'sweat'),
+        say('ahn', '그래도 그날 옥상에서 안내한 건 앱이에요. 그 아가씨가 들었다는 "뒤로, 팔 쭉"도 다 앱 소리고요.', 'explain'),
+        think('(난간에서 한발 물러서더니, 이번엔 옥상에 울린 목소리를 기계한테 떠넘기네.)'),
+        flag('t2:x6shield'),
+        reveal('x6-5'),
+      ])])])]),
       ifPresented('phoneDump', [
         say('dan', '집값닷AI 운영사가 올린 5월 20일 재인증 공식 공지예요.', 'point'),
         say('dan', '"안내는 화면과 알림음으로만 제공됩니다. {r}음성 안내 없음.{/}"'),
@@ -595,9 +617,8 @@ export const TRIAL2_TESTIMONIES: Record<string, Testimony> = {
           say('dan', '5월 24일, 당신 계정으로 그 옥상에서 직접 연습 인증을 아홉 번이나 시도했어요.'),
           say('dan', '최고 기록은 {r}79퍼센트{/}, 판정은 "1% 부족". 아홉 번 내내 한 번도 통과한 적이 없었어요!'),
           say('ahn', '…연습은 연습이죠. 각도나 빛이 조금만 달라도 1퍼센트쯤은 더 오를 수 있잖아요!', 'sweat'),
-          say('dan', '운 좋게 1퍼센트가 더 오를 가능성까지 없었다고는 안 할게요. 하지만 "백 프로 된다"고 장담할 근거는 없었어요!', 'point'),
-          say('dan', '설령 그 1퍼센트를 노렸다 해도, 당신이 풀어 놓은 난간이 안전해지는 건 아니잖아요!'),
-          think('(통과를 장담할 근거도 없이, 자기가 해체한 난간에 기대게 했어. 선의라는 변명이 무너지고 있어.)'),
+          say('dan', '아홉 번을 찍고도 한 번을 못 넘겼어요. 그런데 무슨 근거로 "다 왔다"고 믿으셨죠?', 'point'),
+          think('(직접 해 보고도 넘지 못한 선이야. 선의라는 변명이 흔들리고 있어.)'),
           flag('t2:x7b'),
         ], [
           say('dan', '5월 24일 연습 인증 기록을 보면 최고 79퍼센트에서 멈췄어요.'),
@@ -638,7 +659,7 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     say('narae', '응! 우선 래칫 끈에 묻은 회색 페인트! 그 끈은 방수포가 아니라 서쪽 난간을 옥상 안쪽으로 당겨 묶고 있었어.', 'normal'),
     say('dan', '변 위원장님 4K 원본엔 렌치로 밑동 너트를 풀고 연결 클램프를 떼는 모습이 찍혀 있었어.', 'point'),
     say('narae', '컨테이너랑 세탁소에서 나온 너트랑 클램프, 그리고 하늘 언니네 사다리차 배차 일지까지!', 'surprised'),
-    say('dan', '거기에 "음성 안내 기능은 없다"는 앱 공지, 7시 40분에 원격 지원을 걸겠다던 문자, 8시 14분 홈캠 원본까지.', 'normal'),
+    say('dan', '거기에 앱 공지랑 7시 40분에 원격 지원을 걸겠다던 문자, 8시 14분 홈캠 원본까지.', 'normal'),
     say('narae', '이제 검사님이 요청한 메신저 통화 기록만 오면… 그 시간의 빈칸이 다 채워지는 거지?', 'normal'),
     think('(화살이 가리키는 방향이 너무 뚜렷해서 오히려 등골이 서늘하다. 동네 모두가 믿던 얼굴인데.)'),
     think('(그래도 짐작으로 단정하진 말자. 법정 안에서 증거와 증언으로 하나씩 확인해야 해.)'),
@@ -719,12 +740,51 @@ export const TRIAL2_SCENES: Record<string, Script> = {
   // jump here starts from that checkpoint (call record in hand).
   ahnCall: [cross('x6b')],
 
+  // The player calls up the clip (EP2-S1 §S2-a). The evidence is still handed over here, after the
+  // present, so a save made at this scene's start gets it too.
   clip: [
-    say('eom', '재판장님. 집값닷AI 운영사의 서버 회신이 방금 도착했습니다. 바로 제출합니다.', 'normal'),
+    say('ahn', '…그래서요? 제가 무슨 말을 했는지 아는 사람 있습니까?', 'watch'),
+    say('ahn', '원격 지원엔 녹음 기능이 없고, 메신저는 내용을 안 남겨요. 증명하실 수 있으면 해 보시죠.', 'watch'),
+    think('(내용이 남지 않는 통화. …정말 아무 데도 안 남았을까? 그 순간 최 사장님 휴대폰은 뭘 하고 있었지?)'),
+    present('그 4분 동안, 그의 목소리가 남아 있을 수 있는 곳은?', 'phoneDump#fine', [
+      say('dan', '최 사장님 휴대폰은 그때 재인증 촬영 중이었어요. 공지 작은 글씨를 보시죠.', 'point'),
+      say('dan', '"현장 인증 클립(영상·음성)은 부정 방지를 위해 30일간 보관됩니다."'),
+      say('dan', '검사님, 운영사 회신에 그날 클립이 있는지 확인해 주세요!', 'point'),
+      say('eom', '…운영사에 요청해 둔 회신이 마침 방금 들어왔습니다. 확인하겠습니다.', 'normal'),
+      note('엄정한이 태블릿 화면을 넘긴다. 손이 멈춘다.'),
+    ], undefined, {
+      phoneScreen: [
+        say('dan', '휴대폰 화면엔 일치율과 「원격 지원 중」이 떠 있었어요.', 'sweat'),
+        think('(화면은 화면일 뿐, 소리는 없어. 그 순간의 소리가 남을 만한 곳이 필요해.)'),
+      ],
+      call119: [
+        say('dan', '소윤 씨의 119 신고 녹음이에요.', 'sweat'),
+        think('(119는 19시 47분부터야. 필요한 건 그 전, 추락 직전의 소리야.)'),
+      ],
+      hallCctv: [
+        say('dan', '복도 CCTV엔 휴대폰에 대고 말하는 모습이 찍혀 있어요.', 'sweat'),
+        think('(그런데 복도 CCTV는 무음이야. 입 모양만으론 무슨 말을 했는지 못 박을 수 없어.)'),
+      ],
+      'phoneDump#messenger': [
+        say('dan', '메신저 회신엔 연결과 종료 시각이 남아 있어요.', 'sweat'),
+        think('(시각과 계정뿐, 내용은 없지. 그가 말한 그대로야.)'),
+      ],
+      'phoneDump#notice': [
+        say('dan', '앱엔 음성 안내가 없다는 공지요.', 'sweat'),
+        think('(그건 방금 밝혔어. 지금 필요한 건, 그때의 소리가 어디에 남았느냐야.)'),
+      ],
+    }, {
+      hints: [
+        '통화 내용은 메신저에도 원격 지원에도 남지 않아. 그때 피해자 휴대폰은 뭘 하고 있었지?',
+        '피해자는 재인증 촬영 중이었어. 앱 공지엔 촬영 기록을 어떻게 한다고 적혀 있었지?',
+        '휴대폰 분석 [공지·작은 글씨]: "현장 인증 클립(영상·음성) 30일 보관".',
+      ],
+      hintKey: 'q10pre',
+    }),
+    say('eom', '있습니다. 재인증 시도의 마지막 12초가, 영상과 기기 마이크 소리 그대로 남아 있습니다.', 'normal'),
     addEvidence('serverReply'),
-    say('judge', '공판 도중에 도착했군요. 어떤 자료입니까?', 'surprised'),
-    say('eom', '재인증 시도 마지막 12초는 영상과 기기 마이크 소리 그대로 서버에 자동 저장됩니다.', 'normal'),
-    say('eom', '피해자 휴대폰이 추락 직전 남긴 마지막 클립입니다. 법정에서 재생하겠습니다.'),
+    say('judge', '피해자 휴대폰이 추락 직전에 남긴 소리란 말입니까?', 'surprised'),
+    say('eom', '그렇습니다. 법정에서 재생하겠습니다.'),
     tape('집값닷AI 인증 클립 · 6/14 19:46:27~38', 'serverReply'),
     recNote('19:46:27', '(바람) (삑)'),
     rec('soyoon', '19:46:28', '사장님, 지금 사진 찍을 때예요?!'),
@@ -752,7 +812,7 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     ...ECHO_CHAIR,
     sayAs('narae', '신나래 (방청석)', '…사무실에서 어르신 의자 잡아 주던 그 목소리랑… 똑같아.', 'sad'),
     think('(사람을 가장 안심시키던 다정한 말투가, 그대로 허공 앞의 등 뒤에서 울렸어.)'),
-    say('ahn', '이, 이상하잖아요! 원격 지원엔 음성이나 녹음 기능이 없다고 검사님도 그러셨잖아요!', 'sweat'),
+    say('ahn', '이, 이건… 원격 지원엔 녹음 기능이 없는데…!', 'sweat'),
     say('eom', '원격 지원이 녹음한 게 아닙니다. 인증 클립을 찍던 피해자 휴대폰 마이크가, 스피커로 새어 나온 증인의 목소리를 그대로 담았습니다.', 'normal'),
     say('ahn', '…제 목소리 맞습니다. 하지만 정말 다 온 줄 알고 응원한 거예요! 사고가 날 줄은 몰랐습니다!', 'sweat'),
     say('eom', '통화 내역은 남아도 말 내용은 안 남는다고 믿으셨겠지요. 그 말이 정말 응원이었는지는 잠시 뒤에 따지겠습니다.', 'normal'),
@@ -814,8 +874,12 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     pulse,
     say('judge', '삼십사 점 영으로 내려갔군요. 한 가지는 분명히 해 두겠습니다. 설령 증인의 속내를 다 밝히지 못해도, 그것이 피고인이 밀었다는 증거가 되진 않습니다.', 'stern'),
     say('dan', '소윤 씨, 들었어요? 밀었다는 누명은 이제 벗었어요.'),
-    say('soyoon', '…제 누명은 벗었어도 아직 안 끝났어요. 도와주려 했다는 저 사람 변명, 어디까지 가는지 끝까지 들을 거예요.', 'tears'),
-    think('(눈시울이 붉어졌는데도 끝까지 안 닦네. 그래, 저 거짓말의 바닥까지 다 보고 나가자.)'),
+    // From here on the stake is the seven households, not her verdict (EP2-S1 §S3): today is the last trial day.
+    say('soyoon', '…제 일은 끝났네요. 근데 변호사님, 즉결공판은 오늘이 마지막 날이잖아요.', 'tears'),
+    say('soyoon', '저 사람이 그 사진을 어디서 찍었는지, 뭘 알고 있었는지 오늘 조서에 안 남으면… 우리 일곱 집은 피해자 인정도 못 받고 7월 12일에 그대로 경매로 넘어가요.', 'cold'),
+    think('(7월 12일. 첫날 접견실에서 수첩 첫 줄에 적은 날짜다.)'),
+    think('(눈시울이 붉어졌는데도 끝까지 안 닦네. 자기 누명이 벗겨진 순간에도, 이 사람은 일곱 집부터 세고 있어.)'),
+    say('dan', '남길게요. 오늘, 이 법정에서.', 'confident'),
     goto('ahnStand3'),
   ],
 
@@ -852,15 +916,36 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     say('eom', '넷. 화면을 보며, 그 목소리로.', 'normal'),
     board('여섯 고리', [row('⑤', '장담할 근거가 없었다 — 허공에서 찍은 사진, 아홉 번 찍어도 최고 79%', 'key', '간판 · 일지 · 연습')]),
     say('dan', '다섯. 아홉 번을 찍어도 최고 79퍼센트였어요. 그런데 백 프로 맞춰 준다며 해체한 난간 앞으로 불렀어요.'),
+    // The proof's limit (case-truth: 79% does not prove a pass was impossible) is the prosecutor's to raise.
+    say('eom', '잠깐. 이 고리엔 이의를 남기겠습니다.', 'normal'),
+    say('eom', '79는 80에서 1점 모자란 점수입니다. 변호인은 통과가 불가능했다는 걸 증명하지 못했습니다.', 'normal'),
+    choose('다섯째 고리', '엄 검사님 말은 맞아. 그럼 내가 짚어야 할 건?', [
+      option('그래도 통과는 불가능했다', [
+        say('eom', '그건 증명되지 않았습니다. 빛이나 각도가 달랐다면 1점쯤은 오를 수도 있었겠지요.', 'normal'),
+        think('(맞아. 79는 79일 뿐이야. 불가능까진 말할 수 없어.)'),
+      ]),
+      option('그가 통과를 장담할 근거는 없었다', [
+        say('dan', '적어도 "백 프로"를 장담할 근거는 없었어요. 직접 아홉 번을 해 보고도 못 넘겼으니까요.', 'point'),
+        say('eom', '그 정도는 인정하죠. 하지만 장사꾼의 허풍이 곧 살인은 아닙니다. 그 장담이 왜 위험했습니까?', 'normal'),
+        think('(장담이 허풍이었다는 것까진 됐어. 남은 건, 그 허풍을 어디 앞에서 했느냐야.)'),
+      ]),
+      option('통과할 여지가 있었다 해도, 고정을 푼 난간이 버텨 주진 않는다', [
+        say('dan', '점수가 오를 여지가 있었다 해도, 너트를 풀어 놓은 난간이 버텨 주는 건 아니에요.', 'point'),
+        say('dan', '안태수 씨는 그걸 알면서 "끈 풀고 걷으시라", "허리 대셔도 돼요"라고 했어요. 통과하든 못 하든, 그 난간 앞에 세운 거예요.'),
+        say('eom', '…이의를 거두겠습니다.', 'normal'),
+      ], true),
+    ], 'dan', {
+      free: true,
+      hints: [
+        '엄 검사님의 이의는 맞는 말이야. 79%가 불가능을 증명하진 않아.',
+        '점수가 오를 수 있었든 없었든, 그 옥상에서 달라지지 않는 게 있지.',
+        '통과 여부와 상관없이, 그는 고정을 푼 난간에 기대게 했다.',
+      ],
+      hintKey: 'q13',
+    }),
     board('여섯 고리', [row('⑥', '그 지시대로 넘어갔다 — 젖힌 순간, 풀린 칸이 바깥으로', 'key', '구조 감정 · 프레임')]),
     say('eom', '여섯. 그리고 그 말대로 젖힌 순간, 그 칸이 넘어갔습니다.', 'normal'),
-    choose('여섯 고리', '증인은 그 시각 옥상에 없었다. 그 알리바이로 끊을 수 있는 고리는?', [
-      option('④ 그 순간 지시했다', [say('eom', '말은 경로당 복도에서도 할 수 있습니다. 그는 거기서 했고요.', 'normal')]),
-      option('② 장치를 만들었다', [say('eom', '그건 전날 아침의 일입니다. 그 시각의 알리바이와는 상관없지요.', 'normal')]),
-      option('어느 고리도 끊지 못한다', [
-        say('dan', '어느 고리도 끊지 못해요. 그는 그 자리에 없었지만, 그 자리를 보고 있었고, 그 자리에 말하고 있었어요.', 'point'),
-      ], true),
-    ], 'dan', { free: true, hints: ['그가 옥상에 없어도 할 수 있었던 일은?', '경고를 받고, 미리 풀고, 화면을 보며 말하는 것.', '알리바이는 몸의 위치만 말해 준다.'], hintKey: 'q13' }),
+    say('dan', '그는 그 자리에 없었지만, 그 자리를 보고 있었고, 그 자리를 향해 말하고 있었어요.', 'point'),
     boardOff,
     sayAs('narae', '신나래 (방청석)', '…아저씨.', 'sad'),
     sayAs('narae', '신나래 (방청석)', '…떨어지는 소리 다 듣고, 119도 안 부르고 끊었어? 그러고 웃으면서 할머니 계신 데로 돌아간 거야?', 'angry'),
@@ -874,7 +959,8 @@ export const TRIAL2_SCENES: Record<string, Script> = {
     say('judge', '…? 숫자가… 이십일 점 영에서 멈췄군요.', 'surprised'),
     say('judge', '피고인이 밀지 않았다는 건 이미 확인됐는데, 저 시스템은 왜 아직도 이십일 프로에 머물러 있는 겁니까?', 'stern'),
     say('eom', '기계의 계산식엔 아직 의심이 남았을지 몰라도, 피고인을 유죄로 볼 증거는 더 이상 남아 있지 않습니다. 증인의 동기를 다 설명하지 못했다고 그 판단이 바뀌지는 않습니다.', 'normal'),
-    think('(소윤 씨의 혐의는 이미 걷혔어. 이제 안태수가 왜 그날 밤 최 사장님을 지워야 했는지 끝까지 밝혀내자.)'),
+    sayAs('eungyeol', '노은결 (방청석)', '…저 숫자가 멈춰도, 우리 집값은 아직 저 사람이 매긴 그대로예요.', 'firm'),
+    think('(소윤 씨의 혐의는 걷혔어. 남은 건 저 사람이 왜 그 사진을, 그 사람을 지워야 했는지야. 일곱 집 서류는 거기서부터 다시 열려.)'),
     goto('motive'),
   ],
 };
